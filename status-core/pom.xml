@@ -8,7 +8,7 @@
     </parent>
 
     <artifactId>status-core</artifactId>
-    <name>indeed-status-core</name>
+    <name>Indeed Status Core</name>
     <description>
         Basic core functionality for status checking of app dependencies
     </description>
@@ -20,6 +20,23 @@
     </scm>
 
     <dependencies>
+        <dependency>
+            <groupId>com.indeed</groupId>
+            <artifactId>util-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.indeed</groupId>
+            <artifactId>util-varexport</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
