@@ -138,7 +138,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             t = new CheckException("Health check task was cancelled.", e);
 
         } catch (final TimeoutException e) {
-            log.debug ( "Timed out attempting to validate dependency '" + dependency.getId() + "'.");
+            log.debug("Timed out attempting to validate dependency '" + dependency.getId() + "'.");
 
             final long duration = System.currentTimeMillis() - timestamp;
 
@@ -150,12 +150,15 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
                     .setDuration(duration)
                     .build();
 
+        } catch (final RejectedExecutionException e) {
+            t = new CheckException("Health check failed to launch a new thread due to pool exhaustion, which should not happen. Please dump /private/v and thread-state and contact dev.", e);
+
         } catch (final ExecutionException e) {
             //  nobody cares about the wrapping ExecutionException
-            t = new CheckException("Health check blowed up", e.getCause());
+            t = new CheckException("Health-check failed for unknown reason. Please dump /private/v and thread-state and contact dev.", e.getCause());
 
         } catch(Throwable e) {
-            t = new CheckException("Oopsed.", e);
+            t = new CheckException("Health-check failed for unknown reason. Please dump /private/v and thread-state and contact dev.", e);
 
         } finally {
             if ( null == evaluationResult ) {
@@ -274,7 +277,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         }
     }
 
-    /*@Override todo(cameron)*/
+    /*@Override todo(cameron) */
     public void shutdown () {
             dependencyExecutor.shutdown();
     }

@@ -48,7 +48,6 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     private final DependencyChecker checker;
     private final Dependency dependency;
 
-    @VisibleForTesting
     public DependencyPinger(final Dependency dependency) {
         this(Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
                 .setNameFormat("dependency-pinger-%d")

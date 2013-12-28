@@ -10,12 +10,17 @@ public interface Dependency extends Callable<CheckResult>, Documented {
      * @return An identifier for this dependency that is unique in the system
      *  represented by the client application.
      */
-    String getId();
+    String getId ();
 
     /**
      * @return Human-readable description of the nature of this dependency
      */
     String getDescription();
+
+    /**
+     * @return the URL at which additional information about this dependency can be discovered
+     */
+    String getDocumentationUrl();
 
     /**
      * @return The number of milliseconds that the dependency should be allowed to execute for before being

@@ -1,5 +1,10 @@
 package com.indeed.status.core;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+
+import javax.annotation.Nonnull;
+
 /**
  * The {@link AbstractDependency} provides a convenience base class for implementers of
  *  the {@link Dependency} interface. All primitive properties are captured here as fields,
@@ -16,12 +21,19 @@ public abstract class AbstractDependency implements Dependency {
     public static final long DEFAULT_TIMEOUT = 10*1000; // 10 seconds
     public static final long DEFAULT_PING_PERIOD = 30*1000; // 30 seconds
 
-    protected AbstractDependency(String id, String description, long timeout, long pingPeriod, Urgency urgency) {
-        this.id = id;
-        this.description = description;
+    protected AbstractDependency(
+            @Nonnull final String id,
+            @Nonnull final String description,
+            final long timeout,
+            final long pingPeriod,
+            @Nonnull final Urgency urgency
+    ) {
+        this.id = Preconditions.checkNotNull(id, "Missing id");
+        // TODO This should really be check-not-empty precondition, but let's not break things.
+        this.description = Strings.nullToEmpty(description);
         this.timeout = timeout;
         this.pingPeriod = pingPeriod;
-        this.urgency = urgency;
+        this.urgency = Preconditions.checkNotNull(urgency, "Missing urgency");
     }
 
     @Override

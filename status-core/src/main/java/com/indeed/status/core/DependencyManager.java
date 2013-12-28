@@ -24,15 +24,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor.AbortPolicy;
 import java.util.concurrent.TimeUnit;
 
-/*import com.indeed.common.util.Terminable; todo(cameron)*/
-
 /**
  * The {@link DependencyManager} is a singleton clearinghouse responsible for knowing
  *  all dependencies of the system and their current availability.
  *
  *
  */
-public class DependencyManager implements StatusUpdateProducer, StatusUpdateListener/*, Terminable todo(cameron)*/ {
+public class DependencyManager implements StatusUpdateProducer, StatusUpdateListener/*,Terminable todo(cameron)*/ {
     public static class Qualifiers {
         protected Qualifiers () { throw new UnsupportedOperationException("ResultType is a constants class."); }
 
@@ -61,7 +59,7 @@ public class DependencyManager implements StatusUpdateProducer, StatusUpdateList
             @Nullable final Logger logger,
             @Nonnull final DependencyChecker checker
     ) {
-        this(appName, logger, newDefaultThreadPool(),checker);
+        this(appName, logger, newDefaultThreadPool(), checker);
     }
 
     public DependencyManager(
@@ -240,6 +238,9 @@ public class DependencyManager implements StatusUpdateProducer, StatusUpdateList
         Preconditions.checkState(
                 null == existing,
                 "Can't have two dependencies with the same ID [%s]. Check your setup.", dependency.getId());
+
+        // Direct this through the update-handler so that we don't inadvertently alert ourselves that we added a dependency
+        updateHandler.onAdded(dependency);
     }
 
     public Collection<Dependency> getDependencies() {
@@ -249,6 +250,11 @@ public class DependencyManager implements StatusUpdateProducer, StatusUpdateList
     @Override
     public void onChanged (@Nonnull final Dependency source, @Nullable final CheckResult original, @Nonnull final CheckResult updated) {
         updateHandler.onChanged(source, original, updated);
+    }
+
+    @Override
+    public void onAdded(@Nonnull final Dependency dependency) {
+        updateHandler.onAdded(dependency);
     }
 
     @Override

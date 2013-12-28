@@ -54,6 +54,11 @@ public class AbstractStatusUpdateListener implements StatusUpdateListener {
         }
     }
 
+    @Override
+    public void onAdded(@Nonnull final Dependency dependency) {
+        // Nothing to do by default
+    }
+
     /**
      * Triggered when the given <code>dependency</code> has fallen out of OK status.
      *

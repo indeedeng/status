@@ -20,4 +20,10 @@ public interface StatusUpdateListener {
             @Nullable final CheckResult original,
             @Nonnull final CheckResult updated
     );
+
+    /**
+     * Triggered when a new dependency is added
+     * @param dependency
+     */
+    void onAdded(@Nonnull final Dependency dependency);
 }

@@ -11,5 +11,5 @@ public interface CheckReportHandler {
      *
      * @param resultSet
      */
-    void handle(final CheckResultSet resultSet) throws IOException;
+    void handle ( final CheckResultSet resultSet ) throws IOException;
 }
