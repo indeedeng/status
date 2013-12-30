@@ -23,6 +23,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor.AbortPolicy;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The {@link DependencyManager} is a singleton clearinghouse responsible for knowing
@@ -83,7 +84,7 @@ public class DependencyManager implements StatusUpdateProducer, StatusUpdateList
         this.log = null == logger ? Logger.getLogger(getClass()) : logger;
 
         this.executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder()
-                .setNameFormat("dependency-management-thread-%d")
+                .setNameFormat("dependency-management-" + MANAGEMENT_THREAD_POOL_COUNT.getAndIncrement() + "-thread-%d")
                 .setDaemon(true)
                 .setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
                     @Override
@@ -150,7 +151,7 @@ public class DependencyManager implements StatusUpdateProducer, StatusUpdateList
                 new SynchronousQueue<Runnable>(),
                 // Name your threads.
                 new ThreadFactoryBuilder()
-                        .setNameFormat("dependency-default-checker-%d")
+                        .setNameFormat("dependency-default-" + DEFAULT_THREAD_POOL_COUNT.getAndIncrement() + "-checker-%d")
                         .setDaemon(true)
                         .setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
                             @Override
@@ -295,6 +296,8 @@ public class DependencyManager implements StatusUpdateProducer, StatusUpdateList
     }
 
     private static final int DEFAULT_PING_PERIOD = 30 * 1000; // 30 seconds
+    private static final AtomicInteger DEFAULT_THREAD_POOL_COUNT = new AtomicInteger(1);
+    private static final AtomicInteger MANAGEMENT_THREAD_POOL_COUNT = new AtomicInteger(1);
 
     @SuppressWarnings ({ "FieldCanBeLocal" })
     @Nonnull
