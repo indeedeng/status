@@ -5,7 +5,6 @@ import com.indeed.teststatus.ServletTestSuite;
 import com.indeed.status.core.CheckResultSet;
 import com.indeed.status.core.CheckStatus;
 import com.indeed.status.core.Dependency;
-import com.indeed.status.core.DependencyManager;
 import com.indeed.status.core.PingableDependency;
 import com.indeed.status.core.Urgency.BuiltIns;
 import com.indeed.status.web.AbstractResponseWriter;

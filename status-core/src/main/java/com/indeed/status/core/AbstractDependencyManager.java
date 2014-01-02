@@ -2,7 +2,6 @@ package com.indeed.status.core;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Supplier;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.indeed.util.varexport.Export;
@@ -26,12 +25,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * The {@link DependencyManager} is a singleton clearinghouse responsible for knowing
+ * The {@link AbstractDependencyManager} is a singleton clearinghouse responsible for knowing
  *  all dependencies of the system and their current availability.
  *
  *
  */
-public class DependencyManager implements StatusUpdateProducer, StatusUpdateListener/*,Terminable todo(cameron)*/ {
+abstract public class AbstractDependencyManager implements StatusUpdateProducer, StatusUpdateListener/*,Terminable todo(cameron)*/ {
     public static class Qualifiers {
         protected Qualifiers () { throw new UnsupportedOperationException("ResultType is a constants class."); }
 
@@ -42,20 +41,20 @@ public class DependencyManager implements StatusUpdateProducer, StatusUpdateList
 
     // TODO Some day, all of this will be replaced with a builder.
 
-    public DependencyManager() {
+    public AbstractDependencyManager() {
         this(null, null, newDefaultThreadPool());
     }
-    public DependencyManager(final String appName) {
+    public AbstractDependencyManager(final String appName) {
         this(appName, null, newDefaultThreadPool());
     }
-    public DependencyManager ( final String appName, final Logger logger ) {
+    public AbstractDependencyManager ( final String appName, final Logger logger ) {
         this(appName, logger, newDefaultThreadPool());
     }
-    public DependencyManager ( final Logger logger ) {
+    public AbstractDependencyManager ( final Logger logger ) {
         this(null, logger, newDefaultThreadPool());
     }
 
-    public DependencyManager(
+    public AbstractDependencyManager(
             @Nullable final String appName,
             @Nullable final Logger logger,
             @Nonnull final DependencyChecker checker
@@ -63,7 +62,7 @@ public class DependencyManager implements StatusUpdateProducer, StatusUpdateList
         this(appName, logger, newDefaultThreadPool(), checker);
     }
 
-    public DependencyManager(
+    public AbstractDependencyManager(
             @Nullable final String appName,
             @Nullable final Logger logger,
             @Nonnull final ThreadPoolExecutor threadPool
@@ -74,13 +73,13 @@ public class DependencyManager implements StatusUpdateProducer, StatusUpdateList
                 .build());
     }
 
-    public DependencyManager(
+    public AbstractDependencyManager(
             @Nullable final String appName,
             @Nullable final Logger logger,
             @Nonnull final ThreadPoolExecutor threadPool,
             @Nonnull final DependencyChecker checker
     ) {
-        this.appName = resolveAppName(appName);
+        this.appName = Strings.isNullOrEmpty(appName) ? getAppName() : appName;
         this.log = null == logger ? Logger.getLogger(getClass()) : logger;
 
         this.executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder()
@@ -104,34 +103,7 @@ public class DependencyManager implements StatusUpdateProducer, StatusUpdateList
 
     @Nullable
     public String getAppName() {
-        return appName;
-    }
-
-    @Nullable
-    protected String resolveAppName(@Nullable final String explicitAppName) {
-        if (!Strings.isNullOrEmpty(explicitAppName)) {
-            return explicitAppName;
-        }
-
-        final Supplier<VersionData> versionDataSupplier = getVersionDataSupplier();
-        //noinspection ConstantConditions
-        if (null != versionDataSupplier) {
-            @Nullable final VersionData versionData = versionDataSupplier.get();
-
-            if (null != versionData) {
-                final String indeedLoggingAppName = versionData.getProjectName();
-                if (!Strings.isNullOrEmpty(indeedLoggingAppName)) {
-                    return indeedLoggingAppName;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    @Nullable
-    protected Supplier<VersionData> getVersionDataSupplier() {
-        return null;
+        return this.appName;
     }
 
     static ThreadPoolExecutor newDefaultThreadPool() {
@@ -156,7 +128,7 @@ public class DependencyManager implements StatusUpdateProducer, StatusUpdateList
                         .setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
                             @Override
                             public void uncaughtException(Thread t, Throwable e) {
-                                Logger.getLogger(DependencyManager.class)
+                                Logger.getLogger(AbstractDependencyManager.class)
                                         .error("Uncaught throwable in thread " + t.getName() + "/" + t.getId(), e);
                             }
                         })

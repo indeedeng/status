@@ -1,10 +1,10 @@
 package com.indeed.status.web;
 
 import com.google.common.base.Function;
+import com.indeed.status.core.AbstractDependencyManager;
 import com.indeed.status.core.CheckReportHandler;
 import com.indeed.status.core.CheckResultSet;
 import com.indeed.status.core.CheckStatus;
-import com.indeed.status.core.DependencyManager;
 import org.apache.log4j.Logger;
 
 import javax.servlet.ServletConfig;
@@ -17,11 +17,11 @@ import java.io.IOException;
 /**
  * @author Matt Schemmel
  */
-public class AbstractDaemonCheckReportServlet extends HttpServlet {
+abstract public class AbstractDaemonCheckReportServlet extends HttpServlet {
     /// Instance logger available for use by subclasses.
     protected final Logger log = Logger.getLogger(getClass());
     // Set-once, read-many
-    private DependencyManager manager;
+    private AbstractDependencyManager manager;
 
     @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
@@ -47,12 +47,9 @@ public class AbstractDaemonCheckReportServlet extends HttpServlet {
         this.manager = newManager(config);
     }
 
-    @SuppressWarnings({"UnusedParameters"})
-    protected DependencyManager newManager(final ServletConfig config) {
-        return new DependencyManager();
-    }
+    abstract protected AbstractDependencyManager newManager(final ServletConfig config);
 
-    protected DependencyManager getManager() {
+    protected AbstractDependencyManager getManager() {
         return this.manager;
     }
 

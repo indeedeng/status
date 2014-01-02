@@ -1,5 +1,6 @@
 package com.indeed.status;
 
+import com.indeed.status.core.AbstractDependencyManager;
 import com.indeed.status.core.CheckResult;
 import com.indeed.status.core.CheckStatus;
 import com.indeed.status.core.Dependency;
@@ -18,6 +19,11 @@ public class PermissiveServlet extends AbstractDaemonCheckReportServlet {
         super.init(config);
 
         this.getManager().addDependency(newSampleDependency());
+    }
+
+    @Override
+    protected AbstractDependencyManager newManager(ServletConfig config) {
+        return new DependencyManager();
     }
 
     protected Dependency newSampleDependency() {

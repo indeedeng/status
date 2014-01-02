@@ -1,6 +1,7 @@
 package com.indeed.status;
 
 import com.google.common.base.Function;
+import com.indeed.status.core.AbstractDependencyManager;
 import com.indeed.status.core.CheckReportHandler;
 import com.indeed.status.core.CheckResult;
 import com.indeed.status.core.CheckStatus;
@@ -35,6 +36,10 @@ public class StrictServlet extends AbstractDaemonCheckReportServlet {
         };
     }
 
+    @Override
+    protected AbstractDependencyManager newManager(ServletConfig config) {
+        return new DependencyManager();
+    }
 
     protected Dependency newSampleDependency() {
         return new Dependency() {
