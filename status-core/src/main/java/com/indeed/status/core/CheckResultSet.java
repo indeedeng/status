@@ -3,6 +3,7 @@ package com.indeed.status.core;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.indeed.util.core.NetUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
@@ -161,7 +162,7 @@ public class CheckResultSet {
     public class SystemReport {
         public SystemReport() {
             duration = System.currentTimeMillis() - startTime;
-            this.hostname = "todo"; // todo: bring in netutils //NetUtils.determineHostName("unknown");
+            this.hostname = NetUtils.determineHostName("unknown");
 
             condition = systemStatus.get();
             switch(condition) {

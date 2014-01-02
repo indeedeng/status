@@ -48,6 +48,6 @@
     </dependencyManagement>
 
     <properties>
-        <com.indeed-util.version>1.0.2-SNAPSHOT</com.indeed-util.version>
+        <com.indeed-util.version>1.0.3</com.indeed-util.version>
     </properties>
 </project>
