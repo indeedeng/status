@@ -7,7 +7,7 @@ the current health of any internal aspects of this app.
 
 Core Status checking classes. Possible to be used without a webapp if wanted.
 
-## [status-web](https://github.com/indeedeng/util/tree/master/status-web)
+## [status-web](https://github.com/indeedeng/status/tree/master/status-web)
 
 Web classes for status information.
 
