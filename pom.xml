@@ -37,17 +37,17 @@
             <dependency>
                 <groupId>com.indeed</groupId>
                 <artifactId>util-core</artifactId>
-                <version>${com.indeed-util.version}</version>
+                <version>${indeed-util.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.indeed</groupId>
                 <artifactId>util-varexport</artifactId>
-                <version>${com.indeed-util.version}</version>
+                <version>${indeed-util.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <properties>
-        <com.indeed-util.version>1.0.3</com.indeed-util.version>
+        <indeed-util.version>1.0.3</indeed-util.version>
     </properties>
 </project>
