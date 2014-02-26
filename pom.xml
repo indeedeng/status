@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.indeed</groupId>
         <artifactId>oss-parent</artifactId>
-        <version>5</version>
+        <version>6</version>
     </parent>
 
     <artifactId>status-parent</artifactId>
@@ -30,24 +30,4 @@
         <module>status-core</module>
         <module>status-web</module>
     </modules>
-
-    <dependencyManagement>
-        <!-- This sets version numbers; it does not create dependencies in and of itself -->
-        <dependencies>
-            <dependency>
-                <groupId>com.indeed</groupId>
-                <artifactId>util-core</artifactId>
-                <version>${indeed-util.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.indeed</groupId>
-                <artifactId>util-varexport</artifactId>
-                <version>${indeed-util.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <properties>
-        <indeed-util.version>1.0.3</indeed-util.version>
-    </properties>
 </project>
