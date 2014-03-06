@@ -19,11 +19,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * Standalone evaluator of {@link Dependency} objects.
  *
- * Evolved from the com.indeed.webapp.common.healthcheck.HealthCheckRunner
- *
- *
  * @author matts
- *
  */
 class DependencyChecker /*implements Terminable todo(cameron)*/ {
     @Nonnull
@@ -41,7 +37,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     }
 
     @Nonnull
-    public CheckResultSet evaluate (final Collection<Dependency> dependencies) {
+    public CheckResultSet evaluate(final Collection<Dependency> dependencies) {
         final CheckResultSet result = new CheckResultSet();
 
         for ( final Dependency dependency : dependencies ) {
@@ -52,7 +48,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     }
 
     @Nullable
-    public CheckResult evaluate (@Nonnull final Dependency dependency) {
+    public CheckResult evaluate(@Nonnull final Dependency dependency) {
         @Nonnull
         final CheckResultSet result = new CheckResultSet();
         evaluateAndRecord(dependency, result);
@@ -129,7 +125,8 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
         } catch (final InterruptedException e) {
             // Do NOT interrupt the current thread if the future was interrupted; record the failure and let the
-            //  master thread continue.
+            // master thread continue.
+            // todo(cameron): Why would we not want to set Thread.interrupted()?
             t = new CheckException("Operation interrupted", e);
             cancel(future);
 
@@ -161,7 +158,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             t = new CheckException("Health-check failed for unknown reason. Please dump /private/v and thread-state and contact dev.", e);
 
         } finally {
-            if ( null == evaluationResult ) {
+            if (null == evaluationResult) {
                 final long duration = System.currentTimeMillis() - timestamp;
 
                 evaluationResult = CheckResult.newBuilder(dependency, CheckStatus.OUTAGE, "Exception thrown during the evaluation of the dependency.")

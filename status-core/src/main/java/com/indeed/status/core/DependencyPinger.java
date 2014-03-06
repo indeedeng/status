@@ -1,7 +1,6 @@
 package com.indeed.status.core;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.indeed.util.core.LongRecentEventsCounter;
@@ -15,6 +14,9 @@ import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * The {@link DependencyPinger} is a modification of the HCv2 ServicePinger class that keeps the
@@ -32,9 +34,9 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     private final long pingPeriod;
     @SuppressWarnings ({"FieldCanBeLocal"})
     private final int consecutiveFailureThreshold = 3;
-    private AtomicInteger consecutiveFailures = new AtomicInteger();
-    private int totalSuccesses;
-    private int totalFailures;
+    private final AtomicInteger consecutiveFailures = new AtomicInteger();
+    private final AtomicLong totalSuccesses = new AtomicLong();
+    private final AtomicLong totalFailures = new AtomicLong();
     private final LongRecentEventsCounter failuresOverTime = new LongRecentEventsCounter(LongRecentEventsCounter.MINUTE_TICKER, 60);
     private final StatusUpdateDelegate updateHandler = new StatusUpdateDelegate();
     @Nullable
@@ -46,9 +48,10 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
 
     @Nonnull
     private final DependencyChecker checker;
+    @Nonnull
     private final Dependency dependency;
 
-    public DependencyPinger(final Dependency dependency) {
+    public DependencyPinger(@Nonnull final Dependency dependency) {
         this(Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
                 .setNameFormat("dependency-pinger-%d")
                 .setDaemon(true)
@@ -62,11 +65,15 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
         ), dependency);
     }
 
-    DependencyPinger(final ExecutorService executorService, final Dependency dependency) {
+    DependencyPinger(@Nonnull final ExecutorService executorService, @Nonnull final Dependency dependency) {
         this(executorService, dependency, dependency.getPingPeriod());
     }
 
-    DependencyPinger (final ExecutorService executorService, final Dependency dependency, final long pingPeriod) {
+    DependencyPinger (
+            @Nonnull final ExecutorService executorService,
+            @Nonnull final Dependency dependency,
+            final long pingPeriod
+    ) {
         this.checker = DependencyChecker.newBuilder()
                 .setExecutorService(executorService)
                 .setLogger(log)
@@ -126,28 +133,29 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
                     run();
                 }
 
-                return Preconditions.checkNotNull(lastResult, "No result available after inline execution");
+                return checkNotNull(lastResult, "No result available after inline execution");
             }
         }
 
+        // this will not be null, because lastResult goes from null -> notnull and never back to null
+        //noinspection ConstantConditions
         return lastResult;
     }
 
-    private void notifyListeners (@Nonnull final CheckResult currentResult) {
+    private void notifyListeners(@Nonnull final CheckResult currentResult) {
+        // calling getStatus is safe because lastResult goes from null -> notnull and never back to null
+        //noinspection ConstantConditions
         if (null == lastResult || lastResult.getStatus() != currentResult.getStatus()) {
             updateHandler.onChanged(dependency, lastResult, currentResult);
         }
     }
 
-    private CheckResult handleSuccess (@Nonnull CheckResult reportedResult) {
+    private CheckResult handleSuccess(@Nonnull final CheckResult reportedResult) {
         if (consecutiveFailures.get() != 0) {
             consecutiveFailures.set(0);
         }
-        totalSuccesses++;
-        final long now = System.currentTimeMillis();
-        lastDuration = now - lastExecuted;
-        // This could reasonably be 'now', but it's more confusing to have the tiny tiny delta between
-        //  'timestamp' and 'lngTimestamp'.
+        totalSuccesses.incrementAndGet();
+        lastDuration = System.currentTimeMillis() - lastExecuted;
         lastKnownGood = lastExecuted;
         lastThrown = null;
 
@@ -159,32 +167,29 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
                 .build();
     }
 
-    @SuppressWarnings ({"ThrowableResultOfMethodCallIgnored"})
-    private CheckResult handleFailure (@Nullable CheckResult reportedResult, @Nullable final Throwable t) {
-        final CheckResult result;
-        lastDuration = System.currentTimeMillis() - lastExecuted;
+    private CheckResult handleFailure(@Nullable CheckResult reportedResult, @Nullable final Throwable t) {
         consecutiveFailures.incrementAndGet();
-        totalFailures++;
-        lastThrown = null == reportedResult ? t  : (null == t ? reportedResult.getThrowable() : t);
+        totalFailures.incrementAndGet();
         synchronized (failuresOverTime) {
             failuresOverTime.increment();
         }
+        lastDuration = System.currentTimeMillis() - lastExecuted;
+        //noinspection ThrowableResultOfMethodCallIgnored
+        lastThrown = null == reportedResult ? t  : (null == t ? reportedResult.getThrowable() : t);
 
-        /// The worst possible status this failure can generate. If the caller is using a full-fledged dependency rather than
-        ///  an up/down exception-thrower, then we don't want to report an OUTAGE when it's simply been a MINOR degradation
-        ///  for a while.
+        // The worst possible status this failure can generate. If the caller is using a full-fledged dependency rather than
+        // an up/down exception-thrower, then we don't want to report an OUTAGE when it's simply been a MINOR degradation
+        // for a while.
         final CheckStatus worstPossibleStatus = null == reportedResult ? CheckStatus.OUTAGE : reportedResult.getStatus();
-        result = newFailureNotice(worstPossibleStatus, reportedResult);
-
-        return result;
+        return newFailureNotice(worstPossibleStatus, reportedResult);
     }
 
     @Nonnull
     private CheckResult newFailureNotice(@Nonnull final CheckStatus outageStatus, @Nullable final CheckResult failedResult) {
         final CheckResult result;
 
-        if ( consecutiveFailures.get() < consecutiveFailureThreshold && totalSuccesses > 0 ) {
-            if ( log.isDebugEnabled() ) {
+        if (consecutiveFailures.get() < consecutiveFailureThreshold && totalSuccesses.get() > 0) {
+            if (log.isDebugEnabled()) {
                 log.debug ( "Most recent call to '" + dependency.getId() + "' was a failure, but recent pings succeeded. Noting impairment." );
             }
 
@@ -200,7 +205,7 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
                     .build();
 
         } else {
-            if ( log.isDebugEnabled() ) {
+            if (log.isDebugEnabled()) {
                 log.debug ( "No recent pings to '" + getId() + "' have succeeded. Noting unavailability." );
             }
 
@@ -221,7 +226,6 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     private static String getFailureMessage(@Nullable final CheckResult result, @Nullable final Throwable thrown) {
         if (null != thrown) {
             final String thrownMessage = thrown.getMessage();
-
             if (!Strings.isNullOrEmpty(thrownMessage)) {
                 return thrownMessage;
             }
@@ -244,17 +248,15 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     }
 
     @Export(name = "total-failures")
-    public int getTotalFailures() {
-        return totalFailures;
+    public long getTotalFailures() {
+        return totalFailures.get();
     }
 
-    @SuppressWarnings  ({"UnusedDeclaration"}) /* Exported */
     @Export(name = "total-successes")
-    public int getTotalSuccesses() {
-        return totalSuccesses;
+    public long getTotalSuccesses() {
+        return totalSuccesses.get();
     }
 
-    @SuppressWarnings ({"UnusedDeclaration"})  /* Exported */
     @Export(name = "failures", doc = "Rolling count of recent failures")
     public String getFailures() {
         synchronized (failuresOverTime) {

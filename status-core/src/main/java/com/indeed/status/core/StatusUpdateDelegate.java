@@ -11,19 +11,19 @@ import java.util.List;
 /**
  * Simple delegate that can be used by StatusUpdateProducer implementers as a delegate
  *
- *
  * @author matts
  */
-public class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateListener {
+class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateListener {
     private static final Logger log = Logger.getLogger(StatusUpdateDelegate.class);
 
     private final List<StatusUpdateListener> listeners;
 
-    public StatusUpdateDelegate () {
+    StatusUpdateDelegate () {
         final List<StatusUpdateListener> l = Lists.newArrayListWithExpectedSize(2);
         listeners = Collections.synchronizedList(l);
     }
 
+    @Override
     public void onChanged (@Nonnull final Dependency source, @Nullable final CheckResult original, @Nonnull final CheckResult updated) {
         if (log.isTraceEnabled()) {
             log.trace("Notifying " + listeners.size() + " listeners of the change to " + source + " from " + original + " to " + updated);
@@ -55,10 +55,12 @@ public class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateL
         }
     }
 
+    @Override
     public void addListener (final StatusUpdateListener listener) {
         listeners.add(listener);
     }
 
+    @Override
     public void clear() {
         listeners.clear();
     }

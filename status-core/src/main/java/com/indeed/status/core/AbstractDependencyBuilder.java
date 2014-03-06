@@ -9,10 +9,13 @@ import javax.annotation.Nonnull;
  * @author matts
  */
 public abstract class AbstractDependencyBuilder<T extends AbstractDependency, B extends AbstractDependencyBuilder<T,B>> {
+    @Nonnull
     protected String id;
+    @Nonnull
     protected String description;
     protected long timeout = PingableDependency.DEFAULT_TIMEOUT;
     protected long pingPeriod = PingableDependency.DEFAULT_PING_PERIOD;
+    @Nonnull
     protected Urgency urgency;
     @Nonnull
     protected Supplier<Boolean> toggle = Suppliers.ofInstance(Boolean.TRUE);

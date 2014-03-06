@@ -24,13 +24,45 @@ import java.util.concurrent.ThreadPoolExecutor.AbortPolicy;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * The {@link AbstractDependencyManager} is a singleton clearinghouse responsible for knowing
- *  all dependencies of the system and their current availability.
- *
- *
+ * all dependencies of the system and their current availability.
  */
 abstract public class AbstractDependencyManager implements StatusUpdateProducer, StatusUpdateListener/*,Terminable todo(cameron)*/ {
+    private static final int DEFAULT_PING_PERIOD = 30 * 1000; // 30 seconds
+    private static final AtomicInteger DEFAULT_THREAD_POOL_COUNT = new AtomicInteger(1);
+    private static final AtomicInteger MANAGEMENT_THREAD_POOL_COUNT = new AtomicInteger(1);
+
+    @Nonnull
+    private final Logger log;
+    @Nullable
+    private final String appName;
+
+    /// Timer for managing scheduled executions
+    @Nonnull
+    private final ScheduledExecutorService executor;
+
+    /// Thread pool for running dependency checks
+    @Nonnull
+    private final ThreadPoolExecutor threadPool;
+
+    /// Container for checking all dependencies
+    @Nonnull
+    private final DependencyChecker checker;
+
+    /// Delegate for handling event propagation
+    private final StatusUpdateDelegate updateHandler = new StatusUpdateDelegate();
+
+    /// Collection of all dependencies governed by this manager. The keys of this map are the unique
+    ///  String identifiers of each dependency. The values are the immutable objects representing the
+    ///  canonical view of each dependency. This map does <em>not</em> indicate the current status
+    ///  of dependencies, but rather the set of dependencies that are registered with the system.
+    private final ConcurrentMap<String, Dependency> dependencies = Maps.newConcurrentMap();
+
+    private long pingPeriod = DEFAULT_PING_PERIOD;
+
     public static class Qualifiers {
         protected Qualifiers () { throw new UnsupportedOperationException("ResultType is a constants class."); }
 
@@ -103,7 +135,7 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
 
     @Nullable
     public String getAppName() {
-        return this.appName;
+        return appName;
     }
 
     static ThreadPoolExecutor newDefaultThreadPool() {
@@ -143,33 +175,34 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         return result;
     }
 
-    @SuppressWarnings ( { "UnusedDeclaration" })
+    @SuppressWarnings("UnusedDeclaration")
     public Collection<String> getDependencyIds() {
         return Collections.unmodifiableCollection(dependencies.keySet());
     }
 
     @Nonnull
     public CheckResultSet evaluate() {
-        final CheckResultSet result = checker.evaluate(getDependencies());
+        return evaluate(getDependencies());
+    }
 
-        result.setAppName(this.appName);
+    @Nullable
+    public CheckResult evaluate(@Nonnull final String id) {
+        final Dependency dependency = checkNotNull(dependencies.get(id), "Missing dependency '%s'", id);
+        return evaluate(Collections.singleton(dependency)).get(id);
+    }
+
+    @Nonnull
+    private CheckResultSet evaluate(Collection<Dependency> dependencies) {
+        final CheckResultSet result = checker.evaluate(dependencies);
+
+        result.setAppName(appName);
 
         return result;
     }
 
-    @Nullable
-    public CheckResult evaluate (@Nonnull final String id) {
-        final Dependency dependency = Preconditions.checkNotNull(dependencies.get(id), "Missing dependency '%s'", id);
-        final CheckResultSet resultSet = checker.evaluate(Collections.singleton(dependency));
-
-        resultSet.setAppName(this.appName);
-
-        return resultSet.get(id);
-    }
-
     /**
      * Launches a background pinger over the given dependency. The periodicity of the
-     *  check is controlled by the dependency manager object.
+     * check is controlled by the dependency manager object.
      *
      * @param dependency
      */
@@ -177,9 +210,9 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         final DependencyPinger pinger = newPingerFor(dependency);
 
         // Add a listener so that objects that want to listen for updates to ANY dependency
-        //  can do so. Note that this is done ONLY for background-pinger type dependency
-        //  checks, because it makes less sense to monitor checks that are evaluated
-        //  unpredictably.
+        // can do so. Note that this is done ONLY for background-pinger type dependency
+        // checks, because it makes less sense to monitor checks that are evaluated
+        // unpredictably.
         pinger.addListener(updateHandler);
 
         executor.scheduleWithFixedDelay(pinger, 0, pinger.getPingPeriod(), TimeUnit.MILLISECONDS);
@@ -191,8 +224,8 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         final DependencyPinger pinger;
         final long dependencyPingPeriod = dependency.getPingPeriod();
         if (dependencyPingPeriod <= 0 || dependencyPingPeriod == AbstractDependency.DEFAULT_PING_PERIOD) {
-            log.info("Creating pinger with ping period " + this.pingPeriod);
-            pinger = new DependencyPinger(threadPool, dependency, this.pingPeriod);
+            log.info("Creating pinger with ping period " + pingPeriod);
+            pinger = new DependencyPinger(threadPool, dependency, pingPeriod);
 
         } else {
             log.info("Creating pinger with ping period " + dependency.getPingPeriod());
@@ -266,37 +299,4 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         final BlockingQueue<Runnable> queue = threadPool.getQueue();
         return null == queue ? 0 : queue.size();
     }
-
-    private static final int DEFAULT_PING_PERIOD = 30 * 1000; // 30 seconds
-    private static final AtomicInteger DEFAULT_THREAD_POOL_COUNT = new AtomicInteger(1);
-    private static final AtomicInteger MANAGEMENT_THREAD_POOL_COUNT = new AtomicInteger(1);
-
-    @SuppressWarnings ({ "FieldCanBeLocal" })
-    @Nonnull
-    private final Logger log;
-    private long pingPeriod = DEFAULT_PING_PERIOD;
-    @Nullable
-    private final String appName;
-
-    /// Timer for managing scheduled executions
-    @Nonnull
-    private final ScheduledExecutorService executor;
-    /// Thread pool for running dependency checks
-    @Nonnull
-    private final ThreadPoolExecutor threadPool;
-
-    /// Container for checking all dependencies
-    @Nonnull
-    private final DependencyChecker checker;
-
-    /// Delegate for handling event propagation
-    @Nonnull
-    private final StatusUpdateDelegate updateHandler = new StatusUpdateDelegate();
-
-    /// Collection of all dependencies governed by this manager. The keys of this map are the unique
-    ///  String identifiers of each dependency. The values are the immutable objects representing the
-    ///  canonical view of each dependency. This map does <em>not</em> indicate the current status
-    ///  of dependencies, but rather the set of dependencies that are registered with the system.
-    @Nonnull
-    private ConcurrentMap<String, Dependency> dependencies = Maps.newConcurrentMap();
 }

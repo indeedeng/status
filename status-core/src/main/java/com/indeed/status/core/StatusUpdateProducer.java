@@ -4,9 +4,15 @@ package com.indeed.status.core;
  * @author matts
  */
 public interface StatusUpdateProducer {
-    // Remove all listeners
+    /**
+     * Remove all listeners
+     */
     void clear();
 
-    // Add a single listener for all events
+    /**
+     * Add a single listener for all events
+     *
+     * @param listener
+     */
     void addListener(final StatusUpdateListener listener);
 }

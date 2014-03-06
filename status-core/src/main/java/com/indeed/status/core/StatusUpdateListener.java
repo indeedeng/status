@@ -23,6 +23,7 @@ public interface StatusUpdateListener {
 
     /**
      * Triggered when a new dependency is added
+     *
      * @param dependency
      */
     void onAdded(@Nonnull final Dependency dependency);

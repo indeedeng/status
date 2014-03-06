@@ -14,7 +14,16 @@ import javax.annotation.Nullable;
 public class AbstractStatusUpdateListener implements StatusUpdateListener {
     private static final Logger log = Logger.getLogger(AbstractStatusUpdateListener.class);
 
-    public void onChanged (
+    /**
+     * Use provided functions if you would like to use this class. If you want to make your
+     * own onChanged method implement StatusUpdateListener instead
+     *
+     * @param source
+     * @param original
+     * @param updated
+     */
+    @Override
+    public final void onChanged (
             @Nonnull final Dependency source,
             @Nullable final CheckResult original,
             @Nonnull final CheckResult updated
