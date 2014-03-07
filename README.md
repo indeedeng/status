@@ -2,7 +2,7 @@
 Status is a framework for providing health check like statuses to a java web application.
 
 # Documentation
-http://indeed.github.io/status
+http://indeedeng.github.io/status
 
 ## Building documentation locally
 
