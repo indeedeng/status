@@ -2,15 +2,16 @@ package com.indeed.status.core;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.util.concurrent.ForwardingFuture;
 import com.indeed.status.core.CheckResult.Thrown;
 import com.indeed.status.core.DependencyChecker.DependencyExecutorSet;
-import com.indeed.status.core.test.WrappedFuture;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -321,7 +322,12 @@ public class TestHealthcheckFramework {
         public Future<CheckResult> submit (final Dependency dependency) {
             final Future<CheckResult> delegate = super.submit(dependency);
 
-            return new WrappedFuture<CheckResult>(delegate) {
+            return new ForwardingFuture<CheckResult>() {
+                @Override
+                protected Future<CheckResult> delegate() {
+                    return delegate;
+                }
+
                 @Override
                 public CheckResult get () throws InterruptedException, ExecutionException {
                     doInterrupt();
@@ -329,7 +335,7 @@ public class TestHealthcheckFramework {
                 }
 
                 @Override
-                public CheckResult get (final long l, final TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
+                public CheckResult get (final long l, @Nonnull final TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
                     doInterrupt();
                     return super.get(l, timeUnit);
                 }
