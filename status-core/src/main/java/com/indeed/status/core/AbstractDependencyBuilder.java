@@ -3,6 +3,7 @@ package com.indeed.status.core;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 
+import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 
 /**
@@ -13,7 +14,9 @@ public abstract class AbstractDependencyBuilder<T extends AbstractDependency, B 
     protected String id;
     @Nonnull
     protected String description;
+    @Nonnegative
     protected long timeout = PingableDependency.DEFAULT_TIMEOUT;
+    @Nonnegative
     protected long pingPeriod = PingableDependency.DEFAULT_PING_PERIOD;
     @Nonnull
     protected Urgency urgency;
@@ -24,27 +27,27 @@ public abstract class AbstractDependencyBuilder<T extends AbstractDependency, B 
 
     public abstract T build();
 
-    public B setId(final String id) {
+    public B setId(@Nonnull final String id) {
         this.id = id;
         return cast();
     }
 
-    public B setDescription(final String description) {
+    public B setDescription(@Nonnull final String description) {
         this.description = description;
         return cast();
     }
 
-    public B setTimeout(final long timeout) {
+    public B setTimeout(@Nonnegative final long timeout) {
         this.timeout = timeout;
         return cast();
     }
 
-    public B setPingPeriod(final long pingPeriod) {
+    public B setPingPeriod(@Nonnegative final long pingPeriod) {
         this.pingPeriod = pingPeriod;
         return cast();
     }
 
-    public B setUrgency(final Urgency urgency) {
+    public B setUrgency(@Nonnull final Urgency urgency) {
         this.urgency = urgency;
         return cast();
     }
