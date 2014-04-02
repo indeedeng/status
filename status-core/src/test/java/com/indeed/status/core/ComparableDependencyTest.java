@@ -12,12 +12,12 @@ import static org.junit.Assert.assertEquals;
  * author: cameron
  */
 public class ComparableDependencyTest {
-    private static final class CompTest extends ComparableDependency<Integer> {
+    private static final class CompDep extends ComparableDependency<Integer> {
 
         @Nonnull
         private final AtomicInteger val;
 
-        private CompTest(
+        private CompDep(
                 @Nonnull final AtomicInteger val,
                 int maxOK, int maxMinor, int maxMajor
         ) {
@@ -39,33 +39,33 @@ public class ComparableDependencyTest {
     @Test
     public void testSane() throws Exception {
         final AtomicInteger val = new AtomicInteger(0);
-        final CompTest compTest = new CompTest(val, 5, 10, 15);
+        final CompDep compDep = new CompDep(val, 5, 10, 15);
 
         val.set(0);
-        assertEquals("OK,0,null,null", compTest.call().getErrorMessage());
+        assertEquals("OK,0,null,null", compDep.call().getErrorMessage());
 
         val.set(5);
-        assertEquals("OK,5,null,null", compTest.call().getErrorMessage());
+        assertEquals("OK,5,null,null", compDep.call().getErrorMessage());
 
         val.set(6);
-        assertEquals("MINOR,6,5,null", compTest.call().getErrorMessage());
+        assertEquals("MINOR,6,5,null", compDep.call().getErrorMessage());
 
         val.set(10);
-        assertEquals("MINOR,10,5,null", compTest.call().getErrorMessage());
+        assertEquals("MINOR,10,5,null", compDep.call().getErrorMessage());
 
         val.set(11);
-        assertEquals("MAJOR,11,10,null", compTest.call().getErrorMessage());
+        assertEquals("MAJOR,11,10,null", compDep.call().getErrorMessage());
 
         val.set(15);
-        assertEquals("MAJOR,15,10,null", compTest.call().getErrorMessage());
+        assertEquals("MAJOR,15,10,null", compDep.call().getErrorMessage());
 
         val.set(16);
-        assertEquals("OUTAGE,16,15,null", compTest.call().getErrorMessage());
+        assertEquals("OUTAGE,16,15,null", compDep.call().getErrorMessage());
     }
 
     @Test
     public void testException() throws Exception {
-        final CompTest compTest = new CompTest(null, 5, 10, 15);
-        assertEquals("OUTAGE,null,null,java.lang.NullPointerException", compTest.call().getErrorMessage());
+        final CompDep compDep = new CompDep(null, 5, 10, 15);
+        assertEquals("OUTAGE,null,null,java.lang.NullPointerException", compDep.call().getErrorMessage());
     }
 }

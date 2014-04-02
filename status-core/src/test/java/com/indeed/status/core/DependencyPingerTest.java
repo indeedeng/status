@@ -4,7 +4,7 @@ import com.google.common.base.Supplier;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.indeed.status.core.test.TestDepControlled;
 import org.easymock.Capture;
-import org.easymock.classextension.EasyMock;
+import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;

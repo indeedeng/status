@@ -1,7 +1,7 @@
 package com.indeed.status.core;
 
 import com.indeed.status.core.test.TestDepControlled;
-import org.easymock.classextension.EasyMock;
+import org.easymock.EasyMock;
 import org.junit.Test;
 
 /**
