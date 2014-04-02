@@ -1,6 +1,6 @@
 package com.indeed.status.core;
 
-import com.indeed.status.core.test.TestDepControlled;
+import com.indeed.status.core.test.ControlledDependency;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
@@ -10,15 +10,15 @@ import org.junit.Test;
 public class AbstractStatusUpdateListenerTest {
     @Test
     public void testLevel() throws Exception {
-        final TestDepControlled dep = TestDepControlled.build();
+        final ControlledDependency dep = ControlledDependency.build();
         final AbstractStatusUpdateListener listener = EasyMock.createMock(AbstractStatusUpdateListener.class);
         final CheckResult OK = CheckResult.newBuilder(dep, CheckStatus.OK, "ok").build();
         final CheckResult MINOR = CheckResult.newBuilder(dep, CheckStatus.MINOR, "minor out")
-                .setThrowable(TestDepControlled.EXCEPTION).build();
+                .setThrowable(ControlledDependency.EXCEPTION).build();
         final CheckResult MAJOR = CheckResult.newBuilder(dep, CheckStatus.MAJOR, "major out")
-                .setThrowable(TestDepControlled.EXCEPTION).build();
+                .setThrowable(ControlledDependency.EXCEPTION).build();
         final CheckResult OUTAGE = CheckResult.newBuilder(dep, CheckStatus.OUTAGE, "outage")
-                .setThrowable(TestDepControlled.EXCEPTION).build();
+                .setThrowable(ControlledDependency.EXCEPTION).build();
 
         EasyMock.reset(listener);
 

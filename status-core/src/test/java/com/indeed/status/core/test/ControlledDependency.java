@@ -10,29 +10,29 @@ import javax.annotation.Nonnull;
 /**
  * author: cameron
  */
-public class TestDepControlled extends PingableDependency {
+public class ControlledDependency extends PingableDependency {
     public static final RuntimeException EXCEPTION = new RuntimeException("BAD");
     @Nonnull
     private final Supplier<Boolean> toggle;
     private boolean inError = true;
     private int times;
 
-    private TestDepControlled(@Nonnull Supplier<Boolean> toggle) {
+    private ControlledDependency(@Nonnull Supplier<Boolean> toggle) {
         super("controlled-id", "controlled-description", Urgency.REQUIRED);
         this.toggle = toggle;
     }
 
-    public static final class TestDepControlledBuilder extends PingableDependencyBuilder<TestDepControlled, TestDepControlledBuilder> {
+    public static final class TestDepControlledBuilder extends PingableDependencyBuilder<ControlledDependency, TestDepControlledBuilder> {
         private TestDepControlledBuilder() {
         }
 
         @Override
-        public TestDepControlled build() {
-            return new TestDepControlled(toggle);
+        public ControlledDependency build() {
+            return new ControlledDependency(toggle);
         }
     }
 
-    public static TestDepControlled build() {
+    public static ControlledDependency build() {
         return new TestDepControlledBuilder().build();
     }
 

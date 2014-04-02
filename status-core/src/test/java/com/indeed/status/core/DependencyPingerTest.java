@@ -2,7 +2,7 @@ package com.indeed.status.core;
 
 import com.google.common.base.Supplier;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.indeed.status.core.test.TestDepControlled;
+import com.indeed.status.core.test.ControlledDependency;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -21,7 +21,7 @@ public class DependencyPingerTest {
     @Test
     public void testListener() throws Exception {
         final StatusUpdateListener listener = EasyMock.createMock(StatusUpdateListener.class);
-        final TestDepControlled dependency = TestDepControlled.build();
+        final ControlledDependency dependency = ControlledDependency.build();
         dependency.setInError(true);
         final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency);
         pinger.addListener(listener);
@@ -44,7 +44,7 @@ public class DependencyPingerTest {
         pinger.run();
         assertEquals(CheckStatus.OK, original.getValue().getStatus());
         assertEquals(CheckStatus.MINOR, updated.getValue().getStatus());
-        assertEquals(TestDepControlled.EXCEPTION, updated.getValue().getThrowable());
+        assertEquals(ControlledDependency.EXCEPTION, updated.getValue().getThrowable());
         original.setValue(null);
         updated.setValue(null);
 
@@ -52,7 +52,7 @@ public class DependencyPingerTest {
         pinger.run(); // should change
         assertEquals(CheckStatus.MINOR, original.getValue().getStatus());
         assertEquals(CheckStatus.OUTAGE, updated.getValue().getStatus());
-        assertEquals(TestDepControlled.EXCEPTION, updated.getValue().getThrowable());
+        assertEquals(ControlledDependency.EXCEPTION, updated.getValue().getThrowable());
         original.setValue(null);
         updated.setValue(null);
 
@@ -61,14 +61,14 @@ public class DependencyPingerTest {
 
     @Test
     public void testGradual() throws Exception {
-        final TestDepControlled dependency = TestDepControlled.build();
+        final ControlledDependency dependency = ControlledDependency.build();
         dependency.setInError(true);
         final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency);
 
         // with no successes
         // expect that first time, call will run something
         assertEquals(CheckStatus.OUTAGE, pinger.call().getStatus());
-        assertSame(TestDepControlled.EXCEPTION, pinger.call().getThrowable());
+        assertSame(ControlledDependency.EXCEPTION, pinger.call().getThrowable());
         assertEquals(1, dependency.getTimes());
 
         // run once
@@ -87,26 +87,26 @@ public class DependencyPingerTest {
         // run again
         pinger.run();
         assertEquals(CheckStatus.MINOR, pinger.call().getStatus());
-        assertSame(TestDepControlled.EXCEPTION, pinger.call().getThrowable());
+        assertSame(ControlledDependency.EXCEPTION, pinger.call().getThrowable());
         assertEquals(3, dependency.getTimes());
 
         // run again
         pinger.run();
         assertEquals(CheckStatus.MINOR, pinger.call().getStatus());
-        assertSame(TestDepControlled.EXCEPTION, pinger.call().getThrowable());
+        assertSame(ControlledDependency.EXCEPTION, pinger.call().getThrowable());
         assertEquals(4, dependency.getTimes());
 
         // run again 3x failure turns into outage!
         pinger.run();
         assertEquals(CheckStatus.OUTAGE, pinger.call().getStatus());
-        assertSame(TestDepControlled.EXCEPTION, pinger.call().getThrowable());
+        assertSame(ControlledDependency.EXCEPTION, pinger.call().getThrowable());
         assertEquals(5, dependency.getTimes());
     }
 
     @Test
     public void testWithToggle() throws Exception {
         final AtomicBoolean toggle = new AtomicBoolean(true);
-        final TestDepControlled dependency = TestDepControlled.builder().setToggle(new Supplier<Boolean>() {
+        final ControlledDependency dependency = ControlledDependency.builder().setToggle(new Supplier<Boolean>() {
             @Override
             public Boolean get() {
                 return toggle.get();
