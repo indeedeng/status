@@ -18,10 +18,23 @@ import java.util.SortedSet;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  *
  */
 public class CheckResultSet {
+    private final long startTime;
+    @Nullable
+    private String appName = null;
+
+    // The overall health of the system represented by this result set. Assume that all systems
+    // start in a healthy state.
+    private final AtomicReference<CheckStatus> systemStatus = new AtomicReference<CheckStatus>(CheckStatus.OK);
+    private final ConcurrentMap<String, Tag> executingChecks = Maps.newConcurrentMap();
+    private final ConcurrentMap<String, CheckResult> completedChecks = Maps.newConcurrentMap();
+
+    private static final Logger log = Logger.getLogger(CheckResultSet.class);
 
     public CheckResultSet() {
         this.startTime = System.currentTimeMillis();
@@ -33,10 +46,11 @@ public class CheckResultSet {
     }
 
     @Nullable
-    public CheckResult get (@Nonnull final String id ) {
+    public CheckResult get(@Nonnull final String id ) {
         return completedChecks.get(id);
     }
 
+    @Nonnull
     public Collection<CheckResult> getCompleted() {
         return completedChecks.values();
     }
@@ -47,18 +61,18 @@ public class CheckResultSet {
     }
 
     @Nonnull
-    public SystemReport summarize ( final boolean detailed ) {
+    public SystemReport summarize(final boolean detailed) {
         return detailed ? new DetailedSystemReport() : new SystemReport();
     }
 
-    protected void handleInit (@Nonnull final Dependency dependency) {
+    protected void handleInit(@Nonnull final Dependency dependency) {
         final String id = dependency.getId();
 
-        Preconditions.checkState(!executingChecks.containsKey(id), "Found another task executing with the same ID: '%s'.", id);
-        Preconditions.checkState(!completedChecks.containsKey(id), "Found another task completed with the same ID: '%s'.", id);
+        checkState(!executingChecks.containsKey(id), "Found another task executing with the same ID: '%s'.", id);
+        checkState(!completedChecks.containsKey(id), "Found another task completed with the same ID: '%s'.", id);
     }
 
-    protected void handleExecute (@Nonnull final Dependency dependency) {
+    protected void handleExecute(@Nonnull final Dependency dependency) {
         final String id = dependency.getId();
 
         // Create a new tag with the current system time.
@@ -66,10 +80,10 @@ public class CheckResultSet {
 
         @Nullable
         final Tag oldValue = executingChecks.putIfAbsent(id, tag);
-        Preconditions.checkState(null == oldValue, "Found another tag executing with the same ID: '%s'.", oldValue);
+        checkState(null == oldValue, "Found another tag executing with the same ID: '%s'.", oldValue);
     }
 
-    protected void handleComplete (@Nonnull final Dependency dependency, @Nonnull final CheckResult result) {
+    protected void handleComplete(@Nonnull final Dependency dependency, @Nonnull final CheckResult result) {
         final String id = dependency.getId();
 
         try {
@@ -81,7 +95,7 @@ public class CheckResultSet {
             final Tag tag = executingChecks.get(id);
 
             if ( null == tag ) {
-                Preconditions.checkState(
+                checkState(
                         result.getStatus() != CheckStatus.OK,
                         "Expected a failure of some sort from a check that isn't listed in the executing checks.");
 
@@ -106,7 +120,7 @@ public class CheckResultSet {
     /**
      * Do not throw exceptions here
      */
-    protected void handleFinalize (@Nonnull final Dependency dependency, @Nonnull final CheckResult result ) {
+    protected void handleFinalize(@Nonnull final Dependency dependency, @Nonnull final CheckResult result ) {
         // everything after the result is finalized depends on the completed list containing all references
         final CheckResult recordedResult = completedChecks.putIfAbsent(dependency.getId(), result);
         if (null == recordedResult) {
@@ -158,11 +172,28 @@ public class CheckResultSet {
         public final long startTime;
     }
 
+    private static final Comparator<CheckResult> ID_COMPARATOR = new Comparator<CheckResult>() {
+        @Override
+        public int compare (final CheckResult checkResult, final CheckResult checkResult1) {
+            return checkResult.getId().compareTo(checkResult1.getId());
+        }
+    };
+
     @JsonSerialize (include = Inclusion.NON_NULL)
     public class SystemReport {
+        @Nonnull
+        public final String hostname;
+        public final long duration;
+        @Nonnull
+        public final CheckStatus condition;
+        // Status code used by the dynect DNS manager to determine whether to fail over the entire DC. Play nicely.
+        // Must include the string "OK" to pass dynect.
+        @Nonnull
+        public final String dcStatus;
+
         public SystemReport() {
             duration = System.currentTimeMillis() - startTime;
-            this.hostname = NetUtils.determineHostName("unknown");
+            hostname = NetUtils.determineHostName("unknown");
 
             condition = systemStatus.get();
             switch(condition) {
@@ -179,69 +210,43 @@ public class CheckResultSet {
                     this.dcStatus = "OK";
             }
         }
-
-        public final String hostname;
-        public final long duration;
-        @Nonnull
-        public final CheckStatus condition;
-        /// Status code used by the dynect DNS manager to determine whether to fail over the entire DC. Play nicely.
-        ///  Must include the string "OK" to pass dynect.
-        @Nonnull
-        public final String dcStatus;
     }
 
-    private static final Comparator<CheckResult> ID_COMPARATOR = new Comparator<CheckResult>() {
-        @Override
-        public int compare (final CheckResult checkResult, final CheckResult checkResult1) {
-            return checkResult.getId().compareTo(checkResult1.getId());
-        }
-    };
-
+    @JsonSerialize (include = Inclusion.ALWAYS)
     public class DetailedSystemReport extends SystemReport {
+        @Nullable
+        public final String appname;
+        @Nullable
+        public final String catalinaBase;
+        @Nonnull
+        public final String leastRecentlyExecutedDate;
+        public final long leastRecentlyExecutedTimestamp;
+        @Nonnull
+        public final SortedMap<CheckStatus,SortedSet<CheckResult>> results;
+
         public DetailedSystemReport() {
             appname = CheckResultSet.this.appName;
             catalinaBase = System.getProperty("catalina.base");
             results = Maps.newTreeMap();
 
             long earliestTimestamp = System.currentTimeMillis();
-            for ( final CheckResult result : completedChecks.values() ) {
+            for (final CheckResult result : completedChecks.values()) {
                 SortedSet<CheckResult> set;
 
-                if ( null == (set = results.get(result.getStatus()))) {
+                if (null == (set = results.get(result.getStatus()))) {
                     results.put(result.getStatus(), set = Sets.newTreeSet(ID_COMPARATOR));
                 }
 
                 set.add(result);
 
                 final long timestamp = result.getTimestamp();
-                if ( timestamp > 0L && timestamp < earliestTimestamp ) {
+                if (timestamp > 0L && timestamp < earliestTimestamp) {
                     earliestTimestamp = timestamp;
                 }
             }
 
-            this.leastRecentlyExecutedTimestamp = earliestTimestamp;
-            this.leastRecentlyExecutedDate = CheckResult.DATE_FORMAT.get().format(new Date(leastRecentlyExecutedTimestamp));
+            leastRecentlyExecutedTimestamp = earliestTimestamp;
+            leastRecentlyExecutedDate = CheckResult.DATE_FORMAT.get().format(new Date(leastRecentlyExecutedTimestamp));
         }
-
-        @Nullable
-        public final String appname;
-        @Nullable
-        public final String catalinaBase;
-        public final String leastRecentlyExecutedDate;
-        public final long leastRecentlyExecutedTimestamp;
-        public final SortedMap<CheckStatus,SortedSet<CheckResult>> results;
     }
-
-    private final long startTime;
-    @Nullable
-    private String appName = null;
-
-    /// The overall health of the system represented by this result set. Assume that all systems
-    ///  start in a healthy state.
-    private final AtomicReference<CheckStatus> systemStatus = new AtomicReference<CheckStatus>(CheckStatus.OK);
-
-    private final ConcurrentMap<String, Tag> executingChecks = Maps.newConcurrentMap();
-    private final ConcurrentMap<String, CheckResult> completedChecks = Maps.newConcurrentMap();
-
-    private static final Logger log = Logger.getLogger(CheckResultSet.class);
 }

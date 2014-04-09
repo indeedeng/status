@@ -2,6 +2,7 @@ package com.indeed.status.core;
 
 import org.apache.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -11,19 +12,19 @@ public abstract class ComparableDependency<T extends Comparable<T>> extends Abst
     @SuppressWarnings ("UnusedDeclaration")
     private static final Logger log = Logger.getLogger(ComparableDependency.class);
 
-    private final T maxOK;
+    private final @Nonnull T maxOK;
 
     private final @Nullable T maxMinor;
 
     private final @Nullable T maxMajor;
 
     public ComparableDependency(
-            String id,
-            String description,
+            @Nonnull String id,
+            @Nonnull String description,
             long timeout,
             long pingPeriod,
-            Urgency urgency,
-            T maxOK,
+            @Nonnull Urgency urgency,
+            @Nonnull T maxOK,
             @Nullable T maxMinor,
             @Nullable T maxMajor
     ) {

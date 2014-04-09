@@ -27,6 +27,47 @@ import java.util.Set;
 @SuppressWarnings({"UnusedDeclaration"}) // Suppress unused declarations since most are there for serialization
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class CheckResult {
+    /// The final status resulting from the dependency evaluation
+    @Nonnull
+    private final CheckStatus status;
+    /// More detailed description of the dependency, for use by operators reading the report.
+    @Nonnull
+    private final String description;
+    /// More detailed status message describing the final result of the dependency check
+    @Nonnull
+    private final String errorMessage;
+    /// The time this result was generated
+    @Nullable
+    private final Date timestamp;
+    /// The duration of the check
+    @Nonnegative
+    private final long duration;
+    /// The last known time this result was OK'd.
+    @Nonnegative
+    private final long lastKnownGoodTimestamp;
+    /// The periodicity of this result
+    @Nonnegative
+    private final long period;
+    /// The id of the dependency that generated this result;
+    @Nonnull
+    private final String id;
+    /// The urgency of this dependency
+    @Nonnull
+    private final Urgency urgency;
+    /// The documentation URL giving additional info about the result
+    @Nonnull
+    private final String documentationUrl;
+    /// The exception thrown during execution, if any.
+    @JsonIgnore
+    private final Throwable throwable;
+
+    public static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
+        @Override
+        protected DateFormat initialValue() {
+            return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        }
+    };
+
     @Deprecated // Use CheckResult.newBuilder instead
     public CheckResult(
             @Nonnull final Dependency dependency,
@@ -202,47 +243,12 @@ public class CheckResult {
         private volatile List<StackTraceElement> stack;
     }
 
-    /// The final status resulting from the dependency evaluation
     @Nonnull
-    private final CheckStatus status;
-    /// More detailed description of the dependency, for use by operators reading the report.
-    @Nonnull
-    private final String description;
-    /// More detailed status message describing the final result of the dependency check
-    @Nonnull
-    private final String errorMessage;
-    /// The time this result was generated
-    @Nullable
-    private final Date timestamp;
-    /// The duration of the check
-    private final long duration;
-    /// The last known time this result was OK'd.
-    private final long lastKnownGoodTimestamp;
-    /// The periodicity of this result
-    private final long period;
-    /// The id of the dependency that generated this result;
-    @Nonnull
-    private final String id;
-    /// The urgency of this dependency
-    @Nonnull
-    private final Urgency urgency;
-    /// The documentation URL giving additional info about the result
-    @Nonnull
-    private final String documentationUrl;
-
-    /// The exception thrown during execution, if any.
-    @JsonIgnore
-    private final Throwable throwable;
-
-    public static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
-        @Override
-        protected DateFormat initialValue() {
-            return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-        }
-    };
-
-    @Nonnull
-    public static Builder newBuilder(final Dependency dependency, final CheckStatus status, final String errorMessage) {
+    public static Builder newBuilder(
+            @Nonnull final Dependency dependency,
+            @Nonnull final CheckStatus status,
+            @Nonnull final String errorMessage
+    ) {
         return new Builder(dependency, status, errorMessage);
     }
 

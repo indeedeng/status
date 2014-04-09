@@ -2,6 +2,7 @@ package com.indeed.status.core;
 
 import com.google.common.base.Supplier;
 
+import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 
 /**
@@ -13,27 +14,27 @@ public abstract class PingableDependencyBuilder<T extends PingableDependency, B 
     protected PingableDependencyBuilder() {}
 
     @Override
-    public B setId(String id) {
+    public B setId(@Nonnull String id) {
         return super.setId(id);
     }
 
     @Override
-    public B setDescription(String description) {
+    public B setDescription(@Nonnull String description) {
         return super.setDescription(description);
     }
 
     @Override
-    public B setTimeout(long timeout) {
+    public B setTimeout(@Nonnegative long timeout) {
         return super.setTimeout(timeout);
     }
 
     @Override
-    public B setPingPeriod(long pingPeriod) {
+    public B setPingPeriod(@Nonnegative long pingPeriod) {
         return super.setPingPeriod(pingPeriod);
     }
 
     @Override
-    public B setUrgency(Urgency urgency) {
+    public B setUrgency(@Nonnull Urgency urgency) {
         return super.setUrgency(urgency);
     }
 
