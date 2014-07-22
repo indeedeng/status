@@ -1,5 +1,6 @@
 package com.indeed.status.core.test;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Supplier;
 import com.indeed.status.core.PingableDependency;
 import com.indeed.status.core.PingableDependencyBuilder;
@@ -17,8 +18,8 @@ public class ControlledDependency extends PingableDependency {
     private boolean inError = true;
     private int times;
 
-    private ControlledDependency(@Nonnull Supplier<Boolean> toggle) {
-        super("controlled-id", "controlled-description", Urgency.REQUIRED);
+    private ControlledDependency(@Nonnull Supplier<Boolean> toggle, @Nonnull Urgency urgency) {
+        super("controlled-id", "controlled-description", urgency);
         this.toggle = toggle;
     }
 
@@ -28,7 +29,7 @@ public class ControlledDependency extends PingableDependency {
 
         @Override
         public ControlledDependency build() {
-            return new ControlledDependency(toggle);
+            return new ControlledDependency(toggle, Objects.firstNonNull(urgency, Urgency.REQUIRED));
         }
     }
 

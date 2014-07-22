@@ -139,9 +139,9 @@ public class TestDependencyReport extends ServletTestSuite {
         final String json = out.toString();
 
         final List<String> expectedJsonFingerprints = ImmutableList.of(
-                        "\"status\" : \"OUTAGE\",",
-                        "\"exception\" : \"IOException\",",
-                        "\"exception\" : \"NullPointerException\",");
+                        "\"status\" : \"OUTAGE\"",
+                        "\"exception\" : \"IOException\"",
+                        "\"exception\" : \"NullPointerException\"");
         for (final String fingerprint:  expectedJsonFingerprints) {
             Assert.assertTrue(
                     "Expected to find fingerprint '" + fingerprint + "' in json: " + json,

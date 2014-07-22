@@ -64,6 +64,24 @@ public enum Urgency {
         }
     },
 
+    /**
+     *  The NONE urgency value represents a functional dependency that could be flappy.
+     *  It is for a dependency that you would like to monitor, but really do not want it
+     *  to change the overall system status
+     */
+    NONE {
+        @Override
+        public CheckStatus downgradeWith (
+                @Nonnull CheckStatus system, @Nonnull CheckStatus status
+        ) {
+            return system;
+        }
+
+        public String toString () {
+            return "None: Failure of this dependency would result in nothing that we are that sure about";
+        }
+    },
+
     UNKNOWN {
         @Override
         public CheckStatus downgradeWith (@Nonnull CheckStatus system, @Nonnull CheckStatus status) {

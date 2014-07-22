@@ -60,6 +60,48 @@ public class DependencyPingerTest {
     }
 
     @Test
+    public void testWithUrgencyNone() throws Exception {
+        final StatusUpdateListener listener = EasyMock.createMock(StatusUpdateListener.class);
+        final ControlledDependency dependency = ControlledDependency.builder().setUrgency(Urgency.NONE).build();
+        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency);
+        pinger.addListener(listener);
+
+        final Capture<CheckResult> original = new Capture<CheckResult>();
+        final Capture<CheckResult> updated = new Capture<CheckResult>();
+        EasyMock.reset(listener);
+
+        listener.onChanged(EasyMock.same(pinger), EasyMock.<CheckResult>isNull(), EasyMock.capture(updated));
+        listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
+        listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
+
+        EasyMock.replay(listener);
+
+        dependency.setInError(false);
+        pinger.run();
+        assertEquals(CheckStatus.OK, pinger.call().getStatus());
+        assertEquals(CheckStatus.OK, updated.getValue().getStatus());
+
+        dependency.setInError(true);
+        pinger.run();
+        assertEquals(CheckStatus.MINOR, pinger.call().getStatus());
+        assertEquals(CheckStatus.OK, original.getValue().getStatus());
+        assertEquals(CheckStatus.MINOR, updated.getValue().getStatus());
+
+        dependency.setInError(true);
+        pinger.run();
+        assertEquals(CheckStatus.MINOR, pinger.call().getStatus());
+        // no call to listen
+
+        dependency.setInError(true);
+        pinger.run();
+        assertEquals(CheckStatus.OUTAGE, pinger.call().getStatus());
+        assertEquals(CheckStatus.MINOR, original.getValue().getStatus());
+        assertEquals(CheckStatus.OUTAGE, updated.getValue().getStatus());
+
+        EasyMock.verify(listener);
+    }
+
+    @Test
     public void testGradual() throws Exception {
         final ControlledDependency dependency = ControlledDependency.build();
         dependency.setInError(true);
