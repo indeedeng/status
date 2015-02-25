@@ -1,6 +1,6 @@
-# indeedeng/status
+# Status
 
-Status is a project to help report the current status of dependencies that an application depends on, as well as 
+Status is a project to help report the current state of external systems that an application depends on, as well as 
 the current health of any internal aspects of the application.
 
 ## Dependency Management
