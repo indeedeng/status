@@ -12,7 +12,7 @@ The amount it affects the service is dependent upon the severity specified in th
 REQUIRED dependencies will cause the application to report an OUTAGE.
 STRONG will report a MAJOR status, WEAK will report a MINOR, and NONE will not change the state.
 
-```
+```java
 import com.indeed.status.core.PingableDependency
 import com.indeed.status.core.Urgency;
  
@@ -32,7 +32,7 @@ public class SimpleDependency extends PingableDependency {
 
 By default, the status-web package provides an `AbstractDaemonCheckReportServlet` that can be extended to pass the dependency manager appropriately.
 
-```
+```java
 import com.indeed.status.web.AbstractDaemonCheckReportServlet;
  
 public class StatusServlet extends AbstractDaemonCheckReportServlet {
@@ -51,7 +51,7 @@ public class StatusServlet extends AbstractDaemonCheckReportServlet {
 
 Once extended, the servlet can be mounted on any path and accessed in the browser.
 
-```
+```java
 final ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);        
 handler.setContextPath("/");
 
@@ -71,21 +71,21 @@ server.start();
 The servlet approach is great for developers working with web applications, however, some tools do not provide a web interface.
 For these tools, you can interact with the dependency manager directly to evaluate the status of all dependencies.
 
-```
+```java
 final CheckResultSet status = dependencyManager.evaluate();
 ```
 
 By calling the getSystemStatus method, you can get the overall status of the system.
 This is useful for bottle-necking services that may be in a broken or degraded state.
 
-```
+```java
 status.getSystemStatus();
 ```
 
 Another option available to developers is the ability to check the status of a single dependency.
 This will allow applications to gracefully degrade by circumventing problematic code paths.
 
-```
+```java
 status.get("simple").getStatus();
 ```
 
@@ -101,7 +101,7 @@ Failing healthchecks make it easy to determine good starting points when it come
 When a healthcheck is failing, it can fail for a variety of reasons with a different status (see the section on Dependency Management).
 Below is a sample of what a failing healthcheck might look like through the reporting system.
 
-```
+```json
 {
     "hostname": "pitz.local",
     "duration": 19,
@@ -160,7 +160,7 @@ Below is a sample of what a failing healthcheck might look like through the repo
 When all the dependencies are passing, they will report a healthy status of OK.
 The JSON dump below is a sample of what a passing healthcheck looks like.
 
-```
+```json
 {
     "hostname": "pitz.local",
     "duration": 186,
