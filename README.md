@@ -17,7 +17,7 @@ import com.indeed.status.core.PingableDependency
 import com.indeed.status.core.Urgency;
  
 public class SimpleDependency extends PingableDependency {
-    private SimpleDependency(String id, String description, long timeout, long pingPeriod, Urgency urgency) {
+    private SimpleDependency() {
         super("simple", "my description", DEFAULT_TIMEOUT, DEFAULT_PING_PERIOD, Urgency.REQUIRED);
     }
  
