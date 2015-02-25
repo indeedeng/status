@@ -1,110 +1,7 @@
 # indeedeng/status
 
-A project to help report status of dependencies that this app depends on, as well as 
-the current health of any internal aspects of this app.
-
-## Healthchecks
-
-Healthchecks are an easy way to see the status of the application.
-They can help shed light into services that are currently unavailable or unhealthy.
-
-### Failing Healthchecks
-
-```
-{
-    "hostname": "pitz.local",
-    "duration": 19,
-    "condition": "OUTAGE",
-    "dcStatus": "FAILOVER",
-    "appname": "crm.api",
-    "catalinaBase": "/var/folders/7t/vsd_gsrn6y99fpl2ydmlszyw0000gn/T/tomcat.5084685826050345209.8000",
-    "leastRecentlyExecutedDate": "2015-02-24T22:48:37.782-0600",
-    "leastRecentlyExecutedTimestamp": 1424839717782,
-    "results": {
-        "OUTAGE": [{
-            "status": "OUTAGE",
-            "description": "mysql",
-            "errorMessage": "Exception thrown during ping",
-            "timestamp": 1424839717782,
-            "duration": 18,
-            "lastKnownGoodTimestamp": 0,
-            "period": 0,
-            "id": "mysql",
-            "urgency": "Required: Failure of this dependency would result in complete system outage",
-            "documentationUrl": "http://www.mysql.com/",
-            "thrown": {
-                "exception": "RuntimeException",
-                "message": "Failed to communicate with the following tables: user_authorities, oauth_code, oauth_approvals, oauth_client_token, oauth_refresh_token, oauth_client_details, oauth_access_token",
-                "stack": [
-                    "io.github.jpitz.example.MySQLDependency.ping(MySQLDependency.java:68)",
-                    "com.indeed.status.core.PingableDependency.call(PingableDependency.java:59)",
-                    "com.indeed.status.core.PingableDependency.call(PingableDependency.java:15)",
-                    "java.util.concurrent.FutureTask.run(FutureTask.java:262)",
-                    "java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)",
-                    "java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)",
-                    "java.lang.Thread.run(Thread.java:745)"
-                ]
-            },
-            "date": "2015-02-24T22:48:37.782-0600"
-        }],
-        "OK": [{
-            "status": "OK",
-            "description": "mongo",
-            "errorMessage": "ok",
-            "timestamp": 1424839717782,
-            "duration": 0,
-            "lastKnownGoodTimestamp": 0,
-            "period": 0,
-            "id": "mongo",
-            "urgency": "Required: Failure of this dependency would result in complete system outage",
-            "documentationUrl": "http://www.mongodb.org/",
-            "date": "2015-02-24T22:48:37.782-0600"
-        }]
-    }
-}
-```
-
-### Passing Healthchecks
-
-```
-{
-    "hostname": "pitz.local",
-    "duration": 186,
-    "condition": "OK",
-    "dcStatus": "OK",
-    "appname": "crm.api",
-    "catalinaBase": "/var/folders/7t/vsd_gsrn6y99fpl2ydmlszyw0000gn/T/tomcat.5084685826050345209.8000",
-    "leastRecentlyExecutedDate": "2015-02-24T22:56:16.568-0600",
-    "leastRecentlyExecutedTimestamp": 1424840176568,
-    "results": {
-        "OK": [{
-            "status": "OK",
-            "description": "mongo",
-            "errorMessage": "ok",
-            "timestamp": 1424840176568,
-            "duration": 1,
-            "lastKnownGoodTimestamp": 0,
-            "period": 0,
-            "id": "mongo",
-            "urgency": "Required: Failure of this dependency would result in complete system outage",
-            "documentationUrl": "http://www.mongodb.org/",
-            "date": "2015-02-24T22:56:16.568-0600"
-        }, {
-            "status": "OK",
-            "description": "mysql",
-            "errorMessage": "ok",
-            "timestamp": 1424840176569,
-            "duration": 185,
-            "lastKnownGoodTimestamp": 0,
-            "period": 0,
-            "id": "mysql",
-            "urgency": "Required: Failure of this dependency would result in complete system outage",
-            "documentationUrl": "http://www.mysql.com/",
-            "date": "2015-02-24T22:56:16.569-0600"
-        }]
-    }
-}
-```
+Status is a project to help report the current status of dependencies that an application depends on, as well as 
+the current health of any internal aspects of the application.
 
 ## Dependency Management
 
@@ -190,6 +87,117 @@ This will allow applications to gracefully degrade by circumventing problematic 
 
 ```
 status.get("simple").getStatus();
+```
+
+## Healthchecks
+
+Healthchecks are pages within applications that take all the dependencies and dump their statuses in a JSON format
+They can help shed light into services that are currently unavailable or unhealthy.
+This feature is only available through the status-web package, but sim
+
+### Failing Healthchecks
+
+Failing healthchecks make it easy to determine good starting points when it comes to debugging problems in development, staging, and production environments.
+When a healthcheck is failing, it can fail for a variety of reasons with a different status (see the section on Dependency Management).
+Below is a sample of what a failing healthcheck might look like through the reporting system.
+
+```
+{
+    "hostname": "pitz.local",
+    "duration": 19,
+    "condition": "OUTAGE",
+    "dcStatus": "FAILOVER",
+    "appname": "crm.api",
+    "catalinaBase": "/var/folders/7t/vsd_gsrn6y99fpl2ydmlszyw0000gn/T/tomcat.5084685826050345209.8000",
+    "leastRecentlyExecutedDate": "2015-02-24T22:48:37.782-0600",
+    "leastRecentlyExecutedTimestamp": 1424839717782,
+    "results": {
+        "OUTAGE": [{
+            "status": "OUTAGE",
+            "description": "mysql",
+            "errorMessage": "Exception thrown during ping",
+            "timestamp": 1424839717782,
+            "duration": 18,
+            "lastKnownGoodTimestamp": 0,
+            "period": 0,
+            "id": "mysql",
+            "urgency": "Required: Failure of this dependency would result in complete system outage",
+            "documentationUrl": "http://www.mysql.com/",
+            "thrown": {
+                "exception": "RuntimeException",
+                "message": "Failed to communicate with the following tables: user_authorities, oauth_code, oauth_approvals, oauth_client_token, oauth_refresh_token, oauth_client_details, oauth_access_token",
+                "stack": [
+                    "io.github.jpitz.example.MySQLDependency.ping(MySQLDependency.java:68)",
+                    "com.indeed.status.core.PingableDependency.call(PingableDependency.java:59)",
+                    "com.indeed.status.core.PingableDependency.call(PingableDependency.java:15)",
+                    "java.util.concurrent.FutureTask.run(FutureTask.java:262)",
+                    "java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)",
+                    "java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)",
+                    "java.lang.Thread.run(Thread.java:745)"
+                ]
+            },
+            "date": "2015-02-24T22:48:37.782-0600"
+        }],
+        "OK": [{
+            "status": "OK",
+            "description": "mongo",
+            "errorMessage": "ok",
+            "timestamp": 1424839717782,
+            "duration": 0,
+            "lastKnownGoodTimestamp": 0,
+            "period": 0,
+            "id": "mongo",
+            "urgency": "Required: Failure of this dependency would result in complete system outage",
+            "documentationUrl": "http://www.mongodb.org/",
+            "date": "2015-02-24T22:48:37.782-0600"
+        }]
+    }
+}
+```
+
+### Passing Healthchecks
+
+When all the dependencies are passing, they will report a healthy status of OK.
+The JSON dump below is a sample of what a passing healthcheck looks like.
+
+```
+{
+    "hostname": "pitz.local",
+    "duration": 186,
+    "condition": "OK",
+    "dcStatus": "OK",
+    "appname": "crm.api",
+    "catalinaBase": "/var/folders/7t/vsd_gsrn6y99fpl2ydmlszyw0000gn/T/tomcat.5084685826050345209.8000",
+    "leastRecentlyExecutedDate": "2015-02-24T22:56:16.568-0600",
+    "leastRecentlyExecutedTimestamp": 1424840176568,
+    "results": {
+        "OK": [{
+            "status": "OK",
+            "description": "mongo",
+            "errorMessage": "ok",
+            "timestamp": 1424840176568,
+            "duration": 1,
+            "lastKnownGoodTimestamp": 0,
+            "period": 0,
+            "id": "mongo",
+            "urgency": "Required: Failure of this dependency would result in complete system outage",
+            "documentationUrl": "http://www.mongodb.org/",
+            "date": "2015-02-24T22:56:16.568-0600"
+        }, {
+            "status": "OK",
+            "description": "mysql",
+            "errorMessage": "ok",
+            "timestamp": 1424840176569,
+            "duration": 185,
+            "lastKnownGoodTimestamp": 0,
+            "period": 0,
+            "id": "mysql",
+            "urgency": "Required: Failure of this dependency would result in complete system outage",
+            "documentationUrl": "http://www.mysql.com/",
+            "date": "2015-02-24T22:56:16.569-0600"
+        }]
+    }
+}
 ```
 
 ## Components
