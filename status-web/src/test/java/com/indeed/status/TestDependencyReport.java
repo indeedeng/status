@@ -8,9 +8,9 @@ import com.indeed.status.core.Dependency;
 import com.indeed.status.core.PingableDependency;
 import com.indeed.status.core.Urgency.BuiltIns;
 import com.indeed.status.web.AbstractResponseWriter;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.junit.Assert;
 import org.junit.Test;
 

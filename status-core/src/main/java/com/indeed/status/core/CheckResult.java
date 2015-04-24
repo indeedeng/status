@@ -5,8 +5,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 import com.indeed.status.core.DependencyChecker.CheckException;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;

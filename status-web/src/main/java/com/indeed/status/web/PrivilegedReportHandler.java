@@ -7,7 +7,7 @@ import com.indeed.status.core.CheckResultSet;
 import com.indeed.status.core.CheckStatus;
 import com.indeed.status.web.json.Jackson;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;

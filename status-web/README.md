@@ -5,7 +5,7 @@ is not as detailed you can use the PrivilegedReportHandler.
 # Dependencies
 - Guava
 - log4j
-- org.codehaus.jackson:jackson-mapper-asl
+- com.fasterxml.jackson.core:jackson-databind
 - com.indeed:status-core
 - com.indeed:util-varexport
 - com.indeed:util-core

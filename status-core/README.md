@@ -4,7 +4,7 @@ not included in this package.
 # Dependencies
 - Guava
 - log4j
-- org.codehaus.jackson:jackson-mapper-asl
+- com.fasterxml.jackson.core:jackson-databind
 - com.indeed:util-varexport
 - com.indeed:util-core
 - junit (test)

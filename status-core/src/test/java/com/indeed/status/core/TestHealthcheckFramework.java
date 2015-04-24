@@ -7,7 +7,7 @@ import com.indeed.status.core.CheckResult.Thrown;
 import com.indeed.status.core.DependencyChecker.DependencyExecutorSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
 
