@@ -5,8 +5,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.indeed.util.core.NetUtils;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
