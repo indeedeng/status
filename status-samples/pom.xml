@@ -4,10 +4,10 @@
     <parent>
         <groupId>com.indeed</groupId>
         <artifactId>status-parent</artifactId>
-        <version>1.0.7-SNAPSHOT</version>
+        <version>1.0.8-SNAPSHOT</version>
     </parent>
 
-    <artifactId>status-mongodb-sample</artifactId>
+    <artifactId>status-samples</artifactId>
 
     <dependencies>
         <dependency>
