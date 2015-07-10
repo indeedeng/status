@@ -4,8 +4,8 @@ import com.indeed.status.core.CheckResultSet;
 import com.indeed.status.core.Dependency;
 import com.mongodb.MongoClient;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.IOException;
