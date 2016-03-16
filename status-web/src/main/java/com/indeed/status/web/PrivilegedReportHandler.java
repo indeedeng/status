@@ -5,6 +5,7 @@ import com.google.common.base.Objects;
 import com.indeed.status.core.CheckReportHandler;
 import com.indeed.status.core.CheckResultSet;
 import com.indeed.status.core.CheckStatus;
+import com.indeed.status.core.AbstractSystemReport;
 import com.indeed.status.web.json.Jackson;
 import org.apache.log4j.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,7 +45,7 @@ public class PrivilegedReportHandler extends AbstractResponseWriter implements C
 
     // TODO should this throw IOException or not?
     protected void sendResponse(final HttpServletResponse response, final CheckResultSet resultSet) throws IOException {
-        final CheckResultSet.SystemReport report = resultSet.summarize(isDetailed());
+        final AbstractSystemReport report = resultSet.summarize(isDetailed());
         final String json = Jackson.prettyPrint(report, this.mapper);
 
         response.getWriter().println(json);

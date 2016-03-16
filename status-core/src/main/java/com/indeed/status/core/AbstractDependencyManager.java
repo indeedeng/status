@@ -82,6 +82,13 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     public AbstractDependencyManager ( final String appName, final Logger logger ) {
         this(appName, logger, newDefaultThreadPool());
     }
+
+    public AbstractDependencyManager(final String appName,
+                                     final Logger logger,
+                                     @Nonnull final SystemReporter systemReporter) {
+        this(appName, logger, newDefaultThreadPool(), systemReporter);
+    }
+
     public AbstractDependencyManager ( final Logger logger ) {
         this(null, logger, newDefaultThreadPool());
     }
@@ -99,9 +106,19 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
             @Nullable final Logger logger,
             @Nonnull final ThreadPoolExecutor threadPool
     ) {
+        this(appName, logger, threadPool, new SystemReporter());
+    }
+
+    public AbstractDependencyManager(
+            @Nullable final String appName,
+            @Nullable final Logger logger,
+            @Nonnull final ThreadPoolExecutor threadPool,
+            @Nonnull final SystemReporter systemReporter
+    ) {
         this(appName, logger, threadPool, DependencyChecker.newBuilder()
                 .setExecutorService(threadPool)
                 .setLogger(logger)
+                .setSystemReporter(systemReporter)
                 .build());
     }
 
