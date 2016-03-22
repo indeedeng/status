@@ -206,8 +206,6 @@ public class CheckResultSet {
         public final long duration;
         @Nonnull
         public final CheckStatus condition;
-        // Status code used by the dynect DNS manager to determine whether to fail over the entire DC. Play nicely.
-        // Must include the string "OK" to pass dynect.
         @Nonnull
         public final String dcStatus;
 
@@ -226,7 +224,6 @@ public class CheckResultSet {
                     this.dcStatus = "FAILOVER";
                     break;
                 default:
-                    // Not really sensible. Don't let dynect fail this out.
                     this.dcStatus = "OK";
             }
         }
