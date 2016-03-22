@@ -80,7 +80,7 @@ public class CheckResultSet {
     }
 
     @Nonnull
-    public AbstractSystemReport summarize(final boolean detailed) {
+    public CheckResultSystemReport summarize(final boolean detailed) {
         return detailed ?
                 systemReporter.collectDetailedSystemReport(this) : systemReporter.collectSystemReport(this);
     }
@@ -200,17 +200,23 @@ public class CheckResultSet {
     };
 
     @JsonSerialize (include = Inclusion.NON_NULL)
-    public class SystemReport extends AbstractSystemReport {
+    public class SystemReport implements CheckResultSystemReport {
+        @Nonnull
+        public final String hostname;
+        public final long duration;
+        @Nonnull
+        public final CheckStatus condition;
         // Status code used by the dynect DNS manager to determine whether to fail over the entire DC. Play nicely.
         // Must include the string "OK" to pass dynect.
         @Nonnull
         public final String dcStatus;
 
         public SystemReport() {
-            super(NetUtils.determineHostName("unknown"),
-                    System.currentTimeMillis() - startTime,
-                    systemStatus.get());
-            switch (condition) {
+            duration = System.currentTimeMillis() - startTime;
+            hostname = NetUtils.determineHostName("unknown");
+
+            condition = systemStatus.get();
+            switch(condition) {
                 case OK:
                 case MINOR:
                 case MAJOR:
