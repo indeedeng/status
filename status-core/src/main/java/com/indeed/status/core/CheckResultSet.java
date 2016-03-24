@@ -1,12 +1,12 @@
 package com.indeed.status.core;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.indeed.util.core.NetUtils;
 import org.apache.log4j.Logger;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -25,6 +25,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public class CheckResultSet {
     private final long startTime;
+    private final SystemReporter systemReporter;
     @Nullable
     private String appName = null;
 
@@ -36,13 +37,31 @@ public class CheckResultSet {
 
     private static final Logger log = Logger.getLogger(CheckResultSet.class);
 
+    /**
+     * @deprecated  As of release 1.0.8, replaced by {@link #CheckResultSet(SystemReporter)}
+     */
+    @Deprecated
     public CheckResultSet() {
+        this(new SystemReporter());
+    }
+
+    public CheckResultSet(@Nonnull final SystemReporter systemReporter) {
         this.startTime = System.currentTimeMillis();
+        this.systemReporter = systemReporter;
     }
 
     // Set after the fact, because the dependency checker is unaware of the app.
     public void setAppName(@Nullable final String appName) {
         this.appName = appName;
+    }
+
+    @Nullable
+    public String getAppName() {
+        return appName;
+    }
+
+    public long getStartTime() {
+        return startTime;
     }
 
     @Nullable
@@ -61,8 +80,9 @@ public class CheckResultSet {
     }
 
     @Nonnull
-    public SystemReport summarize(final boolean detailed) {
-        return detailed ? new DetailedSystemReport() : new SystemReport();
+    public CheckResultSystemReport summarize(final boolean detailed) {
+        return detailed ?
+                systemReporter.collectDetailedSystemReport(this) : systemReporter.collectSystemReport(this);
     }
 
     protected void handleInit(@Nonnull final Dependency dependency) {
@@ -174,20 +194,18 @@ public class CheckResultSet {
 
     private static final Comparator<CheckResult> ID_COMPARATOR = new Comparator<CheckResult>() {
         @Override
-        public int compare (final CheckResult checkResult, final CheckResult checkResult1) {
+        public int compare(final CheckResult checkResult, final CheckResult checkResult1) {
             return checkResult.getId().compareTo(checkResult1.getId());
         }
     };
 
     @JsonSerialize (include = Inclusion.NON_NULL)
-    public class SystemReport {
+    public class SystemReport implements CheckResultSystemReport {
         @Nonnull
         public final String hostname;
         public final long duration;
         @Nonnull
         public final CheckStatus condition;
-        // Status code used by the dynect DNS manager to determine whether to fail over the entire DC. Play nicely.
-        // Must include the string "OK" to pass dynect.
         @Nonnull
         public final String dcStatus;
 
@@ -206,7 +224,6 @@ public class CheckResultSet {
                     this.dcStatus = "FAILOVER";
                     break;
                 default:
-                    // Not really sensible. Don't let dynect fail this out.
                     this.dcStatus = "OK";
             }
         }

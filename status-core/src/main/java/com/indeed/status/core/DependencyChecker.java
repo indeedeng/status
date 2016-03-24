@@ -24,6 +24,8 @@ import java.util.concurrent.TimeoutException;
 class DependencyChecker /*implements Terminable todo(cameron)*/ {
     @Nonnull
     private final DependencyExecutor dependencyExecutor;
+    @Nullable
+    private final SystemReporter systemReporter;
     @SuppressWarnings ({"FieldCanBeLocal", "UnusedDeclaration"})
     @Nonnull
     private final Logger log;
@@ -32,13 +34,22 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             @Nonnull final Logger logger,
             @Nonnull final DependencyExecutor dependencyExecutor
     ) {
+        this(logger, dependencyExecutor, new SystemReporter());
+    }
+
+    public DependencyChecker (
+            @Nonnull final Logger logger,
+            @Nonnull final DependencyExecutor dependencyExecutor,
+            @Nonnull final SystemReporter systemReporter
+    ) {
         this.log = logger;
         this.dependencyExecutor = dependencyExecutor;
+        this.systemReporter = systemReporter;
     }
 
     @Nonnull
     public CheckResultSet evaluate(final Collection<Dependency> dependencies) {
-        final CheckResultSet result = new CheckResultSet();
+        final CheckResultSet result = new CheckResultSet(systemReporter);
 
         for ( final Dependency dependency : dependencies ) {
             evaluateAndRecord(dependency, result);
@@ -50,7 +61,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     @Nullable
     public CheckResult evaluate(@Nonnull final Dependency dependency) {
         @Nonnull
-        final CheckResultSet result = new CheckResultSet();
+        final CheckResultSet result = new CheckResultSet(systemReporter);
         evaluateAndRecord(dependency, result);
 
         return result.get(dependency.getId());
@@ -305,6 +316,8 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         @Nonnull
         private ExecutorService executorService;
 
+        private SystemReporter systemReporter = new SystemReporter();
+
         private Builder() {
         }
 
@@ -318,10 +331,15 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             return this;
         }
 
+        public Builder setSystemReporter(@Nonnull final SystemReporter systemReporter) {
+            this.systemReporter = systemReporter;
+            return this;
+        }
+
         public DependencyChecker build() {
             final DependencyExecutor dependencyExecutor = new DependencyExecutorSet(executorService);
 
-            return new DependencyChecker(_logger, dependencyExecutor);
+            return new DependencyChecker(_logger, dependencyExecutor, systemReporter);
         }
     }
 }
