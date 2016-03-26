@@ -79,8 +79,22 @@ public class CheckResultSet {
         return this.systemStatus.get();
     }
 
+
+    /**
+     * @deprecated This is replaced by {@link #summarizeBySystemReporter(boolean)}
+     *
+     * You could call {@link #CheckResultSet(SystemReporter)} to inject your own customized system reporter and
+     * {@link #summarizeBySystemReporter(boolean)} would return the customized reports to you.
+     */
+
     @Nonnull
-    public CheckResultSystemReport summarize(final boolean detailed) {
+    @Deprecated
+    public SystemReport summarize(final boolean detailed) {
+        return detailed ? new DetailedSystemReport() : new SystemReport();
+    }
+
+    @Nonnull
+    public CheckResultSystemReport summarizeBySystemReporter(final boolean detailed) {
         return detailed ?
                 systemReporter.collectDetailedSystemReport(this) : systemReporter.collectSystemReport(this);
     }
