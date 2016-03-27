@@ -45,7 +45,7 @@ public class PrivilegedReportHandler extends AbstractResponseWriter implements C
 
     // TODO should this throw IOException or not?
     protected void sendResponse(final HttpServletResponse response, final CheckResultSet resultSet) throws IOException {
-        final CheckResultSystemReport report = resultSet.summarize(isDetailed());
+        final CheckResultSystemReport report = resultSet.summarizeBySystemReporter(isDetailed());
         final String json = Jackson.prettyPrint(report, this.mapper);
 
         response.getWriter().println(json);
