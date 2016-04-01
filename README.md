@@ -123,6 +123,8 @@ Below is a sample of what a failing healthcheck might look like through the repo
             "id": "mysql",
             "urgency": "Required: Failure of this dependency would result in complete system outage",
             "documentationUrl": "http://www.mysql.com/",
+            "type" : "mysql",
+            "servicePool" : "dbpool.example.com:3306/mysqldb1",
             "thrown": {
                 "exception": "RuntimeException",
                 "message": "Failed to communicate with the following tables: user_authorities, oauth_code, oauth_approvals, oauth_client_token, oauth_refresh_token, oauth_client_details, oauth_access_token",
@@ -149,6 +151,8 @@ Below is a sample of what a failing healthcheck might look like through the repo
             "id": "mongo",
             "urgency": "Required: Failure of this dependency would result in complete system outage",
             "documentationUrl": "http://www.mongodb.org/",
+            "type" : "mongo",
+            "servicePool" : "dbpool.example.com:27017/mongodb1",
             "date": "2015-02-24T22:48:37.782-0600"
         }]
     }
@@ -182,6 +186,8 @@ The JSON dump below is a sample of what a passing healthcheck looks like.
             "id": "mongo",
             "urgency": "Required: Failure of this dependency would result in complete system outage",
             "documentationUrl": "http://www.mongodb.org/",
+            "type" : "mongo",
+            "servicePool" : "dbpool.example.com:27017/mongodb1",
             "date": "2015-02-24T22:56:16.568-0600"
         }, {
             "status": "OK",
@@ -194,6 +200,8 @@ The JSON dump below is a sample of what a passing healthcheck looks like.
             "id": "mysql",
             "urgency": "Required: Failure of this dependency would result in complete system outage",
             "documentationUrl": "http://www.mysql.com/",
+            "type" : "mysql",
+            "servicePool" : "dbpool.example.com:3306/mysqldb1",
             "date": "2015-02-24T22:56:16.569-0600"
         }]
     }

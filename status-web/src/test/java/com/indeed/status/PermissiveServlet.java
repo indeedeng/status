@@ -4,6 +4,7 @@ import com.indeed.status.core.AbstractDependencyManager;
 import com.indeed.status.core.CheckResult;
 import com.indeed.status.core.CheckStatus;
 import com.indeed.status.core.Dependency;
+import com.indeed.status.core.DependencyType;
 import com.indeed.status.core.Urgency;
 import com.indeed.status.web.AbstractDaemonCheckReportServlet;
 
@@ -61,6 +62,16 @@ public class PermissiveServlet extends AbstractDaemonCheckReportServlet {
             @Override
             public Urgency getUrgency() {
                 return Urgency.BuiltIns.REQUIRED;
+            }
+
+            @Override
+            public DependencyType getType() {
+                return DependencyType.StandardDependencyTypes.OTHER;
+            }
+
+            @Override
+            public String getServicePool() {
+                return "not specified";
             }
         };
     }

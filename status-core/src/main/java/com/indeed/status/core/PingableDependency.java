@@ -10,32 +10,86 @@ import javax.annotation.Nullable;
  * Similar to the PingableService interface in HCv2, this is a convenience base class for
  * dependencies that do not need to worry about different levels of check status and only
  * want to report their gross availability.
- *
  */
 public abstract class PingableDependency extends AbstractDependency {
     private final Supplier<Boolean> toggle;
 
+    /**
+     * @deprecated Instead, use {@link PingableDependency#PingableDependency(String, String, Urgency, DependencyType, String)}.
+     */
+    @Deprecated
     public PingableDependency(
             @Nonnull final String id,
             @Nonnull final String description,
             @Nonnull final Urgency urgency
     ) {
-        this(id, description, DEFAULT_TIMEOUT, urgency);
+        this(id, description, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
     }
 
+    public PingableDependency(
+            @Nonnull final String id,
+            @Nonnull final String description,
+            @Nonnull final Urgency urgency,
+            @Nonnull final DependencyType type,
+            final String servicePool
+    ) {
+        this(id, description, DEFAULT_TIMEOUT, urgency, type, servicePool);
+    }
+
+    /**
+     * @deprecated Instead, use {@link PingableDependency#PingableDependency(String, String, long, Urgency, DependencyType, String)}.
+     */
+    @Deprecated
     public PingableDependency (
             @Nonnull final String id,
             @Nonnull final String description,
             final long timeout,
             @Nonnull final Urgency urgency
     ) {
-        this(id, description, timeout, DEFAULT_PING_PERIOD, urgency);
+        this(id, description, timeout, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
     }
 
-    protected PingableDependency (final String id, final String description, final long timeout, final long pingPeriod, final Urgency urgency) {
-        this(id, description, timeout, pingPeriod, urgency, Suppliers.ofInstance(Boolean.TRUE));
+    public PingableDependency (
+            @Nonnull final String id,
+            @Nonnull final String description,
+            final long timeout,
+            @Nonnull final Urgency urgency,
+            @Nonnull final DependencyType type,
+            final String servicePool
+    ) {
+        this(id, description, timeout, DEFAULT_PING_PERIOD, urgency, type, servicePool);
     }
 
+    /**
+     * @deprecated Instead, use {@link PingableDependency#PingableDependency(String, String, long, long, Urgency, DependencyType, String)}.
+     */
+    @Deprecated
+    protected PingableDependency (
+            final String id,
+            final String description,
+            final long timeout,
+            final long pingPeriod,
+            final Urgency urgency
+    ) {
+        this(id, description, timeout, pingPeriod, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
+    }
+
+    protected PingableDependency (
+            final String id,
+            final String description,
+            final long timeout,
+            final long pingPeriod,
+            final Urgency urgency,
+            @Nonnull final DependencyType type,
+            final String servicePool
+    ) {
+        this(id, description, timeout, pingPeriod, urgency, type, servicePool, Suppliers.ofInstance(Boolean.TRUE));
+    }
+
+    /**
+     * @deprecated Instead, use {@link PingableDependency#PingableDependency(String, String, long, long, Urgency, DependencyType, String, Supplier<Boolean>)}.
+     */
+    @Deprecated
     protected PingableDependency(
             @Nonnull final String id,
             @Nonnull final String description,
@@ -44,7 +98,20 @@ public abstract class PingableDependency extends AbstractDependency {
             @Nonnull final Urgency urgency,
             @Nonnull final Supplier<Boolean> toggle
     ) {
-        super(id, description, timeout, pingPeriod, urgency);
+        this(id, description, timeout, pingPeriod, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL, toggle);
+    }
+
+    protected PingableDependency(
+            @Nonnull final String id,
+            @Nonnull final String description,
+            final long timeout,
+            final long pingPeriod,
+            @Nonnull final Urgency urgency,
+            @Nonnull final DependencyType type,
+            final String servicePool,
+            @Nonnull final Supplier<Boolean> toggle
+    ) {
+        super(id, description, timeout, pingPeriod, urgency, type, servicePool);
         this.toggle = toggle;
     }
 

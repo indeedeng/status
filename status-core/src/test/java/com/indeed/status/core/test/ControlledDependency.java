@@ -18,7 +18,7 @@ public class ControlledDependency extends PingableDependency {
     private boolean inError = true;
     private int times;
 
-    private ControlledDependency(@Nonnull Supplier<Boolean> toggle, @Nonnull Urgency urgency) {
+    private ControlledDependency(@Nonnull final Supplier<Boolean> toggle, @Nonnull final Urgency urgency) {
         super("controlled-id", "controlled-description", urgency);
         this.toggle = toggle;
     }

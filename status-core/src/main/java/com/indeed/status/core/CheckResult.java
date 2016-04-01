@@ -1,12 +1,13 @@
 package com.indeed.status.core;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 import com.indeed.status.core.DependencyChecker.CheckException;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -58,6 +59,10 @@ public class CheckResult {
     @Nonnull
     private final String documentationUrl;
     /// The exception thrown during execution, if any.
+    @Nonnull
+    private final DependencyType type;
+    @Nonnull
+    private final String servicePool;
     @JsonIgnore
     private final Throwable throwable;
 
@@ -106,6 +111,8 @@ public class CheckResult {
         this.errorMessage = errorMessage;
         this.documentationUrl = dependency.getDocumentationUrl();
         this.urgency = dependency.getUrgency();
+        this.type = dependency.getType();
+        this.servicePool = dependency.getServicePool();
         this.timestamp = 0 == timestamp ? null : new Date(timestamp);
         this.duration = duration;
         this.lastKnownGoodTimestamp = lastKnownGoodTimestamp;
@@ -151,6 +158,17 @@ public class CheckResult {
     @Nonnegative
     public String getUrgency() {
         return String.valueOf(urgency);
+    }
+
+    @JsonSerialize(using = ToStringSerializer.class)
+    @Nonnull
+    public DependencyType getType() {
+        return type;
+    }
+
+    @Nonnull
+    public String getServicePool() {
+        return servicePool;
     }
 
     @Nonnegative
