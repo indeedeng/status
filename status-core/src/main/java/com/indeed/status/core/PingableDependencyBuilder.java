@@ -39,6 +39,16 @@ public abstract class PingableDependencyBuilder<T extends PingableDependency, B 
     }
 
     @Override
+    public B setType(@Nonnull DependencyType type) {
+        return super.setType(type);
+    }
+
+    @Override
+    public B setServicePool(@Nonnull String servicePool) {
+        return super.setServicePool(servicePool);
+    }
+
+    @Override
     public B setToggle(@Nonnull Supplier<Boolean> toggle) {
         return super.setToggle(toggle);
     }

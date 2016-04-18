@@ -21,6 +21,10 @@ public abstract class AbstractDependencyBuilder<T extends AbstractDependency, B 
     @Nonnull
     protected Urgency urgency;
     @Nonnull
+    protected DependencyType type = PingableDependency.DEFAULT_TYPE;
+    @Nonnull
+    protected String servicePool = PingableDependency.DEFAULT_SERVICE_POOL;
+    @Nonnull
     protected Supplier<Boolean> toggle = Suppliers.ofInstance(Boolean.TRUE);
 
     protected AbstractDependencyBuilder() {}
@@ -49,6 +53,16 @@ public abstract class AbstractDependencyBuilder<T extends AbstractDependency, B 
 
     public B setUrgency(@Nonnull final Urgency urgency) {
         this.urgency = urgency;
+        return cast();
+    }
+
+    public B setType(@Nonnull final DependencyType type) {
+        this.type = type;
+        return cast();
+    }
+
+    public B setServicePool(@Nonnull final String servicePool) {
+        this.servicePool = servicePool;
         return cast();
     }
 

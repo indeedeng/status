@@ -20,7 +20,13 @@ public abstract class AbstractDependency implements Dependency {
      */
     public static final long DEFAULT_TIMEOUT = 10*1000; // 10 seconds
     public static final long DEFAULT_PING_PERIOD = 30*1000; // 30 seconds
+    public static final DependencyType DEFAULT_TYPE = DependencyType.StandardDependencyTypes.OTHER;
+    public static final String DEFAULT_SERVICE_POOL = "not specified";
 
+    /**
+     * @deprecated Instead, use {@link AbstractDependency#AbstractDependency(String, String, long, long, Urgency, DependencyType, String)}.
+     */
+    @Deprecated
     protected AbstractDependency(
             @Nonnull final String id,
             @Nonnull final String description,
@@ -28,12 +34,26 @@ public abstract class AbstractDependency implements Dependency {
             final long pingPeriod,
             @Nonnull final Urgency urgency
     ) {
+        this(id, description, timeout, pingPeriod, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
+    }
+
+    protected AbstractDependency(
+            @Nonnull final String id,
+            @Nonnull final String description,
+            final long timeout,
+            final long pingPeriod,
+            @Nonnull final Urgency urgency,
+            @Nonnull final DependencyType type,
+            final String servicePool
+    ) {
         this.id = Preconditions.checkNotNull(id, "Missing id");
         // TODO This should really be check-not-empty precondition, but let's not break things.
         this.description = Strings.nullToEmpty(description);
         this.timeout = timeout;
         this.pingPeriod = pingPeriod;
         this.urgency = Preconditions.checkNotNull(urgency, "Missing urgency");
+        this.type = type;
+        this.servicePool = servicePool;
     }
 
     @Override
@@ -64,11 +84,23 @@ public abstract class AbstractDependency implements Dependency {
         return urgency;
     }
 
+    @Override
+    public DependencyType getType() {
+        return type;
+    }
+
+    @Override
+    public String getServicePool() {
+        return servicePool;
+    }
+
     public String toString () {
         final StringBuilder sb = new StringBuilder();
         sb.append("Dependency");
         sb.append("{urgency=").append(urgency);
         sb.append(", id='").append(id).append('\'');
+        sb.append(", type='").append(type.toString()).append('\'');
+        sb.append(", servicePool='").append(servicePool).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -78,4 +110,6 @@ public abstract class AbstractDependency implements Dependency {
     private final long timeout;
     private final long pingPeriod;
     private final Urgency urgency;
+    private final DependencyType type;
+    private final String servicePool;
 }

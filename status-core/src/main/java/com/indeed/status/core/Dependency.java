@@ -40,4 +40,19 @@ public interface Dependency extends Callable<CheckResult>, Documented {
      * @return Functor representing the effect of this dependency on the health of the overall system
      */
     Urgency getUrgency();
+
+    /**
+     * @return The type of this dependency: resource, application or service name, categorization, etc.
+     *         The interface {@link DependencyType} should be implemented for the system accordingly.
+     *         Examples: mysql, mongo, http service, memory, third party dependency, etc.
+     */
+    DependencyType getType();
+
+    /**
+     * @return The location where the dependent service/resource exists. This will be helpful especially
+     *         when those service/resources exists in several places, which means when one of these fails,
+     *         this helps us detect the location immediately. We could avoid grepping the logs.
+     *         Examples: "dbpool.example.com:3306/mysqldb1", "ServiceName:ZoneName", etc.
+     */
+    String getServicePool();
 }

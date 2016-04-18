@@ -12,23 +12,45 @@ public abstract class ComparableDependency<T extends Comparable<T>> extends Abst
     @SuppressWarnings ("UnusedDeclaration")
     private static final Logger log = Logger.getLogger(ComparableDependency.class);
 
-    private final @Nonnull T maxOK;
+    @Nonnull
+    private final T maxOK;
 
-    private final @Nullable T maxMinor;
+    @Nullable
+    private final T maxMinor;
 
-    private final @Nullable T maxMajor;
+    @Nullable
+    private final T maxMajor;
+
+    /**
+     * @deprecated Instead, use {@link ComparableDependency#ComparableDependency(String, String, long, long, Urgency, DependencyType, String, T, T ,T)}.
+     */
+    @Deprecated
+    public ComparableDependency(
+            @Nonnull final String id,
+            @Nonnull final String description,
+            final long timeout,
+            final long pingPeriod,
+            @Nonnull final Urgency urgency,
+            @Nonnull final T maxOK,
+            @Nullable final T maxMinor,
+            @Nullable final T maxMajor
+    ) {
+        this(id, description, timeout, pingPeriod, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL, maxOK, maxMinor, maxMajor);
+    }
 
     public ComparableDependency(
-            @Nonnull String id,
-            @Nonnull String description,
-            long timeout,
-            long pingPeriod,
-            @Nonnull Urgency urgency,
-            @Nonnull T maxOK,
-            @Nullable T maxMinor,
-            @Nullable T maxMajor
+            @Nonnull final String id,
+            @Nonnull final String description,
+            final long timeout,
+            final long pingPeriod,
+            @Nonnull final Urgency urgency,
+            @Nonnull final DependencyType type,
+            @Nonnull final String servicePool,
+            @Nonnull final T maxOK,
+            @Nullable final T maxMinor,
+            @Nullable final T maxMajor
     ) {
-        super(id, description, timeout, pingPeriod, urgency);
+        super(id, description, timeout, pingPeriod, urgency, type, servicePool);
         this.maxOK = maxOK;
         this.maxMinor = maxMinor;
         this.maxMajor = maxMajor;

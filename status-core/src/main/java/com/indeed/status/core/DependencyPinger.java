@@ -295,6 +295,16 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     }
 
     @Override
+    public DependencyType getType () {
+        return dependency.getType();
+    }
+
+    @Override
+    public String getServicePool () {
+        return dependency.getServicePool();
+    }
+
+    @Override
     public void clear () {
         updateHandler.clear();
     }
