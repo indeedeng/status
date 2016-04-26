@@ -1,12 +1,16 @@
 package com.indeed.status.core;
 
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.indeed.status.core.test.ControlledDependency;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertEquals;
@@ -168,5 +172,20 @@ public class DependencyPingerTest {
         pinger.run();
         assertEquals(CheckStatus.OK, pinger.call().getStatus());
         assertEquals(2, dependency.getTimes());
+    }
+
+    @Test
+    public void testListeners() {
+        final StatusUpdateListener listener1 = EasyMock.createMock(StatusUpdateListener.class);
+        final StatusUpdateListener listener2 = EasyMock.createMock(StatusUpdateListener.class);
+        final StatusUpdateListener listener3 = EasyMock.createMock(StatusUpdateListener.class);
+        final ControlledDependency dependency = ControlledDependency.build();
+        dependency.setInError(true);
+        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency);
+        pinger.addListener(listener1);
+        pinger.addListener(listener2);
+        pinger.addListener(listener3);
+        final Iterator<StatusUpdateListener> actual = pinger.listeners();
+        assertEquals(ImmutableList.of(listener1, listener2, listener3), Arrays.asList(Iterators.toArray(actual, StatusUpdateListener.class)));
     }
 }

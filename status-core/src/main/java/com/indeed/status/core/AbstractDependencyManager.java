@@ -14,6 +14,7 @@ import javax.annotation.PreDestroy;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
@@ -288,6 +289,11 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     @Override
     public void addListener (final StatusUpdateListener listener) {
         updateHandler.addListener(listener);
+    }
+
+    @Override
+    public Iterator<StatusUpdateListener> listeners() {
+        return updateHandler.listeners();
     }
 
     public void setPingPeriod(final long pingPeriod) {

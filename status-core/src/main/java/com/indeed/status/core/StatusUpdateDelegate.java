@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -58,6 +59,11 @@ class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateListener
     @Override
     public void addListener (final StatusUpdateListener listener) {
         listeners.add(listener);
+    }
+
+    @Override
+    public Iterator<StatusUpdateListener> listeners() {
+        return listeners.iterator();
     }
 
     @Override
