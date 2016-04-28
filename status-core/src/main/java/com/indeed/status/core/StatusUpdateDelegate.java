@@ -5,9 +5,9 @@ import org.apache.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Simple delegate that can be used by StatusUpdateProducer implementers as a delegate
@@ -21,7 +21,7 @@ class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateListener
 
     StatusUpdateDelegate () {
         final List<StatusUpdateListener> l = Lists.newArrayListWithExpectedSize(2);
-        listeners = Collections.synchronizedList(l);
+        listeners = new CopyOnWriteArrayList<StatusUpdateListener>(l);
     }
 
     @Override
