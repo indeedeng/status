@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -312,6 +313,11 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     @Override
     public void addListener (final StatusUpdateListener listener) {
         updateHandler.addListener(listener);
+    }
+
+    @Override
+    public Iterator<StatusUpdateListener> listeners() {
+        return updateHandler.listeners();
     }
 
     // Access to the pinged dependency
