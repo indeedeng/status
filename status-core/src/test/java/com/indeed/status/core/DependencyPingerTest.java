@@ -187,5 +187,10 @@ public class DependencyPingerTest {
         pinger.addListener(listener3);
         final Iterator<StatusUpdateListener> actual = pinger.listeners();
         assertEquals(ImmutableList.of(listener1, listener2, listener3), Arrays.asList(Iterators.toArray(actual, StatusUpdateListener.class)));
+
+        // verify no ConcurrentModificationException
+        for (final Iterator<StatusUpdateListener> it = pinger.listeners(); it.hasNext() ; it.next()) {
+            pinger.addListener(EasyMock.createMock(StatusUpdateListener.class));
+        }
     }
 }
