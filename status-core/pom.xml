@@ -23,10 +23,12 @@
         <dependency>
             <groupId>com.indeed</groupId>
             <artifactId>util-core</artifactId>
+            <version>1.0.19</version>
         </dependency>
         <dependency>
             <groupId>com.indeed</groupId>
             <artifactId>util-varexport</artifactId>
+            <version>1.0.19</version>
         </dependency>
         <dependency>
 	    <groupId>com.fasterxml.jackson.core</groupId>
