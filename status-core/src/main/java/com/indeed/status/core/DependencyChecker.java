@@ -1,6 +1,7 @@
 package com.indeed.status.core;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import org.apache.log4j.Logger;
 
@@ -22,13 +23,9 @@ import java.util.concurrent.TimeoutException;
  * @author matts
  */
 class DependencyChecker /*implements Terminable todo(cameron)*/ {
-    @Nonnull
-    private final DependencyExecutor dependencyExecutor;
-    @Nullable
-    private final SystemReporter systemReporter;
-    @SuppressWarnings ({"FieldCanBeLocal", "UnusedDeclaration"})
-    @Nonnull
-    private final Logger log;
+    @Nonnull private final DependencyExecutor dependencyExecutor;
+    @Nonnull private final SystemReporter systemReporter;
+    @Nonnull private final Logger log;
 
     public DependencyChecker (
             @Nonnull final Logger logger,
@@ -48,10 +45,12 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     }
 
     @Nonnull
-    public CheckResultSet evaluate(final Collection<Dependency> dependencies) {
-        final CheckResultSet result = new CheckResultSet(systemReporter);
+    public CheckResultSet evaluate(final Collection<? extends Dependency> dependencies) {
+        final CheckResultSet result = CheckResultSet.newBuilder()
+                .setSystemReporter(systemReporter)
+                .build();
 
-        for ( final Dependency dependency : dependencies ) {
+        for (final Dependency dependency : dependencies) {
             evaluateAndRecord(dependency, result);
         }
 
@@ -61,7 +60,10 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     @Nullable
     public CheckResult evaluate(@Nonnull final Dependency dependency) {
         @Nonnull
-        final CheckResultSet result = new CheckResultSet(systemReporter);
+        final CheckResultSet result = CheckResultSet.newBuilder()
+                .setSystemReporter(systemReporter)
+                .build();
+
         evaluateAndRecord(dependency, result);
 
         return result.get(dependency.getId());
@@ -70,7 +72,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     private void evaluateAndRecord(@Nonnull final Dependency dependency, @Nonnull final CheckResultSet results) {
         if (dependency instanceof DependencyPinger) {
             // Evaluate directly, as the pinger provides its own timeout and exception protection
-            evaluateDirectlyAndRecord((DependencyPinger)dependency, results);
+            evaluateDirectlyAndRecord((DependencyPinger) dependency, results);
         } else {
             // Evaluate safely, as the dependency offers no execution guarantees.
             evaluateSafelyAndRecord(dependency, results);
@@ -91,7 +93,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
             checkResult = pinger.call();
 
-        } catch(Throwable e) {
+        } catch (Throwable e) {
             t = new CheckException("Background thread error", e);
             checkResult = null;
 
@@ -117,7 +119,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         CheckResult evaluationResult = null;
         Throwable t = null;
 
-        @Nonnull
+        @Nullable
         Future<CheckResult> future = null;
 
         try {
@@ -141,7 +143,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             t = new CheckException("Operation interrupted", e);
             cancel(future);
 
-        } catch ( final CancellationException e ) {
+        } catch (final CancellationException e) {
             log.warn("Task has completed, but was previously cancelled. This is probably okay, but shouldn't happen often.");
             t = new CheckException("Health check task was cancelled.", e);
 
@@ -165,7 +167,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             //  nobody cares about the wrapping ExecutionException
             t = new CheckException("Health-check failed for unknown reason. Please dump /private/v and thread-state and contact dev.", e.getCause());
 
-        } catch(Throwable e) {
+        } catch (final Throwable e) {
             t = new CheckException("Health-check failed for unknown reason. Please dump /private/v and thread-state and contact dev.", e);
 
         } finally {
@@ -185,10 +187,10 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     }
 
     private void cancel(@Nonnull final Future<?>... futures) {
-        for (final Future<?> future: futures) {
+        for (final Future<?> future : futures) {
             try {
                 future.cancel(true);
-            } catch(Exception e) {
+            } catch (Exception e) {
                 log.info("failed to cancel future.", e);
             }
         }
@@ -202,9 +204,9 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         try {
             dependencyExecutor.resolve(dependency);
 
-            results.handleComplete (dependency, evaluationResult);
+            results.handleComplete(dependency, evaluationResult);
 
-        } catch(Exception e) {
+        } catch (final Exception e) {
             log.error("An exception that really shouldn't ever happen, did.", e);
 
         } finally {
@@ -218,13 +220,13 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     }
 
     public static class DependencyExecutorSet implements DependencyExecutor {
-        private static final Logger log = Logger.getLogger ( DependencyExecutorSet.class );
+        private static final Logger log = Logger.getLogger(DependencyExecutorSet.class);
         @Nonnull
         private final Map<String, Future<CheckResult>> inflightChecks = Maps.newHashMapWithExpectedSize(10);
         @Nonnull
         private final ExecutorService executor;
 
-        public DependencyExecutorSet (@Nonnull final ExecutorService executor) {
+        public DependencyExecutorSet(@Nonnull final ExecutorService executor) {
             this.executor = executor;
         }
 
@@ -237,18 +239,18 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
                 log.trace(String.format("Attempting to launch dependency %s from %s.", dependency, this));
             }
 
-            synchronized ( inflightChecks ) {
+            synchronized (inflightChecks) {
                 final String id = dependency.getId();
                 final Future<CheckResult> inflight = inflightChecks.get(id);
 
-                if ( null == inflight ) {
+                if (null == inflight) {
                     Future<CheckResult> launched;
 
                     try {
                         launched = executor.submit(dependency);
                         inflightChecks.put(id, launched);
 
-                    } catch ( RejectedExecutionException e ) {
+                    } catch (final RejectedExecutionException e) {
                         throw new IllegalStateException("Unable to launch the health check.", e);
                     }
 
@@ -275,19 +277,19 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         }
 
         @Override
-        public void shutdown () {
+        public void shutdown() {
             executor.shutdownNow();
         }
 
         @Override
-        public void awaitTermination (final long duration, final TimeUnit unit) throws InterruptedException {
+        public void awaitTermination(final long duration, final TimeUnit unit) throws InterruptedException {
             executor.awaitTermination(duration, unit);
         }
     }
 
     /*@Override todo(cameron) */
-    public void shutdown () {
-            dependencyExecutor.shutdown();
+    public void shutdown() {
+        dependencyExecutor.shutdown();
     }
 
     public static class CheckException extends Exception {
@@ -297,7 +299,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             super(message, cause);
         }
 
-        @SuppressWarnings ({"UnusedDeclaration"})
+        @SuppressWarnings({"UnusedDeclaration"})
         private CheckException(Throwable cause) {
             super(cause);
         }
@@ -313,20 +315,21 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
         @Nonnull
         private Logger _logger = DEFAULT_LOGGER;
-        @Nonnull
+        @Nullable
         private ExecutorService executorService;
 
+        @Nonnull
         private SystemReporter systemReporter = new SystemReporter();
 
         private Builder() {
         }
 
-        public Builder setLogger (@Nullable final Logger logger) {
+        public Builder setLogger(@Nullable final Logger logger) {
             this._logger = Objects.firstNonNull(logger, DEFAULT_LOGGER);
             return this;
         }
 
-        public Builder setExecutorService (@Nonnull final ExecutorService executorService) {
+        public Builder setExecutorService(@Nonnull final ExecutorService executorService) {
             this.executorService = executorService;
             return this;
         }
@@ -337,6 +340,9 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         }
 
         public DependencyChecker build() {
+            final ExecutorService executorService = Preconditions.checkNotNull(
+                    this.executorService,
+                    "Cannot configure a dependency checker with a null executor service.");
             final DependencyExecutor dependencyExecutor = new DependencyExecutorSet(executorService);
 
             return new DependencyChecker(_logger, dependencyExecutor, systemReporter);

@@ -58,7 +58,7 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
                 .setDaemon(true)
                 .setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
                     @Override
-                    public void uncaughtException(Thread t, Throwable e) {
+                    public void uncaughtException(final Thread t, final Throwable e) {
                         log.error("Uncaught throwable in thread " + t.getName() + "/" + t.getId(), e);
                     }
                 })
@@ -122,8 +122,6 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     /**
      * The method, derived from {@link Dependency} intended to be used by elements that check the status of the
      *  background task.
-     *
-     * @return
      */
     @Override
     @Nonnull
@@ -243,6 +241,7 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
         return "Timed out";
     }
 
+    @Nonnull
     @Override
     public String toString() {
         return "background pinger for " + dependency;
@@ -321,6 +320,7 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     }
 
     // Access to the pinged dependency
+    @Nonnull
     public Dependency getDependency() {
         return dependency;
     }
