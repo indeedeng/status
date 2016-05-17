@@ -1,15 +1,10 @@
 package com.indeed.status.core;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
 
 /**
  * The <code>PingableDependency</code> represents the simplest of dependencies, a dependency that executes and either
@@ -17,12 +12,11 @@ import java.util.concurrent.Executors;
  *
  * @see SimpleDependency
  */
-public class PingableDependency extends AbstractDependency {
+public abstract class PingableDependency extends AbstractDependency {
     @Nonnull private final Supplier<Boolean> toggle;
-    @Nonnull private final Optional<Callable<Void>> pingMethod;
 
     /**
-     * @deprecated Use a {@link SimplePingableDependencyBuilder} with a Callable instead.
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
      */
     @Deprecated
     public PingableDependency(
@@ -35,7 +29,7 @@ public class PingableDependency extends AbstractDependency {
     }
 
     /**
-     * @deprecated Use a {@link SimplePingableDependencyBuilder} with a Callable instead.
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
      */
     @Deprecated
     public PingableDependency(
@@ -50,7 +44,7 @@ public class PingableDependency extends AbstractDependency {
     }
 
     /**
-     * @deprecated Use a {@link SimplePingableDependencyBuilder} with a Callable instead.
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
      */
     @Deprecated
     public PingableDependency (
@@ -64,7 +58,7 @@ public class PingableDependency extends AbstractDependency {
     }
 
     /**
-     * @deprecated Use a {@link SimplePingableDependencyBuilder} with a Callable instead.
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
      */
     public PingableDependency (
             @Nonnull final String id,
@@ -79,7 +73,7 @@ public class PingableDependency extends AbstractDependency {
     }
 
     /**
-     * @deprecated Use a {@link SimplePingableDependencyBuilder} with a Callable instead.
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
      */
     @Deprecated
     protected PingableDependency (
@@ -94,7 +88,7 @@ public class PingableDependency extends AbstractDependency {
     }
 
     /**
-     * @deprecated Use a {@link SimplePingableDependencyBuilder} with a Callable instead.
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
      */
     protected PingableDependency (
             final String id,
@@ -110,7 +104,7 @@ public class PingableDependency extends AbstractDependency {
     }
 
     /**
-     * @deprecated Use a {@link SimplePingableDependencyBuilder} with a Callable instead.
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
      */
     @Deprecated
     protected PingableDependency(
@@ -126,45 +120,10 @@ public class PingableDependency extends AbstractDependency {
     }
 
     /**
-     * @deprecated Use a {@link SimplePingableDependencyBuilder} with a Callable instead.
+     * For subclass use only
      */
-    @Deprecated
     protected PingableDependency(
             @Nonnull final String id,
-            @Nonnull final String description,
-            final long timeout,
-            final long pingPeriod,
-            @Nonnull final Urgency urgency,
-            @Nonnull final DependencyType type,
-            final String servicePool,
-            @Nonnull final Supplier<Boolean> toggle
-    ) {
-        this(id, Optional.<Callable<Void>>absent(), description, timeout, pingPeriod, urgency, type, servicePool, toggle);
-    }
-
-    protected PingableDependency(
-            @Nonnull final String id,
-            @Nonnull final Callable<Void> pingMethod,
-            @Nonnull final String description,
-            final long timeout,
-            final long pingPeriod,
-            @Nonnull final Urgency urgency,
-            @Nonnull final DependencyType type,
-            final String servicePool,
-            @Nonnull final Supplier<Boolean> toggle
-    ) {
-        this(id, Optional.of(pingMethod), description, timeout, pingPeriod, urgency, type, servicePool, toggle);
-    }
-
-    /**
-     * Direct constructor based on fields.
-     *
-     * Package-protected, because we don't want to expose the Optionality of the ping method through the public API. Most
-     *  pingable dependency implementers should be encouraged to provide a Callable ping method directly.
-     */
-    PingableDependency(
-            @Nonnull final String id,
-            @Nonnull final Optional<Callable<Void>> optionalPingMethod,
             @Nonnull final String description,
             final long timeout,
             final long pingPeriod,
@@ -175,7 +134,6 @@ public class PingableDependency extends AbstractDependency {
     ) {
         super(id, description, timeout, pingPeriod, urgency, type, servicePool);
         this.toggle = toggle;
-        this.pingMethod = optionalPingMethod;
     }
 
     public CheckResult call () throws Exception {
@@ -213,13 +171,7 @@ public class PingableDependency extends AbstractDependency {
      *
      * @throws Exception If any piece of the dependency check fails.
      */
-    public void ping() throws Exception {
-        Preconditions.checkState(this.pingMethod.isPresent(),
-                "Dependency '%s' neither overrides the ping() method nor provides a pingMethod implementation.", getId());
-
-        // Execute the delegate, passing through any exception.
-        this.pingMethod.get().call();
-    }
+    public abstract void ping() throws Exception;
 
     /**
      * Override this method to modify the error message
@@ -231,32 +183,13 @@ public class PingableDependency extends AbstractDependency {
         return e == null ? "ok" : "Exception thrown during ping";
     }
 
-    public static SimplePingableDependencyBuilder newBuilder() {
-        return new SimplePingableDependencyBuilder();
-    }
-
-    public static abstract class Builder<T extends PingableDependency, B extends AbstractDependency.Builder<T, B>> extends AbstractDependency.Builder<T, B> {
+    public static abstract class Builder<T extends PingableDependency, B extends PingableDependency.Builder<T, B>> extends AbstractDependency.Builder<T, B> {
         /**
          * @deprecated Direct field access deprecated; use {@link #getToggle()}} instead.
          */
         @Nonnull protected Supplier<Boolean> toggle = Suppliers.ofInstance(Boolean.TRUE);
-        @Nullable private Callable<Void> pingMethod;
 
         protected Builder() {}
-
-        @Nullable
-        public Callable<Void> getPingMethod() {
-            return pingMethod;
-        }
-
-        public B setPingMethod(@Nonnull final Callable<Void> pingMethod) {
-            this.pingMethod = pingMethod;
-            return cast();
-        }
-
-        public B setPingMethod(@Nonnull final Runnable pingMethod) {
-            return this.setPingMethod(Executors.<Void>callable(pingMethod, null));
-        }
 
         @Nonnull
         protected Supplier<Boolean> getToggle() {
@@ -270,37 +203,12 @@ public class PingableDependency extends AbstractDependency {
             return cast();
         }
 
-        public PingableDependency build() {
-            final String id = getId();
-            Preconditions.checkState(!Strings.isNullOrEmpty(id), "Cannot build a dependency with an empty ID");
-
-            final String description = getDescription();
-            Preconditions.checkState(!Strings.isNullOrEmpty(description), "Cannot build a dependency with an empty description");
-
-            return new PingableDependency(
-                    id,
-                    Optional.fromNullable(getPingMethod()),
-                    getDescription(),
-                    getTimeout(),
-                    getPingPeriod(),
-                    getUrgency(),
-                    getType(),
-                    getServicePool(),
-                    getToggle());
-        }
+        @Override
+        public abstract PingableDependency build();
 
         private B cast() {
             //noinspection unchecked
             return (B)this;
         }
-    }
-
-    /**
-     * Simple concrete extension of the pingable dependency builder to collapse the
-     *  parameterized types and avoid telescoping type definitions. This class should
-     *  serve as the basic pingable dependency builder for all but a select few cases.
-     */
-    public static class SimplePingableDependencyBuilder
-            extends Builder<PingableDependency, SimplePingableDependencyBuilder> {
     }
 }

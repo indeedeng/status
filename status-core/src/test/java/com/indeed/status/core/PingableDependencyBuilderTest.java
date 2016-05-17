@@ -8,7 +8,7 @@ import org.junit.Test;
 public class PingableDependencyBuilderTest {
     @Test
     public void testBuilderWithDelegate() throws Exception {
-        final PingableDependency dependency = new PingableDependency.SimplePingableDependencyBuilder()
+        final PingableDependency dependency = SimplePingableDependency.newBuilder()
                 .setId("id")
                 .setDescription("description")
                 .setPingMethod(new Runnable() {
@@ -24,33 +24,7 @@ public class PingableDependencyBuilderTest {
 
     @Test
     public void testBuilderWithOverride() throws Exception {
-        final PingableDependency.SimplePingableDependencyBuilder builder = new PingableDependency.SimplePingableDependencyBuilder() {
-            @Override
-            public PingableDependency build() {
-                final PingableDependency template = super.build();
-
-                // Create a simple dependency with an overridden ping() method.
-                // This was the standard method of providing the 'core' dependency code in the original distribution.
-                //noinspection deprecation -- the point is to regression test the deprecate case.
-                return new PingableDependency(
-                        template.getId(),
-                        template.getDescription(),
-                        template.getTimeout(),
-                        template.getPingPeriod(),
-                        template.getUrgency(),
-                        template.getType(),
-                        template.getServicePool(),
-                        getToggle()
-                ) {
-                    @Override
-                    public void ping() throws Exception {
-                        // Always ok.
-                    }
-                };
-            }
-        };
-
-        final PingableDependency dependency = builder
+        final PingableDependency dependency = new MyPingableBuilder()
                 .setId("id")
                 .setDescription("description")
                 .build();
@@ -58,13 +32,37 @@ public class PingableDependencyBuilderTest {
         dependency.ping();
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = NullPointerException.class)
     public void testBuilderWithoutDelegateOrOverride() throws Exception {
-        final PingableDependency dependency = new PingableDependency.SimplePingableDependencyBuilder()
+        final PingableDependency dependency = SimplePingableDependency.newBuilder()
                 .setId("id")
                 .setDescription("description")
                 .build();
 
         dependency.ping();
+    }
+
+    private static class MyPingableBuilder extends PingableDependency.Builder<PingableDependency, MyPingableBuilder> {
+        @Override
+        public PingableDependency build() {
+            // Create a simple dependency with an overridden ping() method.
+            // This was the standard method of providing the 'core' dependency code in the original distribution.
+            //noinspection deprecation -- the point is to regression test the deprecate case.
+            return new PingableDependency(
+                    getId(),
+                    getDescription(),
+                    getTimeout(),
+                    getPingPeriod(),
+                    getUrgency(),
+                    getType(),
+                    getServicePool(),
+                    getToggle()
+            ) {
+                @Override
+                public void ping() throws Exception {
+                    // Always ok.
+                }
+            };
+        }
     }
 }

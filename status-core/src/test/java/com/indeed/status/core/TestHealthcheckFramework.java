@@ -3,7 +3,6 @@ package com.indeed.status.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ForwardingFuture;
 import com.indeed.status.core.CheckResult.Thrown;
 import com.indeed.status.core.DependencyChecker.DependencyExecutorSet;
@@ -14,8 +13,6 @@ import org.junit.Test;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Date;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -422,7 +419,7 @@ public class TestHealthcheckFramework {
         }
     }
 
-    private static class MinimalDependencyBuilder extends PingableDependency.SimplePingableDependencyBuilder {
+    private static class MinimalDependencyBuilder extends SimplePingableDependency.Builder {
         // Defaults for convenience
         public MinimalDependencyBuilder() {
             this.setId("id");

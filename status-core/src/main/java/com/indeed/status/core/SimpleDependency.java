@@ -1,6 +1,5 @@
 package com.indeed.status.core;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
@@ -8,13 +7,13 @@ import javax.annotation.Nullable;
 
 /**
  * The <code>SimpleDependency</code> represents the most common form of dependency with a tiered result level.
- *
- * @see PingableDependency
+ * <br/>
+ * See {@link SimplePingableDependency} for a version with a binary result level.
  *
  * @author matts
  */
-public class SimpleDependency extends AbstractDependency {
-    @Nonnull private final Optional<CheckMethod> checkMethod;
+public final class SimpleDependency extends AbstractDependency {
+    @Nonnull private final CheckMethod checkMethod;
 
     // For builder use only
     private SimpleDependency(
@@ -28,16 +27,13 @@ public class SimpleDependency extends AbstractDependency {
             final String servicePool
     ) {
         super(id, description, timeout, pingPeriod, urgency, type, servicePool);
-        this.checkMethod = Optional.of(checkMethod);
+        this.checkMethod = checkMethod;
     }
 
     @Override
     public CheckResult call() throws Exception {
-        Preconditions.checkState(this.checkMethod.isPresent(),
-                "Dependency '%s' neither overrides the call() method nor provides a checkMethod implementation.", getId());
-
         // Execute the delegate, passing through any exception.
-        return this.checkMethod.get().call(this);
+        return this.checkMethod.call(this);
     }
 
     public static Builder newBuilder() {
