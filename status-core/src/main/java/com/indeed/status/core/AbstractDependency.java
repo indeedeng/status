@@ -128,12 +128,12 @@ public abstract class AbstractDependency implements Dependency {
          * @deprecated Direct field access deprecated; use {@link #getTimeout()} instead.
          */
         @Nonnegative
-        protected long timeout = PingableDependency.DEFAULT_TIMEOUT;
+        protected long timeout = DEFAULT_TIMEOUT;
         /**
          * @deprecated Direct field access deprecated; use {@link #getPingPeriod()} instead.
          */
         @Nonnegative
-        protected long pingPeriod = PingableDependency.DEFAULT_PING_PERIOD;
+        protected long pingPeriod = DEFAULT_PING_PERIOD;
         /**
          * @deprecated Direct field access deprecated; use {@link #getUrgency()} instead.
          */
@@ -143,12 +143,12 @@ public abstract class AbstractDependency implements Dependency {
          * @deprecated Direct field access deprecated; use {@link #getType()} instead.
          */
         @Nonnull
-        protected DependencyType type = PingableDependency.DEFAULT_TYPE;
+        protected DependencyType type = DEFAULT_TYPE;
         /**
          * @deprecated Direct field access deprecated; use {@link #getServicePool()} ()} instead.
          */
         @Nonnull
-        protected String servicePool = PingableDependency.DEFAULT_SERVICE_POOL;
+        protected String servicePool = DEFAULT_SERVICE_POOL;
 
         protected Builder() {
         }
