@@ -7,15 +7,16 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Similar to the PingableService interface in HCv2, this is a convenience base class for
- * dependencies that do not need to worry about different levels of check status and only
- * want to report their gross availability.
+ * The <code>PingableDependency</code> represents the simplest of dependencies, a dependency that executes and either
+ *  completes or throws an Exception.
+ *
+ * @see SimpleDependency
  */
 public abstract class PingableDependency extends AbstractDependency {
-    private final Supplier<Boolean> toggle;
+    @Nonnull private final Supplier<Boolean> toggle;
 
     /**
-     * @deprecated Instead, use {@link PingableDependency#PingableDependency(String, String, Urgency, DependencyType, String)}.
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
      */
     @Deprecated
     public PingableDependency(
@@ -23,9 +24,14 @@ public abstract class PingableDependency extends AbstractDependency {
             @Nonnull final String description,
             @Nonnull final Urgency urgency
     ) {
+        //noinspection deprecation - pointless warning in a deprecated method.
         this(id, description, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
     }
 
+    /**
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
+     */
+    @Deprecated
     public PingableDependency(
             @Nonnull final String id,
             @Nonnull final String description,
@@ -33,11 +39,12 @@ public abstract class PingableDependency extends AbstractDependency {
             @Nonnull final DependencyType type,
             final String servicePool
     ) {
+        //noinspection deprecation - pointless warning in a deprecated method.
         this(id, description, DEFAULT_TIMEOUT, urgency, type, servicePool);
     }
 
     /**
-     * @deprecated Instead, use {@link PingableDependency#PingableDependency(String, String, long, Urgency, DependencyType, String)}.
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
      */
     @Deprecated
     public PingableDependency (
@@ -46,9 +53,13 @@ public abstract class PingableDependency extends AbstractDependency {
             final long timeout,
             @Nonnull final Urgency urgency
     ) {
+        //noinspection deprecation - pointless warning in a deprecated method.
         this(id, description, timeout, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
     }
 
+    /**
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
+     */
     public PingableDependency (
             @Nonnull final String id,
             @Nonnull final String description,
@@ -57,11 +68,12 @@ public abstract class PingableDependency extends AbstractDependency {
             @Nonnull final DependencyType type,
             final String servicePool
     ) {
+        //noinspection deprecation - pointless warning in a deprecated method.
         this(id, description, timeout, DEFAULT_PING_PERIOD, urgency, type, servicePool);
     }
 
     /**
-     * @deprecated Instead, use {@link PingableDependency#PingableDependency(String, String, long, long, Urgency, DependencyType, String)}.
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
      */
     @Deprecated
     protected PingableDependency (
@@ -71,9 +83,13 @@ public abstract class PingableDependency extends AbstractDependency {
             final long pingPeriod,
             final Urgency urgency
     ) {
+        //noinspection deprecation - pointless warning in a deprecated method.
         this(id, description, timeout, pingPeriod, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
     }
 
+    /**
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
+     */
     protected PingableDependency (
             final String id,
             final String description,
@@ -83,11 +99,12 @@ public abstract class PingableDependency extends AbstractDependency {
             @Nonnull final DependencyType type,
             final String servicePool
     ) {
+        //noinspection deprecation - pointless warning in a deprecated method.
         this(id, description, timeout, pingPeriod, urgency, type, servicePool, Suppliers.ofInstance(Boolean.TRUE));
     }
 
     /**
-     * @deprecated Instead, use {@link PingableDependency#PingableDependency(String, String, long, long, Urgency, DependencyType, String, Supplier<Boolean>)}.
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
      */
     @Deprecated
     protected PingableDependency(
@@ -98,9 +115,13 @@ public abstract class PingableDependency extends AbstractDependency {
             @Nonnull final Urgency urgency,
             @Nonnull final Supplier<Boolean> toggle
     ) {
+        //noinspection deprecation - pointless warning in a deprecated method.
         this(id, description, timeout, pingPeriod, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL, toggle);
     }
 
+    /**
+     * For subclass use only
+     */
     protected PingableDependency(
             @Nonnull final String id,
             @Nonnull final String description,
@@ -150,7 +171,7 @@ public abstract class PingableDependency extends AbstractDependency {
      *
      * @throws Exception If any piece of the dependency check fails.
      */
-    public abstract void ping () throws Exception;
+    public abstract void ping() throws Exception;
 
     /**
      * Override this method to modify the error message
@@ -158,7 +179,36 @@ public abstract class PingableDependency extends AbstractDependency {
      * @param e exception that was thrown by ping or null on success
      * @return error message
      */
-    protected String formatErrorMessage(@Nullable Exception e) {
+    protected String formatErrorMessage(@Nullable final Exception e) {
         return e == null ? "ok" : "Exception thrown during ping";
+    }
+
+    public static abstract class Builder<T extends PingableDependency, B extends PingableDependency.Builder<T, B>> extends AbstractDependency.Builder<T, B> {
+        /**
+         * @deprecated Direct field access deprecated; use {@link #getToggle()}} instead.
+         */
+        @Nonnull protected Supplier<Boolean> toggle = Suppliers.ofInstance(Boolean.TRUE);
+
+        protected Builder() {}
+
+        @Nonnull
+        protected Supplier<Boolean> getToggle() {
+            //noinspection deprecation -- only deprecated for direct acces
+            return toggle;
+        }
+
+        public B setToggle(@Nonnull final Supplier<Boolean> toggle) {
+            //noinspection deprecation -- only deprecated for direct acces
+            this.toggle = toggle;
+            return cast();
+        }
+
+        @Override
+        public abstract PingableDependency build();
+
+        private B cast() {
+            //noinspection unchecked
+            return (B)this;
+        }
     }
 }

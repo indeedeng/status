@@ -36,22 +36,17 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     private static final AtomicInteger DEFAULT_THREAD_POOL_COUNT = new AtomicInteger(1);
     private static final AtomicInteger MANAGEMENT_THREAD_POOL_COUNT = new AtomicInteger(1);
 
-    @Nonnull
-    private final Logger log;
-    @Nullable
-    private final String appName;
+    @Nonnull private final Logger log;
+    @Nullable private final String appName;
 
     /// Timer for managing scheduled executions
-    @Nonnull
-    private final ScheduledExecutorService executor;
+    @Nonnull private final ScheduledExecutorService executor;
 
     /// Thread pool for running dependency checks
-    @Nonnull
-    private final ThreadPoolExecutor threadPool;
+    @Nonnull private final ThreadPoolExecutor threadPool;
 
     /// Container for checking all dependencies
-    @Nonnull
-    private final DependencyChecker checker;
+    @Nonnull private final DependencyChecker checker;
 
     /// Delegate for handling event propagation
     private final StatusUpdateDelegate updateHandler = new StatusUpdateDelegate();
@@ -60,7 +55,7 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     ///  String identifiers of each dependency. The values are the immutable objects representing the
     ///  canonical view of each dependency. This map does <em>not</em> indicate the current status
     ///  of dependencies, but rather the set of dependencies that are registered with the system.
-    private final ConcurrentMap<String, Dependency> dependencies = Maps.newConcurrentMap();
+    @Nonnull private final ConcurrentMap<String, Dependency> dependencies = Maps.newConcurrentMap();
 
     private long pingPeriod = DEFAULT_PING_PERIOD;
 
@@ -73,6 +68,9 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     }
 
     // TODO Some day, all of this will be replaced with a builder.
+    //  At the time when we do that, we'll need to work with the dependency manager extensions present in the
+    //  unit tests, since those are the only reasonable extensions of the checker. They can probably be refactored
+    //  to push the custom behavior up into the test case or down into the dependency.
 
     public AbstractDependencyManager() {
         this(null, null, newDefaultThreadPool());
@@ -84,13 +82,15 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         this(appName, logger, newDefaultThreadPool());
     }
 
-    public AbstractDependencyManager(final String appName,
-                                     final Logger logger,
-                                     @Nonnull final SystemReporter systemReporter) {
+    public AbstractDependencyManager(
+            final String appName,
+            final Logger logger,
+            @Nonnull final SystemReporter systemReporter
+    ) {
         this(appName, logger, newDefaultThreadPool(), systemReporter);
     }
 
-    public AbstractDependencyManager ( final Logger logger ) {
+    public AbstractDependencyManager (final Logger logger) {
         this(null, logger, newDefaultThreadPool());
     }
 

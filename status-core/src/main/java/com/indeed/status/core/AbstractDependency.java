@@ -3,6 +3,7 @@ package com.indeed.status.core;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
+import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 
 /**
@@ -47,7 +48,6 @@ public abstract class AbstractDependency implements Dependency {
             final String servicePool
     ) {
         this.id = Preconditions.checkNotNull(id, "Missing id");
-        // TODO This should really be check-not-empty precondition, but let's not break things.
         this.description = Strings.nullToEmpty(description);
         this.timeout = timeout;
         this.pingPeriod = pingPeriod;
@@ -112,4 +112,141 @@ public abstract class AbstractDependency implements Dependency {
     private final Urgency urgency;
     private final DependencyType type;
     private final String servicePool;
+
+    public abstract static class Builder<T extends AbstractDependency, B extends Builder<T, B>> {
+        /**
+         * @deprecated Direct field access deprecated; use {@link #getId()} instead.
+         */
+        @Nonnull
+        protected String id = "";
+        /**
+         * @deprecated Direct field access deprecated; use {@link #getDescription()} instead.
+         */
+        @Nonnull
+        protected String description = "";
+        /**
+         * @deprecated Direct field access deprecated; use {@link #getTimeout()} instead.
+         */
+        @Nonnegative
+        protected long timeout = DEFAULT_TIMEOUT;
+        /**
+         * @deprecated Direct field access deprecated; use {@link #getPingPeriod()} instead.
+         */
+        @Nonnegative
+        protected long pingPeriod = DEFAULT_PING_PERIOD;
+        /**
+         * @deprecated Direct field access deprecated; use {@link #getUrgency()} instead.
+         */
+        @Nonnull
+        protected Urgency urgency = Urgency.UNKNOWN;
+        /**
+         * @deprecated Direct field access deprecated; use {@link #getType()} instead.
+         */
+        @Nonnull
+        protected DependencyType type = DEFAULT_TYPE;
+        /**
+         * @deprecated Direct field access deprecated; use {@link #getServicePool()} ()} instead.
+         */
+        @Nonnull
+        protected String servicePool = DEFAULT_SERVICE_POOL;
+
+        protected Builder() {
+        }
+
+        public abstract AbstractDependency build();
+
+        @Nonnull
+        protected String getId() {
+            //noinspection deprecation -- not deprecated for internal use.
+            return id;
+        }
+
+        @Nonnull
+        public B setId(@Nonnull final String id) {
+            //noinspection deprecation -- not deprecated for internal use.
+            this.id = id;
+            return cast();
+        }
+
+        @Nonnull
+        protected String getDescription() {
+            //noinspection deprecation -- not deprecated for internal use.
+            return description;
+        }
+
+        @Nonnull
+        public B setDescription(@Nonnull final String description) {
+            //noinspection deprecation -- not deprecated for internal use.
+            this.description = description;
+            return cast();
+        }
+
+        protected long getTimeout() {
+            //noinspection deprecation -- not deprecated for internal use.
+            return timeout;
+        }
+
+        @Nonnull
+        public B setTimeout(@Nonnegative final long timeout) {
+            //noinspection deprecation -- not deprecated for internal use.
+            this.timeout = timeout;
+            return cast();
+        }
+
+        protected long getPingPeriod() {
+            //noinspection deprecation -- not deprecated for internal use.
+            return pingPeriod;
+        }
+
+        @Nonnull
+        public B setPingPeriod(@Nonnegative final long pingPeriod) {
+            //noinspection deprecation -- not deprecated for internal use.
+            this.pingPeriod = pingPeriod;
+            return cast();
+        }
+
+        @Nonnull
+        protected Urgency getUrgency() {
+            //noinspection deprecation -- not deprecated for internal use.
+            return urgency;
+        }
+
+        @Nonnull
+        public B setUrgency(@Nonnull final Urgency urgency) {
+            //noinspection deprecation -- not deprecated for internal use.
+            this.urgency = urgency;
+            return cast();
+        }
+
+        @Nonnull
+        protected DependencyType getType() {
+            //noinspection deprecation -- not deprecated for internal use.
+            return type;
+        }
+
+        @Nonnull
+        public B setType(@Nonnull final DependencyType type) {
+            //noinspection deprecation -- not deprecated for internal use.
+            this.type = type;
+            return cast();
+        }
+
+        @Nonnull
+        protected String getServicePool() {
+            //noinspection deprecation -- not deprecated for internal use.
+            return servicePool;
+        }
+
+        @Nonnull
+        public B setServicePool(@Nonnull final String servicePool) {
+            //noinspection deprecation -- not deprecated for internal use.
+            this.servicePool = servicePool;
+            return cast();
+        }
+
+        private B cast() {
+            //noinspection unchecked
+            return (B) this;
+        }
+    }
 }

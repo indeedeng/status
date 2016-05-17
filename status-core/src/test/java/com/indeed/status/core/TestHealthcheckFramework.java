@@ -1,5 +1,6 @@
 package com.indeed.status.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.util.concurrent.ForwardingFuture;
@@ -7,7 +8,6 @@ import com.indeed.status.core.CheckResult.Thrown;
 import com.indeed.status.core.DependencyChecker.DependencyExecutorSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -22,17 +22,20 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author matts
  */
 @SuppressWarnings ({"ThrowableResultOfMethodCallIgnored", "ConstantConditions"})
 public class TestHealthcheckFramework {
+    private SystemReporter systemReporter = new SystemReporter();
+
     private static final class SimpleSupplier<T> implements Supplier<T> {
-            private AtomicReference<T> instance;
+            private final AtomicReference<T> instance;
 
         public SimpleSupplier (final T instance) {
-            this.instance = new AtomicReference<T>(instance);
+            this.instance = new AtomicReference<>(instance);
         }
 
         public T get() {
@@ -45,20 +48,14 @@ public class TestHealthcheckFramework {
     }
 
     private static final Logger log = Logger.getLogger ( TestHealthcheckFramework.class );
-    @SuppressWarnings("deprecation")
-    private static final PingableDependency DEP_ALWAYS_TRUE = new PingableDependency("alwaysTrue", "description", Urgency.REQUIRED) {
-        @Override
-        public void ping () throws Exception {
-            // seriously. always ok.
-        }
-    };
+    private static final PingableDependency DEP_ALWAYS_TRUE = new AlwaysTrueDependencyBuilder().build();
 
     /// Had trouble in production with one of the futured tasks getting cancelled.
     /// Simulate the error here so that we can make sure the surrounding framework
     ///  deals with these properly.
     @Test
     public void testCancelledExecution() throws Exception {
-        final SimpleSupplier<Boolean> shouldCancel = new SimpleSupplier<Boolean>(true);
+        final SimpleSupplier<Boolean> shouldCancel = new SimpleSupplier<>(true);
 
         //noinspection deprecation
         final Dependency longDependency = new PingableDependency("dep", "description", Urgency.REQUIRED) {
@@ -86,8 +83,8 @@ public class TestHealthcheckFramework {
 
     @Test
     public void testInterruptedExecution() throws Exception {
-        final SimpleSupplier<Boolean> shouldInterrupt = new SimpleSupplier<Boolean>(false);
-        final SimpleSupplier<Boolean> testInvalid = new SimpleSupplier<Boolean>(false);
+        final SimpleSupplier<Boolean> shouldInterrupt = new SimpleSupplier<>(false);
+        final SimpleSupplier<Boolean> testInvalid = new SimpleSupplier<>(false);
 
         // First test what happens if the checker thread gets interrupted...
         {
@@ -116,16 +113,16 @@ public class TestHealthcheckFramework {
 
             shouldInterrupt.set(false);
             assertEquals(CheckStatus.OK, manager.evaluate(id).getStatus());
-            Assert.assertTrue(!testInvalid.get());
+            assertTrue(!testInvalid.get());
 
             shouldInterrupt.set(true);
             assertEquals(CheckStatus.OUTAGE, manager.evaluate(id).getStatus());
-            Assert.assertTrue(!testInvalid.get());
+            assertTrue(!testInvalid.get());
 
             // Just to confirm, make sure that we're able to reenter a good state.
             shouldInterrupt.set(false);
             assertEquals(CheckStatus.OK, manager.evaluate(id).getStatus());
-            Assert.assertTrue(!testInvalid.get());
+            assertTrue(!testInvalid.get());
         }
 
         // Then check what happens if the health checker itself gets twiddled.
@@ -136,20 +133,20 @@ public class TestHealthcheckFramework {
 
             shouldInterrupt.set(false);
             assertEquals(CheckStatus.OK, Preconditions.checkNotNull(manager.evaluate(DEP_ALWAYS_TRUE.getId())).getStatus());
-            Assert.assertTrue(!testInvalid.get());
+            assertTrue(!testInvalid.get());
 
             shouldInterrupt.set(true);
             assertEquals(
                     "Expected the system to report an error if the health-check thread itself got interrupted for some reason.",
                     CheckStatus.OUTAGE, Preconditions.checkNotNull(manager.evaluate(DEP_ALWAYS_TRUE.getId())).getStatus());
-            Assert.assertTrue(!testInvalid.get());
+            assertTrue(!testInvalid.get());
 
             shouldInterrupt.set(false);
             final CheckResult recovery = Preconditions.checkNotNull(manager.evaluate(DEP_ALWAYS_TRUE.getId()));
             assertEquals(
                     "Didn't recover properly from the interrupted thread: " + new ObjectMapper().writeValueAsString(recovery),
                     CheckStatus.OK, recovery.getStatus());
-            Assert.assertTrue(!testInvalid.get());
+            assertTrue(!testInvalid.get());
 
         }
     }
@@ -158,24 +155,24 @@ public class TestHealthcheckFramework {
     @Test
     public void testSubmissionDeduplication() throws Exception {
         final int timeoutInMS = 500;
-        final SimpleSupplier<Boolean> ignored = new SimpleSupplier<Boolean>(false);
+        final SimpleSupplier<Boolean> ignored = new SimpleSupplier<>(false);
         final Dependency sampleDependency = new SleepyDependency("sample", timeoutInMS, ignored);
 
         final DependencyExecutorSet executors = new DependencyExecutorSet(Executors.newSingleThreadExecutor());
         final Future<CheckResult> firstFuture = executors.submit(sampleDependency);
         final Future<CheckResult> secondFuture = executors.submit(sampleDependency);
-        Assert.assertTrue("Expected the SAME object to be retrieved for back-to-back submissions", firstFuture == secondFuture);
+        assertTrue("Expected the SAME object to be retrieved for back-to-back submissions", firstFuture == secondFuture);
     }
 
     @Test
     public void testTimeouts() throws Exception {
         final int timeoutInMS = 500;
-        final SimpleSupplier<Boolean> lengthyCheckCompleted = new SimpleSupplier<Boolean>(false);
+        final SimpleSupplier<Boolean> lengthyCheckCompleted = new SimpleSupplier<>(false);
         final Dependency lengthyDependency = new SleepyDependency("lengthy", timeoutInMS, lengthyCheckCompleted);
 
         final int arbitraryUnusedPingPeriod = 30000;
         final Dependency timeoutDependency = new AbstractDependency(
-                "timeout", "", timeoutInMS, arbitraryUnusedPingPeriod, Urgency.REQUIRED
+                "timeout", "", timeoutInMS, arbitraryUnusedPingPeriod, Urgency.REQUIRED, DependencyType.StandardDependencyTypes.OTHER, ""
         ) {
             @Override
             public CheckResult call () throws Exception {
@@ -200,12 +197,12 @@ public class TestHealthcheckFramework {
         assertEquals(
                 "Expected the test to timeout, which should result in an outage.",
                 CheckStatus.OUTAGE, timeoutResult.getStatus());
-        Assert.assertTrue(
+        assertTrue(
                 "Expected the test to timeout well before the actual length of the dependency, within say two timeout periods. " +
                         "Instead, it took " + elapsed + "ms",
                 elapsed <= (2.0 * timeoutInMS));
 
-        Assert.assertTrue(
+        assertTrue(
                 "Expected that the lengthy check would not be completed, but somehow the bit got flipped inside of " + elapsed + "ms.",
                 !wasLengthyCheckCompleted);
     }
@@ -214,23 +211,31 @@ public class TestHealthcheckFramework {
     @Test
     public void testPingerInvariants () {
         final SimpleSupplier<Throwable> excToThrow = new SimpleSupplier<Throwable>(null);
-        final Dependency dependency = new AbstractDependency("id","",100,100,Urgency.REQUIRED) {
-            @Override
-            public CheckResult call () throws Exception {
-                final Throwable throwable = excToThrow.get();
-                if (null != throwable) {
-                    if (throwable instanceof Exception) {
-                        throw (Exception)throwable;
-                    } else if(throwable instanceof Error) {
-                        throw (Error)throwable;
-                    } else {
-                        throw new Exception(throwable);
-                    }
-                }
+        final Dependency dependency = SimpleDependency.newBuilder()
+                .setId("id")
+                .setDescription("")
+                .setTimeout(100)
+                .setPingPeriod(100)
+                .setUrgency(Urgency.REQUIRED)
+                .setCheckMethod(new CheckMethod() {
+                    @Override
+                    @Nonnull
+                    public CheckResult call(@Nonnull final Dependency dependency) throws Exception {
+                        final Throwable throwable = excToThrow.get();
+                        if (null != throwable) {
+                            if (throwable instanceof Exception) {
+                                throw (Exception)throwable;
+                            } else if(throwable instanceof Error) {
+                                throw (Error)throwable;
+                            } else {
+                                throw new Exception(throwable);
+                            }
+                        }
 
-                return CheckResult.newBuilder(this, CheckStatus.OK, "").build();
-            }
-        };
+                        return CheckResult.newBuilder(dependency, CheckStatus.OK, "").build();
+                    }
+                })
+                .build();
 
         final DependencyPinger pinger = new DependencyPinger(dependency);
 
@@ -243,28 +248,28 @@ public class TestHealthcheckFramework {
         excToThrow.set(new IOException(new NullPointerException()));
         pinger.run();
         final Thrown thrownInternal = pinger.call().getThrown();
-        Assert.assertTrue(thrownInternal.getException().equals("IOException"));
+        assertTrue(thrownInternal.getException().equals("IOException"));
         Assert.assertNotNull(thrownInternal.getThrown().getException());
 
         // ... even if they are runtime exceptions
         excToThrow.set(new NullPointerException());
         pinger.run();
-        Assert.assertTrue(pinger.call().getThrown().getException().equals("NullPointerException"));
+        assertTrue(pinger.call().getThrown().getException().equals("NullPointerException"));
 
         // ... or errors
         excToThrow.set(new Error());
         pinger.run();
-        Assert.assertTrue(pinger.call().getThrown().getException().equals("Error"));
+        assertTrue(pinger.call().getThrown().getException().equals("Error"));
 
         assertEquals(1, pinger.getTotalSuccesses());
         assertEquals(3, pinger.getTotalFailures());
         // Make sure we continue to produce the event counter unless we explicitly opt out.
-        Assert.assertTrue(pinger.getFailures().startsWith("3,"));
+        assertTrue(pinger.getFailures().startsWith("3,"));
     }
 
     @Test(expected=IllegalStateException.class)
     public void testInitializationFailure() throws Exception {
-        final CheckResultSet resultSet = new CheckResultSet();
+        final CheckResultSet resultSet = CheckResultSet.newInstance();
         final Dependency dependency = DEP_ALWAYS_TRUE;
 
         resultSet.handleInit(dependency);
@@ -276,7 +281,7 @@ public class TestHealthcheckFramework {
 
     @Test(expected=IllegalStateException.class)
     public void testExecutionFailure() throws Exception {
-        final CheckResultSet resultSet = new CheckResultSet();
+        final CheckResultSet resultSet = CheckResultSet.newInstance();
         final Dependency dependency = DEP_ALWAYS_TRUE;
 
         resultSet.handleInit(dependency);
@@ -290,7 +295,7 @@ public class TestHealthcheckFramework {
     public void testDownstreamFromExecutionFailure() throws Exception {
         Logger.getLogger(CheckResultSet.class).setLevel(Level.FATAL);
 
-        final CheckResultSet resultSet = new CheckResultSet();
+        final CheckResultSet resultSet = CheckResultSet.newInstance();
         final Dependency dependency = DEP_ALWAYS_TRUE;
 
         final CheckResult failureResult = CheckResult.newBuilder(dependency, CheckStatus.MINOR, "Expected a failure").build();
@@ -352,9 +357,9 @@ public class TestHealthcheckFramework {
             };
         }
     }
-    private static class InterruptingChecker extends DependencyChecker {
+    private class InterruptingChecker extends DependencyChecker {
         public InterruptingChecker (final SimpleSupplier<Boolean> shouldInterrupt, final SimpleSupplier<Boolean> testInvalid) {
-            super(log, new InterruptingExecutor(Executors.newSingleThreadExecutor(), shouldInterrupt, testInvalid));
+            super(log, new InterruptingExecutor(Executors.newSingleThreadExecutor(), shouldInterrupt, testInvalid), systemReporter);
         }
     }
 
@@ -375,9 +380,9 @@ public class TestHealthcheckFramework {
             return result;
         }
     }
-    private static class CancelingChecker extends DependencyChecker {
+    private class CancelingChecker extends DependencyChecker {
         public CancelingChecker (final SimpleSupplier<Boolean> shouldCancel) {
-            super(log, new CancelingExecutor(Executors.newSingleThreadExecutor(), shouldCancel));
+            super(log, new CancelingExecutor(Executors.newSingleThreadExecutor(), shouldCancel), systemReporter);
         }
     }
 
@@ -411,6 +416,25 @@ public class TestHealthcheckFramework {
                         System.currentTimeMillis() - startTime,
                         Thread.currentThread().getName()));
             }
+        }
+    }
+
+    private static class MinimalDependencyBuilder extends SimplePingableDependency.Builder {
+        // Defaults for convenience
+        public MinimalDependencyBuilder() {
+            this.setId("id");
+            this.setDescription("description");
+        }
+    }
+
+    private static class AlwaysTrueDependencyBuilder extends MinimalDependencyBuilder {
+        public AlwaysTrueDependencyBuilder() {
+            this.setPingMethod(new Runnable() {
+                @Override
+                public void run() {
+                    // Always ok
+                }
+            });
         }
     }
 }

@@ -73,7 +73,10 @@ public class CheckResult {
         }
     };
 
-    @Deprecated // Use CheckResult.newBuilder instead
+    /**
+     * @deprecated Use {@link CheckResult.Builder} instead
+     */
+    @Deprecated
     public CheckResult(
             @Nonnull final Dependency dependency,
             @Nonnull final CheckStatus status,
@@ -349,7 +352,15 @@ public class CheckResult {
         }
 
         public CheckResult build() {
-            return new CheckResult(dependency, status, errorMessage, timestamp, duration, lastKnownGoodTimestamp, period, t);
+            return new CheckResult(
+                    dependency,
+                    status,
+                    errorMessage,
+                    timestamp,
+                    duration,
+                    lastKnownGoodTimestamp,
+                    period,
+                    t);
         }
     }
 }

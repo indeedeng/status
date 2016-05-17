@@ -21,36 +21,68 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- *
+ * The <code>CheckResultSet</code> is a mutable aggregator collecting the results of individual dependency
+ *  evaluations into a single object describing the current health of the overall system.
  */
 public class CheckResultSet {
+    private static final Logger log = Logger.getLogger(CheckResultSet.class);
+    private static final SystemReporter DEFAULT_SYSTEM_REPORTER = new SystemReporter();
+
+    /// Epoch milliseconds at which the execution captured by this result set began
     private final long startTime;
+    //  TODO Remove this reference; there's no need to inject the reporter into the data rather than vice versa.
+    //       It will take some unwinding to completely extract this, as this is part of the public API.
+    /// Reporter that converts this result set into a human- or machine-readable report.
     private final SystemReporter systemReporter;
     @Nullable
     private String appName = null;
 
-    // The overall health of the system represented by this result set. Assume that all systems
-    // start in a healthy state.
+    /**
+     * The overall health of the system represented by this result set.
+     * Assume that all systems start in a healthy state.
+     */
     private final AtomicReference<CheckStatus> systemStatus = new AtomicReference<CheckStatus>(CheckStatus.OK);
+    /**
+     * Map of all currently-executing checks; provides a simple method of avoiding dependency-check-stacking.
+     */
     private final ConcurrentMap<String, Tag> executingChecks = Maps.newConcurrentMap();
     private final ConcurrentMap<String, CheckResult> completedChecks = Maps.newConcurrentMap();
 
-    private static final Logger log = Logger.getLogger(CheckResultSet.class);
-
     /**
-     * @deprecated  As of release 1.0.8, replaced by {@link #CheckResultSet(SystemReporter)}
+     * @deprecated Use {@link com.indeed.status.core.CheckResultSet.Builder} instead
+     *
+     * TODO Remove after a reasonable grace period.
      */
     @Deprecated
     public CheckResultSet() {
         this(new SystemReporter());
     }
 
+    /**
+     * @deprecated Use {@link com.indeed.status.core.CheckResultSet.Builder} instead
+     *
+     * TODO Remove after a reasonable grace period.
+     */
+    @Deprecated
     public CheckResultSet(@Nonnull final SystemReporter systemReporter) {
         this.startTime = System.currentTimeMillis();
         this.systemReporter = systemReporter;
     }
 
-    // Set after the fact, because the dependency checker is unaware of the app.
+    /**
+     * Convenience factory method for default result sets. Used primarily by tests.
+     */
+    public static CheckResultSet newInstance() {
+        return newBuilder().build();
+    }
+
+    /**
+     * Set the name of the application as it should be reported downstream.
+     *
+     * Implemented as a mutator to avoid having to thread the application name through the DependencyChecker.
+     *
+     * TODO Rearrange things so that we don't need this wart.
+     */
     public void setAppName(@Nullable final String appName) {
         this.appName = appName;
     }
@@ -86,7 +118,6 @@ public class CheckResultSet {
      * You could call {@link #CheckResultSet(SystemReporter)} to inject your own customized system reporter and
      * {@link #summarizeBySystemReporter(boolean)} would return the customized reports to you.
      */
-
     @Nonnull
     @Deprecated
     public SystemReport summarize(final boolean detailed) {
@@ -278,6 +309,23 @@ public class CheckResultSet {
 
             leastRecentlyExecutedTimestamp = earliestTimestamp;
             leastRecentlyExecutedDate = CheckResult.DATE_FORMAT.get().format(new Date(leastRecentlyExecutedTimestamp));
+        }
+    }
+
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        @Nonnull private SystemReporter systemReporter = DEFAULT_SYSTEM_REPORTER;
+
+        public Builder setSystemReporter(@Nonnull final SystemReporter systemReporter) {
+            this.systemReporter = systemReporter;
+            return this;
+        }
+
+        public CheckResultSet build() {
+            return new CheckResultSet(systemReporter);
         }
     }
 }
