@@ -9,6 +9,7 @@ import com.google.common.base.Suppliers;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 
 /**
  * The <code>PingableDependency</code> represents the simplest of dependencies, a dependency that executes and either
@@ -254,7 +255,7 @@ public class PingableDependency extends AbstractDependency {
         }
 
         public B setPingMethod(@Nonnull final Runnable pingMethod) {
-            return this.setPingMethod(new RunnableAsCallable(pingMethod));
+            return this.setPingMethod(Executors.<Void>callable(pingMethod, null));
         }
 
         @Nonnull
