@@ -15,7 +15,7 @@ import java.util.concurrent.Callable;
  * @author matts
  */
 
-public final class SimplePingableDependency extends PingableDependency {
+public class SimplePingableDependency extends PingableDependency {
     @Nonnull private final PingMethod pingMethod;
 
     /**
@@ -46,7 +46,7 @@ public final class SimplePingableDependency extends PingableDependency {
      *
      * @throws Exception If any piece of the dependency check fails.
      */
-    public void ping() throws Exception {
+    public final void ping() throws Exception {
         // Execute the delegate, passing through any exception.
         this.pingMethod.ping();
     }

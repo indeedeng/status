@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
  *
  * @author matts
  */
-public final class SimpleDependency extends AbstractDependency {
+public class SimpleDependency extends AbstractDependency {
     @Nonnull private final CheckMethod checkMethod;
 
     // For builder use only
@@ -31,7 +31,7 @@ public final class SimpleDependency extends AbstractDependency {
     }
 
     @Override
-    public CheckResult call() throws Exception {
+    public final CheckResult call() throws Exception {
         // Execute the delegate, passing through any exception.
         return this.checkMethod.call(this);
     }
