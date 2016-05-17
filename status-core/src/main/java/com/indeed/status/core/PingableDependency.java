@@ -236,7 +236,7 @@ public class PingableDependency extends AbstractDependency {
 
     public static abstract class Builder<T extends PingableDependency, B extends AbstractDependency.Builder<T, B>> extends AbstractDependency.Builder<T, B> {
         /**
-         * @deprecated Direct field access deprecated; use {@link #getServicePool()} ()} instead.
+         * @deprecated Direct field access deprecated; use {@link #getToggle()}} instead.
          */
         @Nonnull protected Supplier<Boolean> toggle = Suppliers.ofInstance(Boolean.TRUE);
         @Nullable private Callable<Void> pingMethod;
