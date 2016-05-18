@@ -61,7 +61,7 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
 
     private long pingPeriod = DEFAULT_PING_PERIOD;
 
-    @Nonnull final WallClock wallClock;
+    @Nonnull private final WallClock wallClock;
 
     public static class Qualifiers {
         protected Qualifiers () { throw new UnsupportedOperationException("ResultType is a constants class."); }
@@ -76,18 +76,30 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     //  unit tests, since those are the only reasonable extensions of the checker. They can probably be refactored
     //  to push the custom behavior up into the test case or down into the dependency.
 
+    /**
+     * @deprecated Use {@link #AbstractDependencyManager(WallClock)}
+     */
+    @Deprecated
     public AbstractDependencyManager() {
         this(null, null, newDefaultThreadPool());
     }
     public AbstractDependencyManager(@Nonnull final WallClock wallClock) {
         this(null, null, newDefaultThreadPool(), wallClock);
     }
+    /**
+     * @deprecated Use {@link #AbstractDependencyManager(String, WallClock)}
+     */
+    @Deprecated
     public AbstractDependencyManager(final String appName) {
         this(appName, null, newDefaultThreadPool());
     }
     public AbstractDependencyManager(final String appName, @Nonnull final WallClock wallClock) {
         this(appName, null, newDefaultThreadPool(), wallClock);
     }
+    /**
+     * @deprecated Use {@link #AbstractDependencyManager(String, Logger, WallClock)}
+     */
+    @Deprecated
     public AbstractDependencyManager (final String appName, final Logger logger) {
         this(appName, logger, newDefaultThreadPool());
     }
