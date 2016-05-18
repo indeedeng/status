@@ -316,11 +316,11 @@ public class TestHealthcheckFramework {
     @Test
     public void testCustomWallClock() throws InterruptedException {
         final long now = System.currentTimeMillis(); // arbitrary time
-        final StoppedClock stoppedClock = new StoppedClock(now);
+        this.wallClock.set(now);
 
         final DependencyChecker checkerWithStoppedClock = DependencyChecker.newBuilder()
                 .setExecutorService(Executors.newSingleThreadExecutor())
-                .setWallClock(stoppedClock)
+                .setWallClock(wallClock)
                 .build();
 
         Thread.sleep(10);
@@ -328,7 +328,7 @@ public class TestHealthcheckFramework {
                 "Failed to advance the system clock by sleeping; remainder of test invalid.",
                 System.currentTimeMillis() > now);
 
-        final PingableDependency dependency = new AlwaysTrueDependencyBuilder().setWallClock(stoppedClock).build();
+        final PingableDependency dependency = new AlwaysTrueDependencyBuilder().setWallClock(wallClock).build();
         final CheckResultSet resultSet = checkerWithStoppedClock.evaluate(ImmutableList.of(dependency));
 
         final long recordedStartTime = resultSet.getStartTime();
