@@ -3,13 +3,14 @@ package com.indeed.status.core;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
+import com.indeed.util.core.time.WallClock;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.concurrent.Callable;
 
 /**
- * Simple pingable depenency that determines health status by evaluating an injected
+ * Simple pingable dependency that determines health status by evaluating an injected
  *  {@link PingMethod} that either runs to completion or throws an exception.
  *
  * @author matts
@@ -33,9 +34,10 @@ public class SimplePingableDependency extends PingableDependency {
             @Nonnull final Urgency urgency,
             @Nonnull final DependencyType type,
             final String servicePool,
+            @Nonnull final WallClock wallClock,
             @Nonnull final Supplier<Boolean> toggle
     ) {
-        super(id, description, timeout, pingPeriod, urgency, type, servicePool, toggle);
+        super(id, description, timeout, pingPeriod, urgency, type, servicePool, wallClock, toggle);
 
         this.pingMethod = pingMethod;
     }
@@ -101,6 +103,7 @@ public class SimplePingableDependency extends PingableDependency {
                     getUrgency(),
                     getType(),
                     getServicePool(),
+                    getWallClock(),
                     getToggle());
         }
     }

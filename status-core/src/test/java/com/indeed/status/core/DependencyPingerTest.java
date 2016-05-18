@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.indeed.status.core.test.ControlledDependency;
+import com.indeed.util.core.time.DefaultWallClock;
+import com.indeed.util.core.time.WallClock;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -21,13 +23,14 @@ import static org.junit.Assert.assertSame;
  * author: cameron
  */
 public class DependencyPingerTest {
+    private WallClock wallClock = new DefaultWallClock();
 
     @Test
     public void testListener() throws Exception {
         final StatusUpdateListener listener = EasyMock.createMock(StatusUpdateListener.class);
         final ControlledDependency dependency = ControlledDependency.build();
         dependency.setInError(true);
-        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency);
+        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency, wallClock);
         pinger.addListener(listener);
 
         final Capture<CheckResult> original = new Capture<CheckResult>();
@@ -67,7 +70,7 @@ public class DependencyPingerTest {
     public void testWithUrgencyNone() throws Exception {
         final StatusUpdateListener listener = EasyMock.createMock(StatusUpdateListener.class);
         final ControlledDependency dependency = ControlledDependency.builder().setUrgency(Urgency.NONE).build();
-        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency);
+        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency, wallClock);
         pinger.addListener(listener);
 
         final Capture<CheckResult> original = new Capture<CheckResult>();
@@ -109,7 +112,7 @@ public class DependencyPingerTest {
     public void testGradual() throws Exception {
         final ControlledDependency dependency = ControlledDependency.build();
         dependency.setInError(true);
-        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency);
+        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency, wallClock);
 
         // with no successes
         // expect that first time, call will run something
@@ -159,7 +162,7 @@ public class DependencyPingerTest {
             }
         }).build();
         dependency.setInError(true);
-        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency);
+        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency, wallClock);
 
         assertEquals(CheckStatus.OUTAGE, pinger.call().getStatus());
         assertEquals(1, dependency.getTimes());
@@ -181,7 +184,7 @@ public class DependencyPingerTest {
         final StatusUpdateListener listener3 = EasyMock.createMock(StatusUpdateListener.class);
         final ControlledDependency dependency = ControlledDependency.build();
         dependency.setInError(true);
-        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency);
+        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency, wallClock);
         pinger.addListener(listener1);
         pinger.addListener(listener2);
         pinger.addListener(listener3);

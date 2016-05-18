@@ -3,9 +3,11 @@ package com.indeed.status.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ForwardingFuture;
 import com.indeed.status.core.CheckResult.Thrown;
 import com.indeed.status.core.DependencyChecker.DependencyExecutorSet;
+import com.indeed.util.core.time.StoppedClock;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -13,6 +15,8 @@ import org.junit.Test;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Date;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,6 +34,7 @@ import static org.junit.Assert.assertTrue;
 @SuppressWarnings ({"ThrowableResultOfMethodCallIgnored", "ConstantConditions"})
 public class TestHealthcheckFramework {
     private SystemReporter systemReporter = new SystemReporter();
+    private StoppedClock wallClock = new StoppedClock();
 
     private static final class SimpleSupplier<T> implements Supplier<T> {
             private final AtomicReference<T> instance;
@@ -210,7 +215,7 @@ public class TestHealthcheckFramework {
     @SuppressWarnings ("ConstantConditions")
     @Test
     public void testPingerInvariants () {
-        final SimpleSupplier<Throwable> excToThrow = new SimpleSupplier<Throwable>(null);
+        final SimpleSupplier<Throwable> excToThrow = new SimpleSupplier<>(null);
         final Dependency dependency = SimpleDependency.newBuilder()
                 .setId("id")
                 .setDescription("")
@@ -237,7 +242,7 @@ public class TestHealthcheckFramework {
                 })
                 .build();
 
-        final DependencyPinger pinger = new DependencyPinger(dependency);
+        final DependencyPinger pinger = new DependencyPinger(dependency, wallClock);
 
         // Call the pinger to get a result BEFORE executing the pinger.
         final CheckResult checkResult = pinger.call();
@@ -308,6 +313,43 @@ public class TestHealthcheckFramework {
         resultSet.handleComplete(dependency, okResult);
     }
 
+    @Test
+    public void testCustomWallClock() throws InterruptedException {
+        final long now = System.currentTimeMillis(); // arbitrary time
+        final StoppedClock stoppedClock = new StoppedClock(now);
+
+        final DependencyChecker checkerWithStoppedClock = DependencyChecker.newBuilder()
+                .setExecutorService(Executors.newSingleThreadExecutor())
+                .setWallClock(stoppedClock)
+                .build();
+
+        Thread.sleep(10);
+        assertTrue(
+                "Failed to advance the system clock by sleeping; remainder of test invalid.",
+                System.currentTimeMillis() > now);
+
+        final PingableDependency dependency = new AlwaysTrueDependencyBuilder().setWallClock(stoppedClock).build();
+        final CheckResultSet resultSet = checkerWithStoppedClock.evaluate(ImmutableList.of(dependency));
+
+        final long recordedStartTime = resultSet.getStartTime();
+        assertEquals(
+                "Expected the check result set to be pinned to the given wall clock time, not the current moment in time.",
+                now, recordedStartTime);
+
+        final Collection<CheckResult> completed = resultSet.getCompleted();
+        assertEquals(
+                "Expected all results to be completed",
+                1, completed.size());
+        final CheckResult result = completed.iterator().next();
+        assertEquals(
+                "Expected the timestamp for the result to be equal to the wall-clock time, not the actual execution time",
+                now, result.getTimestamp());
+        assertEquals(
+                "Expected the recorded execution date to match the given wall clock, not the system time",
+                CheckResult.DATE_FORMAT.get().format(new Date(now)), result.getDate());
+    }
+
+
     private AbstractDependencyManager newDependencyManager() throws Exception {
         return new AbstractDependencyManager() {};
     }
@@ -359,7 +401,7 @@ public class TestHealthcheckFramework {
     }
     private class InterruptingChecker extends DependencyChecker {
         public InterruptingChecker (final SimpleSupplier<Boolean> shouldInterrupt, final SimpleSupplier<Boolean> testInvalid) {
-            super(log, new InterruptingExecutor(Executors.newSingleThreadExecutor(), shouldInterrupt, testInvalid), systemReporter);
+            super(log, new InterruptingExecutor(Executors.newSingleThreadExecutor(), shouldInterrupt, testInvalid), systemReporter, wallClock);
         }
     }
 
@@ -382,7 +424,7 @@ public class TestHealthcheckFramework {
     }
     private class CancelingChecker extends DependencyChecker {
         public CancelingChecker (final SimpleSupplier<Boolean> shouldCancel) {
-            super(log, new CancelingExecutor(Executors.newSingleThreadExecutor(), shouldCancel), systemReporter);
+            super(log, new CancelingExecutor(Executors.newSingleThreadExecutor(), shouldCancel), systemReporter, wallClock);
         }
     }
 
