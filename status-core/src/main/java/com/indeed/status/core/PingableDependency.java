@@ -2,6 +2,8 @@ package com.indeed.status.core;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.indeed.util.core.time.DefaultWallClock;
+import com.indeed.util.core.time.WallClock;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -13,6 +15,7 @@ import javax.annotation.Nullable;
  * @see SimpleDependency
  */
 public abstract class PingableDependency extends AbstractDependency {
+    @Nonnull private final WallClock wallClock;
     @Nonnull private final Supplier<Boolean> toggle;
 
     /**
@@ -120,8 +123,9 @@ public abstract class PingableDependency extends AbstractDependency {
     }
 
     /**
-     * For subclass use only
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
      */
+    @Deprecated
     protected PingableDependency(
             @Nonnull final String id,
             @Nonnull final String description,
@@ -132,13 +136,30 @@ public abstract class PingableDependency extends AbstractDependency {
             final String servicePool,
             @Nonnull final Supplier<Boolean> toggle
     ) {
+        //noinspection deprecation - pointless warning in a deprecated method.
+        this(id, description, timeout, pingPeriod, urgency, type, servicePool, new DefaultWallClock(), toggle);
+    }
+
+    protected PingableDependency(
+            @Nonnull final String id,
+            @Nonnull final String description,
+            final long timeout,
+            final long pingPeriod,
+            @Nonnull final Urgency urgency,
+            @Nonnull final DependencyType type,
+            final String servicePool,
+            @Nonnull final WallClock wallClock,
+            @Nonnull final Supplier<Boolean> toggle
+    ) {
         super(id, description, timeout, pingPeriod, urgency, type, servicePool);
+
+        this.wallClock = wallClock;
         this.toggle = toggle;
     }
 
-    public CheckResult call () throws Exception {
+    public CheckResult call() throws Exception {
         CheckResult result;
-        final long timestamp = System.currentTimeMillis();
+        final long timestamp = wallClock.currentTimeMillis();
 
         try {
             // Execute the unreliable method only if the toggle is set, allow products that have
@@ -147,14 +168,14 @@ public abstract class PingableDependency extends AbstractDependency {
                 ping();
             }
 
-            final long duration = System.currentTimeMillis() - timestamp;
+            final long duration = wallClock.currentTimeMillis() - timestamp;
             result = CheckResult.newBuilder(this, CheckStatus.OK, formatErrorMessage(null))
                     .setTimestamp(timestamp)
                     .setDuration(duration)
                     .build();
 
-        } catch(Exception e) {
-            final long duration = System.currentTimeMillis() - timestamp;
+        } catch(final Exception e) {
+            final long duration = wallClock.currentTimeMillis() - timestamp;
             result = CheckResult.newBuilder(this, CheckStatus.OUTAGE, formatErrorMessage(e))
                     .setTimestamp(timestamp)
                     .setDuration(duration)
@@ -188,6 +209,7 @@ public abstract class PingableDependency extends AbstractDependency {
          * @deprecated Direct field access deprecated; use {@link #getToggle()}} instead.
          */
         @Nonnull protected Supplier<Boolean> toggle = Suppliers.ofInstance(Boolean.TRUE);
+        @Nonnull private WallClock wallClock = new DefaultWallClock();
 
         protected Builder() {}
 
@@ -200,6 +222,16 @@ public abstract class PingableDependency extends AbstractDependency {
         public B setToggle(@Nonnull final Supplier<Boolean> toggle) {
             //noinspection deprecation -- only deprecated for direct acces
             this.toggle = toggle;
+            return cast();
+        }
+
+        @Nonnull
+        protected WallClock getWallClock() {
+            return wallClock;
+        }
+
+        public B setWallClock(@Nonnull final WallClock wallClock) {
+            this.wallClock = wallClock;
             return cast();
         }
 

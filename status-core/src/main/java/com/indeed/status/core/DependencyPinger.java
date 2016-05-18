@@ -4,6 +4,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.indeed.util.core.LongRecentEventsCounter;
+import com.indeed.util.core.time.DefaultWallClock;
+import com.indeed.util.core.time.WallClock;
 import com.indeed.util.varexport.Export;
 import com.indeed.util.varexport.VarExporter;
 import org.apache.log4j.Logger;
@@ -43,6 +45,7 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     @Nullable
     private volatile CheckResult lastResult = null;
     private transient Throwable lastThrown = null;
+    private final WallClock wallClock;
     private transient long lastDuration = 0L;
     private transient long lastExecuted = 0L;
     private transient long lastKnownGood = 0L;
@@ -52,7 +55,17 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     @Nonnull
     private final Dependency dependency;
 
+    /**
+     * @deprecated Use {@link #DependencyPinger(Dependency, WallClock)} instead.
+     */
     public DependencyPinger(@Nonnull final Dependency dependency) {
+        this(dependency, new DefaultWallClock());
+    }
+
+    DependencyPinger(
+            @Nonnull final Dependency dependency,
+            @Nonnull final WallClock wallClock
+    ) {
         this(Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
                 .setNameFormat("dependency-pinger-%d")
                 .setDaemon(true)
@@ -63,24 +76,31 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
                     }
                 })
                 .build()
-        ), dependency);
+        ), dependency, wallClock);
     }
 
-    DependencyPinger(@Nonnull final ExecutorService executorService, @Nonnull final Dependency dependency) {
-        this(executorService, dependency, dependency.getPingPeriod());
+    DependencyPinger(
+            @Nonnull final ExecutorService executorService,
+            @Nonnull final Dependency dependency,
+            @Nonnull final WallClock wallClock
+    ) {
+        this(executorService, dependency, dependency.getPingPeriod(), wallClock);
     }
 
     DependencyPinger (
             @Nonnull final ExecutorService executorService,
             @Nonnull final Dependency dependency,
-            final long pingPeriod
+            final long pingPeriod,
+            @Nonnull final WallClock wallClock
     ) {
         this.checker = DependencyChecker.newBuilder()
                 .setExecutorService(executorService)
                 .setLogger(log)
+                .setWallClock(wallClock)
                 .build();
         this.dependency = dependency;
         this.pingPeriod = pingPeriod;
+        this.wallClock = wallClock;
 
         VarExporter.forNamespace(DependencyPinger.class.getSimpleName() + "-" + this.dependency.getId()).includeInGlobal().export(this, "");
     }
@@ -97,7 +117,7 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
 
         synchronized(this) {
             try {
-                lastExecuted = System.currentTimeMillis();
+                lastExecuted = wallClock.currentTimeMillis();
                 currentResult = checker.evaluate(dependency);
 
                 if (null != currentResult && currentResult.getStatus() == CheckStatus.OK) {
@@ -154,7 +174,7 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
             consecutiveFailures.set(0);
         }
         totalSuccesses.incrementAndGet();
-        lastDuration = System.currentTimeMillis() - lastExecuted;
+        lastDuration = wallClock.currentTimeMillis() - lastExecuted;
         lastKnownGood = lastExecuted;
         lastThrown = null;
 
@@ -166,13 +186,13 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
                 .build();
     }
 
-    private CheckResult handleFailure(@Nullable CheckResult reportedResult, @Nullable final Throwable t) {
+    private CheckResult handleFailure(@Nullable final CheckResult reportedResult, @Nullable final Throwable t) {
         consecutiveFailures.incrementAndGet();
         totalFailures.incrementAndGet();
         synchronized (failuresOverTime) {
             failuresOverTime.increment();
         }
-        lastDuration = System.currentTimeMillis() - lastExecuted;
+        lastDuration = wallClock.currentTimeMillis() - lastExecuted;
         //noinspection ThrowableResultOfMethodCallIgnored
         lastThrown = null == reportedResult ? t  : (null == t ? reportedResult.getThrowable() : t);
 

@@ -3,6 +3,8 @@ package com.indeed.status.core;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.indeed.util.core.time.DefaultWallClock;
+import com.indeed.util.core.time.WallClock;
 import org.apache.log4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -20,34 +22,40 @@ import java.util.concurrent.TimeoutException;
 /**
  * Standalone evaluator of {@link Dependency} objects.
  *
+ * Package-protected, because this evaluator is a convenience class for testing and not intended for
+ *  modification through the public API.
+ *
  * @author matts
  */
 class DependencyChecker /*implements Terminable todo(cameron)*/ {
     @Nonnull private final DependencyExecutor dependencyExecutor;
+    @Nonnull private final WallClock wallClock;
     @Nonnull private final SystemReporter systemReporter;
     @Nonnull private final Logger log;
 
-    public DependencyChecker (
-            @Nonnull final Logger logger,
-            @Nonnull final DependencyExecutor dependencyExecutor
-    ) {
-        this(logger, dependencyExecutor, new SystemReporter());
-    }
-
-    public DependencyChecker (
+    // For builder and subclass use only
+    protected DependencyChecker(
             @Nonnull final Logger logger,
             @Nonnull final DependencyExecutor dependencyExecutor,
-            @Nonnull final SystemReporter systemReporter
+            @Nonnull final SystemReporter systemReporter,
+            @Nonnull final WallClock wallClock
     ) {
         this.log = logger;
         this.dependencyExecutor = dependencyExecutor;
         this.systemReporter = systemReporter;
+        this.wallClock = wallClock;
+    }
+
+    @Nonnull
+    public WallClock getWallClock() {
+        return wallClock;
     }
 
     @Nonnull
     public CheckResultSet evaluate(final Collection<? extends Dependency> dependencies) {
         final CheckResultSet result = CheckResultSet.newBuilder()
                 .setSystemReporter(systemReporter)
+                .setWallClock(wallClock)
                 .build();
 
         for (final Dependency dependency : dependencies) {
@@ -62,6 +70,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         @Nonnull
         final CheckResultSet result = CheckResultSet.newBuilder()
                 .setSystemReporter(systemReporter)
+                .setWallClock(wallClock)
                 .build();
 
         evaluateAndRecord(dependency, result);
@@ -100,7 +109,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         } finally {
             if (null == checkResult) {
                 checkResult = CheckResult.newBuilder(pinger, CheckStatus.OUTAGE, "Unable to check status of dependency; see exception.")
-                        .setTimestamp(System.currentTimeMillis())
+                        .setTimestamp(wallClock.currentTimeMillis())
                         .setDuration(0L)
                         .setThrowable(t)
                         .build();
@@ -115,7 +124,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     private void evaluateSafelyAndRecord(@Nonnull final Dependency dependency, @Nonnull final CheckResultSet results) {
         final long timeout = dependency.getTimeout();
 
-        final long timestamp = System.currentTimeMillis();
+        final long timestamp = wallClock.currentTimeMillis();
         CheckResult evaluationResult = null;
         Throwable t = null;
 
@@ -150,7 +159,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         } catch (final TimeoutException e) {
             log.debug("Timed out attempting to validate dependency '" + dependency.getId() + "'.");
 
-            final long duration = System.currentTimeMillis() - timestamp;
+            final long duration = wallClock.currentTimeMillis() - timestamp;
 
             // Cancel, but don't worry too much if it's not able to be cancelled.
             cancel(future);
@@ -172,7 +181,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
         } finally {
             if (null == evaluationResult) {
-                final long duration = System.currentTimeMillis() - timestamp;
+                final long duration = wallClock.currentTimeMillis() - timestamp;
 
                 evaluationResult = CheckResult.newBuilder(dependency, CheckStatus.OUTAGE, "Exception thrown during the evaluation of the dependency.")
                         .setTimestamp(timestamp)
@@ -206,7 +215,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
             results.handleComplete(dependency, evaluationResult);
 
-        } catch (final Exception e) {
+        } catch (Exception e) {
             log.error("An exception that really shouldn't ever happen, did.", e);
 
         } finally {
@@ -317,7 +326,8 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         private Logger _logger = DEFAULT_LOGGER;
         @Nullable
         private ExecutorService executorService;
-
+        @Nonnull
+        private WallClock wallClock = new DefaultWallClock();
         @Nonnull
         private SystemReporter systemReporter = new SystemReporter();
 
@@ -339,13 +349,18 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             return this;
         }
 
+        public Builder setWallClock(@Nonnull final WallClock wallClock) {
+            this.wallClock = wallClock;
+            return this;
+        }
+
         public DependencyChecker build() {
             final ExecutorService executorService = Preconditions.checkNotNull(
                     this.executorService,
                     "Cannot configure a dependency checker with a null executor service.");
             final DependencyExecutor dependencyExecutor = new DependencyExecutorSet(executorService);
 
-            return new DependencyChecker(_logger, dependencyExecutor, systemReporter);
+            return new DependencyChecker(_logger, dependencyExecutor, systemReporter, wallClock);
         }
     }
 }

@@ -6,6 +6,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.indeed.util.core.NetUtils;
+import com.indeed.util.core.time.DefaultWallClock;
+import com.indeed.util.core.time.WallClock;
 import org.apache.log4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -27,6 +29,7 @@ import static com.google.common.base.Preconditions.checkState;
 public class CheckResultSet {
     private static final Logger log = Logger.getLogger(CheckResultSet.class);
     private static final SystemReporter DEFAULT_SYSTEM_REPORTER = new SystemReporter();
+    private static final DefaultWallClock DEFAULT_WALL_CLOCK = new DefaultWallClock();
 
     /// Epoch milliseconds at which the execution captured by this result set began
     private final long startTime;
@@ -55,7 +58,8 @@ public class CheckResultSet {
      */
     @Deprecated
     public CheckResultSet() {
-        this(new SystemReporter());
+        // noinspection deprecation -- unhelpful warning in a deprecated method
+        this(DEFAULT_WALL_CLOCK.currentTimeMillis(), DEFAULT_SYSTEM_REPORTER);
     }
 
     /**
@@ -65,7 +69,15 @@ public class CheckResultSet {
      */
     @Deprecated
     public CheckResultSet(@Nonnull final SystemReporter systemReporter) {
-        this.startTime = System.currentTimeMillis();
+        // noinspection deprecation -- unhelpful warning in a deprecated method
+        this(DEFAULT_WALL_CLOCK.currentTimeMillis(), systemReporter);
+    }
+
+    public CheckResultSet(
+            final long startTime,
+            @Nonnull final SystemReporter systemReporter
+    ) {
+        this.startTime = startTime;
         this.systemReporter = systemReporter;
     }
 
@@ -317,7 +329,13 @@ public class CheckResultSet {
     }
 
     public static class Builder {
+        @Nonnull private WallClock wallClock = DEFAULT_WALL_CLOCK;
         @Nonnull private SystemReporter systemReporter = DEFAULT_SYSTEM_REPORTER;
+
+        public Builder setWallClock(@Nonnull final WallClock wallClock) {
+            this.wallClock = wallClock;
+            return this;
+        }
 
         public Builder setSystemReporter(@Nonnull final SystemReporter systemReporter) {
             this.systemReporter = systemReporter;
@@ -325,7 +343,7 @@ public class CheckResultSet {
         }
 
         public CheckResultSet build() {
-            return new CheckResultSet(systemReporter);
+            return new CheckResultSet(wallClock.currentTimeMillis(), systemReporter);
         }
     }
 }

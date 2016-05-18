@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.indeed.util.core.time.DefaultWallClock;
+import com.indeed.util.core.time.WallClock;
 import com.indeed.util.varexport.Export;
 import com.indeed.util.varexport.VarExporter;
 import org.apache.log4j.Logger;
@@ -59,6 +61,8 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
 
     private long pingPeriod = DEFAULT_PING_PERIOD;
 
+    @Nonnull private final WallClock wallClock;
+
     public static class Qualifiers {
         protected Qualifiers () { throw new UnsupportedOperationException("ResultType is a constants class."); }
 
@@ -72,14 +76,35 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     //  unit tests, since those are the only reasonable extensions of the checker. They can probably be refactored
     //  to push the custom behavior up into the test case or down into the dependency.
 
+    /**
+     * @deprecated Use {@link #AbstractDependencyManager(WallClock)}
+     */
+    @Deprecated
     public AbstractDependencyManager() {
         this(null, null, newDefaultThreadPool());
     }
+    public AbstractDependencyManager(@Nonnull final WallClock wallClock) {
+        this(null, null, newDefaultThreadPool(), wallClock);
+    }
+    /**
+     * @deprecated Use {@link #AbstractDependencyManager(String, WallClock)}
+     */
+    @Deprecated
     public AbstractDependencyManager(final String appName) {
         this(appName, null, newDefaultThreadPool());
     }
-    public AbstractDependencyManager ( final String appName, final Logger logger ) {
+    public AbstractDependencyManager(final String appName, @Nonnull final WallClock wallClock) {
+        this(appName, null, newDefaultThreadPool(), wallClock);
+    }
+    /**
+     * @deprecated Use {@link #AbstractDependencyManager(String, Logger, WallClock)}
+     */
+    @Deprecated
+    public AbstractDependencyManager (final String appName, final Logger logger) {
         this(appName, logger, newDefaultThreadPool());
+    }
+    public AbstractDependencyManager (final String appName, final Logger logger, @Nonnull final WallClock wallClock) {
+        this(appName, logger, newDefaultThreadPool(), wallClock);
     }
 
     public AbstractDependencyManager(
@@ -90,8 +115,20 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         this(appName, logger, newDefaultThreadPool(), systemReporter);
     }
 
+    public AbstractDependencyManager(
+            final String appName,
+            final Logger logger,
+            @Nonnull final SystemReporter systemReporter,
+            @Nonnull final WallClock wallClock
+    ) {
+        this(appName, logger, newDefaultThreadPool(), systemReporter, wallClock);
+    }
+
     public AbstractDependencyManager (final Logger logger) {
         this(null, logger, newDefaultThreadPool());
+    }
+    public AbstractDependencyManager (final Logger logger, @Nonnull final WallClock wallClock) {
+        this(null, logger, newDefaultThreadPool(), wallClock);
     }
 
     public AbstractDependencyManager(
@@ -109,6 +146,14 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     ) {
         this(appName, logger, threadPool, new SystemReporter());
     }
+    public AbstractDependencyManager(
+            @Nullable final String appName,
+            @Nullable final Logger logger,
+            @Nonnull final ThreadPoolExecutor threadPool,
+            @Nonnull final WallClock wallClock
+    ) {
+        this(appName, logger, threadPool, new SystemReporter(), wallClock);
+    }
 
     public AbstractDependencyManager(
             @Nullable final String appName,
@@ -116,11 +161,26 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
             @Nonnull final ThreadPoolExecutor threadPool,
             @Nonnull final SystemReporter systemReporter
     ) {
-        this(appName, logger, threadPool, DependencyChecker.newBuilder()
-                .setExecutorService(threadPool)
-                .setLogger(logger)
-                .setSystemReporter(systemReporter)
-                .build());
+        this(appName, logger, threadPool, systemReporter, new DefaultWallClock());
+    }
+
+    public AbstractDependencyManager(
+            @Nullable final String appName,
+            @Nullable final Logger logger,
+            @Nonnull final ThreadPoolExecutor threadPool,
+            @Nonnull final SystemReporter systemReporter,
+            @Nonnull final WallClock wallClock
+    ) {
+        this(
+                appName,
+                logger,
+                threadPool,
+                DependencyChecker.newBuilder()
+                        .setExecutorService(threadPool)
+                        .setLogger(logger)
+                        .setSystemReporter(systemReporter)
+                        .setWallClock(wallClock)
+                        .build());
     }
 
     public AbstractDependencyManager(
@@ -147,6 +207,7 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         this.threadPool = threadPool;
 
         this.checker = checker;
+        this.wallClock = checker.getWallClock(); // Ensure the dependency manager and the checker are synchronized on a wall clock.
 
         VarExporter.forNamespace(getClass().getSimpleName()).includeInGlobal().export(this, "");
     }
@@ -154,6 +215,11 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     @Nullable
     public String getAppName() {
         return appName;
+    }
+
+    @Nonnull
+    public WallClock getWallClock() {
+        return wallClock;
     }
 
     static ThreadPoolExecutor newDefaultThreadPool() {
@@ -243,11 +309,11 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         final long dependencyPingPeriod = dependency.getPingPeriod();
         if (dependencyPingPeriod <= 0 || dependencyPingPeriod == AbstractDependency.DEFAULT_PING_PERIOD) {
             log.info("Creating pinger with ping period " + pingPeriod);
-            pinger = new DependencyPinger(threadPool, dependency, pingPeriod);
+            pinger = new DependencyPinger(threadPool, dependency, pingPeriod, wallClock);
 
         } else {
             log.info("Creating pinger with ping period " + dependency.getPingPeriod());
-            pinger = new DependencyPinger(threadPool, dependency);
+            pinger = new DependencyPinger(threadPool, dependency, wallClock);
         }
         return pinger;
     }

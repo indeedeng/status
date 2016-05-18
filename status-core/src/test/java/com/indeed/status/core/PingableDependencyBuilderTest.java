@@ -56,6 +56,7 @@ public class PingableDependencyBuilderTest {
                     getUrgency(),
                     getType(),
                     getServicePool(),
+                    getWallClock(),
                     getToggle()
             ) {
                 @Override
