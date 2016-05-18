@@ -7,6 +7,7 @@ import com.indeed.util.core.time.WallClock;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * The <code>PingableDependency</code> represents the simplest of dependencies, a dependency that executes and either
@@ -14,6 +15,7 @@ import javax.annotation.Nullable;
  *
  * @see SimpleDependency
  */
+@ThreadSafe
 public abstract class PingableDependency extends AbstractDependency {
     @Nonnull private final WallClock wallClock;
     @Nonnull private final Supplier<Boolean> toggle;

@@ -5,12 +5,14 @@ import com.google.common.base.Strings;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * The {@link AbstractDependency} provides a convenience base class for implementers of
  *  the {@link Dependency} interface. All primitive properties are captured here as fields,
  *  leaving on the {@link #call} method to be implemented.
  */
+@ThreadSafe
 public abstract class AbstractDependency implements Dependency {
     /*
         Default values that may be used by subclasses. Don't want to 'bless' these by

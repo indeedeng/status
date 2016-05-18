@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * The <code>SimpleDependency</code> represents the most common form of dependency with a tiered result level.
@@ -12,6 +13,7 @@ import javax.annotation.Nullable;
  *
  * @author matts
  */
+@ThreadSafe
 public class SimpleDependency extends AbstractDependency {
     @Nonnull private final CheckMethod checkMethod;
 

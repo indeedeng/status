@@ -7,6 +7,7 @@ import com.indeed.util.core.time.WallClock;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.ThreadSafe;
 import java.util.concurrent.Callable;
 
 /**
@@ -15,7 +16,7 @@ import java.util.concurrent.Callable;
  *
  * @author matts
  */
-
+@ThreadSafe
 public class SimplePingableDependency extends PingableDependency {
     @Nonnull private final PingMethod pingMethod;
 
