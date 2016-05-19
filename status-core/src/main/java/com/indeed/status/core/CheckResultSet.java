@@ -28,12 +28,11 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public class CheckResultSet {
     private static final Logger log = Logger.getLogger(CheckResultSet.class);
-    private static final SystemReporter DEFAULT_SYSTEM_REPORTER = new SystemReporter();
     private static final DefaultWallClock DEFAULT_WALL_CLOCK = new DefaultWallClock();
+    private static final SystemReporter DEFAULT_SYSTEM_REPORTER = new SystemReporter(DEFAULT_WALL_CLOCK);
 
     /// Epoch milliseconds at which the execution captured by this result set began
     private final long startTimeMillis;
-    @Nonnull private final WallClock wallClock;
 
     //  TODO Remove this reference; there's no need to inject the reporter into the data rather than vice versa.
     //       It will take some unwinding to completely extract this, as this is part of the public API.
@@ -61,26 +60,11 @@ public class CheckResultSet {
     @Deprecated
     public CheckResultSet() {
         // noinspection deprecation -- unhelpful warning in a deprecated method
-        this(DEFAULT_WALL_CLOCK, DEFAULT_SYSTEM_REPORTER);
+        this(DEFAULT_SYSTEM_REPORTER);
     }
 
-    /**
-     * @deprecated Use {@link com.indeed.status.core.CheckResultSet.Builder} instead
-     *
-     * TODO Remove after a reasonable grace period.
-     */
-    @Deprecated
     public CheckResultSet(@Nonnull final SystemReporter systemReporter) {
-        // noinspection deprecation -- unhelpful warning in a deprecated method
-        this(DEFAULT_WALL_CLOCK, systemReporter);
-    }
-
-    public CheckResultSet(
-            @Nonnull final WallClock wallClock,
-            @Nonnull final SystemReporter systemReporter
-    ) {
-        this.wallClock = wallClock;
-        this.startTimeMillis = wallClock.currentTimeMillis();
+        this.startTimeMillis = systemReporter.getWallClock().currentTimeMillis();
         this.systemReporter = systemReporter;
     }
 
@@ -143,7 +127,8 @@ public class CheckResultSet {
     @Nonnull
     @Deprecated
     public SystemReport summarize(final boolean detailed) {
-        return detailed ? new DetailedSystemReport() : new SystemReport();
+        final WallClock wallClock = systemReporter.getWallClock();
+        return detailed ? new DetailedSystemReport(wallClock) : new SystemReport(wallClock);
     }
 
     @Nonnull
@@ -163,7 +148,7 @@ public class CheckResultSet {
         final String id = dependency.getId();
 
         // Create a new tag with the current system time.
-        final Tag tag = new Tag(id, wallClock.currentTimeMillis());
+        final Tag tag = new Tag(id, systemReporter.getWallClock().currentTimeMillis());
 
         @Nullable
         final Tag oldValue = executingChecks.putIfAbsent(id, tag);
@@ -272,8 +257,17 @@ public class CheckResultSet {
         @Nonnull
         public final String dcStatus;
 
+        /**
+         * @deprecated Use {@link #SystemReport(WallClock)} instead
+         */
         public SystemReport() {
-            duration = System.currentTimeMillis() - startTimeMillis;
+            this(DEFAULT_WALL_CLOCK);
+        }
+
+        public SystemReport(@Nonnull final WallClock wallClock) {
+            // Yeah, it isn't great for elapsed time to be derived from a wall-clock rather than from
+            //  a nano ticker, but we need the absolute system time for other fields.
+            duration = wallClock.currentTimeMillis() - startTimeMillis;
             hostname = NetUtils.determineHostName("unknown");
 
             condition = systemStatus.get();
@@ -304,12 +298,21 @@ public class CheckResultSet {
         @Nonnull
         public final SortedMap<CheckStatus,SortedSet<CheckResult>> results;
 
+        /**
+         * @deprecated Use {@link #DetailedSystemReport(WallClock)} instead.
+         */
         public DetailedSystemReport() {
+            this(DEFAULT_WALL_CLOCK);
+        }
+
+        public DetailedSystemReport(@Nonnull final WallClock wallClock) {
+            super(wallClock);
+
             appname = CheckResultSet.this.appName;
             catalinaBase = System.getProperty("catalina.base");
             results = Maps.newTreeMap();
 
-            long earliestTimestamp = System.currentTimeMillis();
+            long earliestTimestamp = wallClock.currentTimeMillis();
             for (final CheckResult result : completedChecks.values()) {
                 SortedSet<CheckResult> set;
 
@@ -335,13 +338,7 @@ public class CheckResultSet {
     }
 
     public static class Builder {
-        @Nonnull private WallClock wallClock = DEFAULT_WALL_CLOCK;
         @Nonnull private SystemReporter systemReporter = DEFAULT_SYSTEM_REPORTER;
-
-        public Builder setWallClock(@Nonnull final WallClock wallClock) {
-            this.wallClock = wallClock;
-            return this;
-        }
 
         public Builder setSystemReporter(@Nonnull final SystemReporter systemReporter) {
             this.systemReporter = systemReporter;
@@ -349,7 +346,7 @@ public class CheckResultSet {
         }
 
         public CheckResultSet build() {
-            return new CheckResultSet(wallClock, systemReporter);
+            return new CheckResultSet(systemReporter);
         }
     }
 }

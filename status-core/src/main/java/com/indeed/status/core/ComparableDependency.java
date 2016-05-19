@@ -58,6 +58,7 @@ public abstract class ComparableDependency<T extends Comparable<T>> extends Abst
 
     @Override
     public final CheckResult call() throws Exception {
+        // TODO Replace this with a SimpleDependency and a CheckMethod that accepts a WallClock.
         final long start = System.currentTimeMillis();
         try {
             final T value = getValue();
@@ -83,7 +84,7 @@ public abstract class ComparableDependency<T extends Comparable<T>> extends Abst
                     .setDuration(duration)
                     .build();
 
-        } catch (Exception e) {
+        } catch (final Exception e) {
             final long duration = System.currentTimeMillis() - start;
             final String errorMessage = formatErrorMessage(CheckStatus.OUTAGE, null, null, start, duration, e);
             return CheckResult.newBuilder(this, CheckStatus.OUTAGE, errorMessage)
