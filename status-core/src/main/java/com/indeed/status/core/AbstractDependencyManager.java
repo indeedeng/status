@@ -107,6 +107,10 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         this(appName, logger, newDefaultThreadPool(), wallClock);
     }
 
+    /**
+     * @deprecated Use {@link #AbstractDependencyManager(String, Logger, SystemReporter, WallClock)} instead
+     */
+    @Deprecated
     public AbstractDependencyManager(
             final String appName,
             final Logger logger,
@@ -124,6 +128,10 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         this(appName, logger, newDefaultThreadPool(), systemReporter, wallClock);
     }
 
+    /**
+     * @deprecated Use {@link #AbstractDependencyManager(Logger, WallClock)} instead
+     */
+    @Deprecated
     public AbstractDependencyManager (final Logger logger) {
         this(null, logger, newDefaultThreadPool());
     }
@@ -139,6 +147,10 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         this(appName, logger, newDefaultThreadPool(), checker);
     }
 
+    /**
+     * @deprecated Use {@link #AbstractDependencyManager(String, Logger, ThreadPoolExecutor, WallClock)} instead
+     */
+    @Deprecated
     public AbstractDependencyManager(
             @Nullable final String appName,
             @Nullable final Logger logger,
@@ -155,6 +167,10 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         this(appName, logger, threadPool, new SystemReporter(), wallClock);
     }
 
+    /**
+     * @deprecated Use {@link #AbstractDependencyManager(String, Logger, ThreadPoolExecutor, SystemReporter, WallClock)} instead
+     */
+    @Deprecated
     public AbstractDependencyManager(
             @Nullable final String appName,
             @Nullable final Logger logger,

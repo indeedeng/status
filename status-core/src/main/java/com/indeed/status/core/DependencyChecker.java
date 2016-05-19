@@ -102,7 +102,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
             checkResult = pinger.call();
 
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             t = new CheckException("Background thread error", e);
             checkResult = null;
 
@@ -199,7 +199,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         for (final Future<?> future : futures) {
             try {
                 future.cancel(true);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 log.info("failed to cancel future.", e);
             }
         }
@@ -215,14 +215,14 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
             results.handleComplete(dependency, evaluationResult);
 
-        } catch (Exception e) {
+        } catch (final Exception e) {
             log.error("An exception that really shouldn't ever happen, did.", e);
 
         } finally {
             try {
                 results.handleFinalize(dependency, evaluationResult);
 
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 log.error("Unexpected exception during supposedly safe finalization operation", e);
             }
         }
@@ -253,7 +253,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
                 final Future<CheckResult> inflight = inflightChecks.get(id);
 
                 if (null == inflight) {
-                    Future<CheckResult> launched;
+                    final Future<CheckResult> launched;
 
                     try {
                         launched = executor.submit(dependency);
@@ -309,7 +309,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         }
 
         @SuppressWarnings({"UnusedDeclaration"})
-        private CheckException(Throwable cause) {
+        private CheckException(final Throwable cause) {
             super(cause);
         }
     }

@@ -323,6 +323,8 @@ public class TestHealthcheckFramework {
                 .setWallClock(wallClock)
                 .build();
 
+        // Allow the system clock to drift from the stopped clock, thus asserting that any epoch millis values
+        //  that have changed are due to the incorrect use of a DefaultWallClock somewhere.
         Thread.sleep(10);
         assertTrue(
                 "Failed to advance the system clock by sleeping; remainder of test invalid.",

@@ -32,7 +32,9 @@ public class CheckResultSet {
     private static final DefaultWallClock DEFAULT_WALL_CLOCK = new DefaultWallClock();
 
     /// Epoch milliseconds at which the execution captured by this result set began
-    private final long startTime;
+    private final long startTimeMillis;
+    @Nonnull private final WallClock wallClock;
+
     //  TODO Remove this reference; there's no need to inject the reporter into the data rather than vice versa.
     //       It will take some unwinding to completely extract this, as this is part of the public API.
     /// Reporter that converts this result set into a human- or machine-readable report.
@@ -44,7 +46,7 @@ public class CheckResultSet {
      * The overall health of the system represented by this result set.
      * Assume that all systems start in a healthy state.
      */
-    private final AtomicReference<CheckStatus> systemStatus = new AtomicReference<CheckStatus>(CheckStatus.OK);
+    private final AtomicReference<CheckStatus> systemStatus = new AtomicReference<>(CheckStatus.OK);
     /**
      * Map of all currently-executing checks; provides a simple method of avoiding dependency-check-stacking.
      */
@@ -59,7 +61,7 @@ public class CheckResultSet {
     @Deprecated
     public CheckResultSet() {
         // noinspection deprecation -- unhelpful warning in a deprecated method
-        this(DEFAULT_WALL_CLOCK.currentTimeMillis(), DEFAULT_SYSTEM_REPORTER);
+        this(DEFAULT_WALL_CLOCK, DEFAULT_SYSTEM_REPORTER);
     }
 
     /**
@@ -70,14 +72,15 @@ public class CheckResultSet {
     @Deprecated
     public CheckResultSet(@Nonnull final SystemReporter systemReporter) {
         // noinspection deprecation -- unhelpful warning in a deprecated method
-        this(DEFAULT_WALL_CLOCK.currentTimeMillis(), systemReporter);
+        this(DEFAULT_WALL_CLOCK, systemReporter);
     }
 
     public CheckResultSet(
-            final long startTime,
+            @Nonnull final WallClock wallClock,
             @Nonnull final SystemReporter systemReporter
     ) {
-        this.startTime = startTime;
+        this.wallClock = wallClock;
+        this.startTimeMillis = wallClock.currentTimeMillis();
         this.systemReporter = systemReporter;
     }
 
@@ -104,8 +107,15 @@ public class CheckResultSet {
         return appName;
     }
 
+    /**
+     * @deprecated Use {@link #getStartTimeMillis()} instead
+     */
     public long getStartTime() {
-        return startTime;
+        return getStartTimeMillis();
+    }
+
+    public long getStartTimeMillis() {
+        return startTimeMillis;
     }
 
     @Nullable
@@ -153,7 +163,7 @@ public class CheckResultSet {
         final String id = dependency.getId();
 
         // Create a new tag with the current system time.
-        final Tag tag = new Tag(id);
+        final Tag tag = new Tag(id, wallClock.currentTimeMillis());
 
         @Nullable
         final Tag oldValue = executingChecks.putIfAbsent(id, tag);
@@ -236,17 +246,13 @@ public class CheckResultSet {
     }
 
     private static class Tag {
-        private Tag (@Nonnull final String id) {
-            this(id, System.currentTimeMillis());
-        }
-
-        private Tag (@Nonnull final String id, final long startTime) {
+        private Tag (@Nonnull final String id, final long startTimeMillis) {
             this.id = id;
-            this.startTime = startTime;
+            this.startTimeMillis = startTimeMillis;
         }
 
         @Nonnull public final String id;
-        public final long startTime;
+        public final long startTimeMillis;
     }
 
     private static final Comparator<CheckResult> ID_COMPARATOR = new Comparator<CheckResult>() {
@@ -267,7 +273,7 @@ public class CheckResultSet {
         public final String dcStatus;
 
         public SystemReport() {
-            duration = System.currentTimeMillis() - startTime;
+            duration = System.currentTimeMillis() - startTimeMillis;
             hostname = NetUtils.determineHostName("unknown");
 
             condition = systemStatus.get();
@@ -343,7 +349,7 @@ public class CheckResultSet {
         }
 
         public CheckResultSet build() {
-            return new CheckResultSet(wallClock.currentTimeMillis(), systemReporter);
+            return new CheckResultSet(wallClock, systemReporter);
         }
     }
 }
