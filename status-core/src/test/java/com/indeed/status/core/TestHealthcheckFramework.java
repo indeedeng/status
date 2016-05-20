@@ -33,8 +33,8 @@ import static org.junit.Assert.assertTrue;
  */
 @SuppressWarnings ({"ThrowableResultOfMethodCallIgnored", "ConstantConditions"})
 public class TestHealthcheckFramework {
-    private SystemReporter systemReporter = new SystemReporter();
-    private StoppedClock wallClock = new StoppedClock();
+    private final  StoppedClock wallClock = new StoppedClock();
+    private final SystemReporter systemReporter = new SystemReporter(wallClock);
 
     private static final class SimpleSupplier<T> implements Supplier<T> {
             private final AtomicReference<T> instance;
@@ -242,7 +242,7 @@ public class TestHealthcheckFramework {
                 })
                 .build();
 
-        final DependencyPinger pinger = new DependencyPinger(dependency, wallClock);
+        final DependencyPinger pinger = new DependencyPinger(dependency, systemReporter);
 
         // Call the pinger to get a result BEFORE executing the pinger.
         final CheckResult checkResult = pinger.call();
@@ -320,7 +320,7 @@ public class TestHealthcheckFramework {
 
         final DependencyChecker checkerWithStoppedClock = DependencyChecker.newBuilder()
                 .setExecutorService(Executors.newSingleThreadExecutor())
-                .setWallClock(wallClock)
+                .setSystemReporter(systemReporter)
                 .build();
 
         // Allow the system clock to drift from the stopped clock, thus asserting that any epoch millis values
@@ -333,7 +333,7 @@ public class TestHealthcheckFramework {
         final PingableDependency dependency = new AlwaysTrueDependencyBuilder().setWallClock(wallClock).build();
         final CheckResultSet resultSet = checkerWithStoppedClock.evaluate(ImmutableList.of(dependency));
 
-        final long recordedStartTime = resultSet.getStartTime();
+        final long recordedStartTime = resultSet.getStartTimeMillis();
         assertEquals(
                 "Expected the check result set to be pinned to the given wall clock time, not the current moment in time.",
                 now, recordedStartTime);
@@ -403,7 +403,7 @@ public class TestHealthcheckFramework {
     }
     private class InterruptingChecker extends DependencyChecker {
         public InterruptingChecker (final SimpleSupplier<Boolean> shouldInterrupt, final SimpleSupplier<Boolean> testInvalid) {
-            super(log, new InterruptingExecutor(Executors.newSingleThreadExecutor(), shouldInterrupt, testInvalid), systemReporter, wallClock);
+            super(log, new InterruptingExecutor(Executors.newSingleThreadExecutor(), shouldInterrupt, testInvalid), systemReporter);
         }
     }
 
@@ -426,7 +426,7 @@ public class TestHealthcheckFramework {
     }
     private class CancelingChecker extends DependencyChecker {
         public CancelingChecker (final SimpleSupplier<Boolean> shouldCancel) {
-            super(log, new CancelingExecutor(Executors.newSingleThreadExecutor(), shouldCancel), systemReporter, wallClock);
+            super(log, new CancelingExecutor(Executors.newSingleThreadExecutor(), shouldCancel), systemReporter);
         }
     }
 

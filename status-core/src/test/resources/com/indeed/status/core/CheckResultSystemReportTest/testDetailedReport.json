@@ -1,0 +1,26 @@
+{
+  "duration" : 10,
+  "condition" : "OK",
+  "dcStatus" : "OK",
+  "appname" : null,
+  "catalinaBase" : null,
+  "leastRecentlyExecutedDate" : "2016-01-01T16:00:00.000-0800",
+  "leastRecentlyExecutedTimestamp" : 1451692800000,
+  "results" : {
+    "OK" : [ {
+      "status" : "OK",
+      "description" : "description",
+      "errorMessage" : "ok",
+      "timestamp" : 1451692800000,
+      "duration" : 10,
+      "lastKnownGoodTimestamp" : 0,
+      "period" : 0,
+      "id" : "id",
+      "urgency" : "Unknown",
+      "documentationUrl" : "http://example.com/?id",
+      "type" : "other",
+      "servicePool" : "not specified",
+      "date" : "2016-01-01T16:00:00.000-0800"
+    } ]
+  }
+}

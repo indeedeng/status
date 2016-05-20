@@ -29,7 +29,6 @@ import java.util.concurrent.TimeoutException;
  */
 class DependencyChecker /*implements Terminable todo(cameron)*/ {
     @Nonnull private final DependencyExecutor dependencyExecutor;
-    @Nonnull private final WallClock wallClock;
     @Nonnull private final SystemReporter systemReporter;
     @Nonnull private final Logger log;
 
@@ -37,25 +36,27 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     protected DependencyChecker(
             @Nonnull final Logger logger,
             @Nonnull final DependencyExecutor dependencyExecutor,
-            @Nonnull final SystemReporter systemReporter,
-            @Nonnull final WallClock wallClock
+            @Nonnull final SystemReporter systemReporter
     ) {
         this.log = logger;
         this.dependencyExecutor = dependencyExecutor;
         this.systemReporter = systemReporter;
-        this.wallClock = wallClock;
+    }
+
+    @Nonnull
+    public SystemReporter getSystemReporter() {
+        return systemReporter;
     }
 
     @Nonnull
     public WallClock getWallClock() {
-        return wallClock;
+        return this.systemReporter.getWallClock();
     }
 
     @Nonnull
     public CheckResultSet evaluate(final Collection<? extends Dependency> dependencies) {
         final CheckResultSet result = CheckResultSet.newBuilder()
                 .setSystemReporter(systemReporter)
-                .setWallClock(wallClock)
                 .build();
 
         for (final Dependency dependency : dependencies) {
@@ -70,7 +71,6 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         @Nonnull
         final CheckResultSet result = CheckResultSet.newBuilder()
                 .setSystemReporter(systemReporter)
-                .setWallClock(wallClock)
                 .build();
 
         evaluateAndRecord(dependency, result);
@@ -109,7 +109,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         } finally {
             if (null == checkResult) {
                 checkResult = CheckResult.newBuilder(pinger, CheckStatus.OUTAGE, "Unable to check status of dependency; see exception.")
-                        .setTimestamp(wallClock.currentTimeMillis())
+                        .setTimestamp(systemReporter.getWallClock().currentTimeMillis())
                         .setDuration(0L)
                         .setThrowable(t)
                         .build();
@@ -122,8 +122,9 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
     // Standard evaluation appropriate to non-pingers, which need to be executed via the lifecycle for timeout protection
     private void evaluateSafelyAndRecord(@Nonnull final Dependency dependency, @Nonnull final CheckResultSet results) {
-        final long timeout = dependency.getTimeout();
+        final WallClock wallClock = systemReporter.getWallClock();
 
+        final long timeout = dependency.getTimeout();
         final long timestamp = wallClock.currentTimeMillis();
         CheckResult evaluationResult = null;
         Throwable t = null;
@@ -327,8 +328,6 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         @Nullable
         private ExecutorService executorService;
         @Nonnull
-        private WallClock wallClock = new DefaultWallClock();
-        @Nonnull
         private SystemReporter systemReporter = new SystemReporter();
 
         private Builder() {
@@ -349,18 +348,13 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             return this;
         }
 
-        public Builder setWallClock(@Nonnull final WallClock wallClock) {
-            this.wallClock = wallClock;
-            return this;
-        }
-
         public DependencyChecker build() {
             final ExecutorService executorService = Preconditions.checkNotNull(
                     this.executorService,
                     "Cannot configure a dependency checker with a null executor service.");
             final DependencyExecutor dependencyExecutor = new DependencyExecutorSet(executorService);
 
-            return new DependencyChecker(_logger, dependencyExecutor, systemReporter, wallClock);
+            return new DependencyChecker(_logger, dependencyExecutor, systemReporter);
         }
     }
 }
