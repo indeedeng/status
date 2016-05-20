@@ -8,6 +8,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.indeed.util.core.time.StoppedClock;
 import org.apache.log4j.Logger;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
@@ -27,12 +29,25 @@ import static org.junit.Assert.assertEquals;
  *
  */
 public class CheckResultSystemReportTest {
+    private TimeZone originalTimeZone;
+    @Before
+    public void pinTimeZone() {
+        originalTimeZone = TimeZone.getDefault();
+        TimeZone.setDefault(TimeZone.getTimeZone("GMT-6"));
+    }
+
+    @After
+    public void restoreTimeZone() {
+        TimeZone.setDefault(originalTimeZone);
+    }
+
     @Test
     public void testSimpleReport() throws IOException {
         final StoppedClock wallClock = new StoppedClock();
         final SystemReporter systemReporter = new SystemReporter(wallClock);
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("US/Chicago"));
-        calendar.set(2016, 01, 01);
+        final Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(0);
+        calendar.set(2016, Calendar.JANUARY, 1);
         final Date sampleDate = calendar.getTime();
         wallClock.set(sampleDate.getTime());
 
@@ -80,7 +95,7 @@ public class CheckResultSystemReportTest {
     public void testDetailedReport() throws IOException {
         final StoppedClock wallClock = new StoppedClock();
         final SystemReporter systemReporter = new SystemReporter(wallClock);
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT-6"));
+        final Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(0);
         calendar.set(2016, Calendar.JANUARY, 1);
         final Date sampleDate = calendar.getTime();
@@ -137,7 +152,7 @@ public class CheckResultSystemReportTest {
     public void testDetailedReportBackground() throws IOException, InterruptedException {
         final StoppedClock wallClock = new StoppedClock();
         final SystemReporter systemReporter = new SystemReporter(wallClock);
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT-6"));
+        final Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(0);
         calendar.set(2016, Calendar.JANUARY, 1);
         final Date sampleDate = calendar.getTime();

@@ -4,7 +4,7 @@
   "dcStatus" : "OK",
   "appname" : "app",
   "catalinaBase" : null,
-  "leastRecentlyExecutedDate" : "2016-01-01T16:00:00.000-0800",
+  "leastRecentlyExecutedDate" : "2016-01-01T18:00:00.000-0600",
   "leastRecentlyExecutedTimestamp" : 1451692800000,
   "results" : {
     "OK" : [ {
@@ -20,7 +20,7 @@
       "documentationUrl" : "http://example.com/?id",
       "type" : "other",
       "servicePool" : "not specified",
-      "date" : "2016-01-01T16:00:00.000-0800"
+      "date" : "2016-01-01T18:00:00.000-0600"
     } ]
   }
 }
