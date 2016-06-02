@@ -11,9 +11,9 @@ public interface StatusUpdateListener {
     /**
      * Triggered when the status of a dependency has changed.
      *
-     * @param source
-     * @param original
-     * @param updated
+     * @param source The dependency which had its status changed.
+     * @param original The previous result.
+     * @param updated The new, changed result.
      */
     void onChanged(
             @Nonnull final Dependency source,
@@ -22,9 +22,20 @@ public interface StatusUpdateListener {
     );
 
     /**
+     * Triggered each and every time the status of a dependency is checked.
+     *
+     * @param source The dependency which was checked.
+     * @param result The result of the check.
+     */
+    void onChecked(
+            @Nonnull final Dependency source,
+            @Nonnull final CheckResult result
+    );
+
+    /**
      * Triggered when a new dependency is added
      *
-     * @param dependency
+     * @param dependency The dependency being added.
      */
     void onAdded(@Nonnull final Dependency dependency);
 }

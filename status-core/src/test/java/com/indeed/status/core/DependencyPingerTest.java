@@ -37,8 +37,12 @@ public class DependencyPingerTest {
         final Capture<CheckResult> original = new Capture<CheckResult>();
         final Capture<CheckResult> updated = new Capture<CheckResult>();
         EasyMock.reset(listener);
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
         listener.onChanged(EasyMock.same(pinger), EasyMock.<CheckResult>isNull(), EasyMock.capture(updated));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
         listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
         listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
         EasyMock.replay(listener);
 
@@ -78,8 +82,12 @@ public class DependencyPingerTest {
         final Capture<CheckResult> updated = new Capture<CheckResult>();
         EasyMock.reset(listener);
 
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
         listener.onChanged(EasyMock.same(pinger), EasyMock.<CheckResult>isNull(), EasyMock.capture(updated));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
         listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
         listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
 
         EasyMock.replay(listener);

@@ -158,6 +158,8 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     }
 
     private void notifyListeners(@Nonnull final CheckResult currentResult) {
+        updateHandler.onChecked(this, currentResult);
+
         // calling getStatus is safe because lastResult goes from null -> notnull and never back to null
         //noinspection ConstantConditions
         if (null == lastResult || lastResult.getStatus() != currentResult.getStatus()) {

@@ -307,6 +307,11 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     }
 
     @Override
+    public void onChecked(@Nonnull final Dependency source, @Nonnull final CheckResult result) {
+        updateHandler.onChecked(source, result);
+    }
+
+    @Override
     public void clear () {
         updateHandler.clear();
     }
