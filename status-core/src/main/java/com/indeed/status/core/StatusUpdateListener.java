@@ -4,7 +4,15 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
+ * Callbacks which receive notification of changes to dependencies.
+ * You can add a StatusUpdateListener to a {@link StatusUpdateProducer},
+ * such as {@link AbstractDependencyManager} or {@link DependencyPinger}.
  *
+ * Note that the order in which callbacks are received isn't strictly
+ * defined so you should not rely on any particular call ordering when
+ * implementing the callback methods.
+ *
+ * @see AbstractStatusUpdateListener
  * @author matts
  */
 public interface StatusUpdateListener {
