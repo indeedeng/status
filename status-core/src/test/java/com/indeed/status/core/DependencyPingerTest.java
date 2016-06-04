@@ -36,19 +36,21 @@ public class DependencyPingerTest {
 
         final Capture<CheckResult> original = new Capture<CheckResult>();
         final Capture<CheckResult> updated = new Capture<CheckResult>();
+        final Capture<CheckResult> checked = new Capture<CheckResult>();
         EasyMock.reset(listener);
-        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
         listener.onChanged(EasyMock.same(pinger), EasyMock.<CheckResult>isNull(), EasyMock.capture(updated));
-        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
         listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
-        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
-        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
         listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
         EasyMock.replay(listener);
 
         dependency.setInError(false);
         pinger.run();
         assertEquals(CheckStatus.OK, updated.getValue().getStatus());
+        assertEquals(updated.getValue(), checked.getValue());
         original.setValue(null);
         updated.setValue(null);
 
@@ -57,14 +59,20 @@ public class DependencyPingerTest {
         assertEquals(CheckStatus.OK, original.getValue().getStatus());
         assertEquals(CheckStatus.MINOR, updated.getValue().getStatus());
         assertEquals(ControlledDependency.EXCEPTION, updated.getValue().getThrowable());
+        assertEquals(checked.getValue(), updated.getValue());
         original.setValue(null);
         updated.setValue(null);
 
         pinger.run(); // no change
+        assertNull(original.getValue());
+        assertNull(updated.getValue());
+        assertEquals(CheckStatus.MINOR, checked.getValue().getStatus());
+
         pinger.run(); // should change
         assertEquals(CheckStatus.MINOR, original.getValue().getStatus());
         assertEquals(CheckStatus.OUTAGE, updated.getValue().getStatus());
         assertEquals(ControlledDependency.EXCEPTION, updated.getValue().getThrowable());
+        assertEquals(checked.getValue(), updated.getValue());
         original.setValue(null);
         updated.setValue(null);
 
@@ -80,14 +88,15 @@ public class DependencyPingerTest {
 
         final Capture<CheckResult> original = new Capture<CheckResult>();
         final Capture<CheckResult> updated = new Capture<CheckResult>();
+        final Capture<CheckResult> checked = new Capture<CheckResult>();
         EasyMock.reset(listener);
 
-        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
         listener.onChanged(EasyMock.same(pinger), EasyMock.<CheckResult>isNull(), EasyMock.capture(updated));
-        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
         listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
-        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
-        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(updated));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
+        listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
         listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
 
         EasyMock.replay(listener);
@@ -96,23 +105,27 @@ public class DependencyPingerTest {
         pinger.run();
         assertEquals(CheckStatus.OK, pinger.call().getStatus());
         assertEquals(CheckStatus.OK, updated.getValue().getStatus());
+        assertEquals(checked.getValue(), updated.getValue());
 
         dependency.setInError(true);
         pinger.run();
         assertEquals(CheckStatus.MINOR, pinger.call().getStatus());
         assertEquals(CheckStatus.OK, original.getValue().getStatus());
         assertEquals(CheckStatus.MINOR, updated.getValue().getStatus());
+        assertEquals(checked.getValue(), updated.getValue());
 
         dependency.setInError(true);
         pinger.run();
         assertEquals(CheckStatus.MINOR, pinger.call().getStatus());
         // no call to listen
+        assertEquals(CheckStatus.MINOR, checked.getValue().getStatus());
 
         dependency.setInError(true);
         pinger.run();
         assertEquals(CheckStatus.OUTAGE, pinger.call().getStatus());
         assertEquals(CheckStatus.MINOR, original.getValue().getStatus());
         assertEquals(CheckStatus.OUTAGE, updated.getValue().getStatus());
+        assertEquals(checked.getValue(), updated.getValue());
 
         EasyMock.verify(listener);
     }
