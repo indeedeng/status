@@ -21,26 +21,18 @@ public class SimplePingableDependency extends PingableDependency {
     @Nonnull private final PingMethod pingMethod;
 
     /**
-     * Direct constructor based on fields.
-     *
      * Package-protected, because we don't want to expose the Optionality of the ping method through the public API. Most
      *  pingable dependency implementers should be encouraged to provide a Callable ping method directly.
      */
-    private SimplePingableDependency(
-            @Nonnull final String id,
-            @Nonnull final PingMethod pingMethod,
-            @Nonnull final String description,
-            final long timeout,
-            final long pingPeriod,
-            @Nonnull final Urgency urgency,
-            @Nonnull final DependencyType type,
-            final String servicePool,
-            @Nonnull final WallClock wallClock,
-            @Nonnull final Supplier<Boolean> toggle
-    ) {
-        super(id, description, timeout, pingPeriod, urgency, type, servicePool, wallClock, toggle);
+    private SimplePingableDependency(@Nonnull final Builder builder) {
+        super(builder);
+        final String id = builder.getId();
+        Preconditions.checkState(!Strings.isNullOrEmpty(id), "Cannot build a dependency with an empty ID");
 
-        this.pingMethod = pingMethod;
+        final String description = builder.getDescription();
+        Preconditions.checkState(!Strings.isNullOrEmpty(description), "Cannot build a dependency with an empty description");
+
+        this.pingMethod = Preconditions.checkNotNull(builder.getPingMethod(), "Cannot build a dependency with no ping method");
     }
 
     /**
@@ -87,25 +79,7 @@ public class SimplePingableDependency extends PingableDependency {
         }
 
         public SimplePingableDependency build() {
-            final String id = getId();
-            Preconditions.checkState(!Strings.isNullOrEmpty(id), "Cannot build a dependency with an empty ID");
-
-            final String description = getDescription();
-            Preconditions.checkState(!Strings.isNullOrEmpty(description), "Cannot build a dependency with an empty description");
-
-            final PingMethod pingMethod = Preconditions.checkNotNull(getPingMethod(), "Cannot build a dependency with no ping method");
-
-            return new SimplePingableDependency(
-                    id,
-                    pingMethod,
-                    getDescription(),
-                    getTimeout(),
-                    getPingPeriod(),
-                    getUrgency(),
-                    getType(),
-                    getServicePool(),
-                    getWallClock(),
-                    getToggle());
+            return new SimplePingableDependency(this);
         }
     }
 }

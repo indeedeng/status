@@ -67,6 +67,7 @@ public class CheckResultSystemReportTest {
                     }
                 })
                 .setWallClock(wallClock)
+                .setDocumentationUrl("http://example.com/?id")
                 .build();
 
 
@@ -117,6 +118,7 @@ public class CheckResultSystemReportTest {
                     }
                 })
                 .setWallClock(wallClock)
+                .setDocumentationUrl("http://example.com/?id")
                 .build();
 
         final CheckResultSet resultSet = checker.evaluate(ImmutableList.of(dependency));
@@ -176,6 +178,7 @@ public class CheckResultSystemReportTest {
                     }
                 })
                 .setWallClock(wallClock)
+                .setDocumentationUrl("http://example.com/?id")
                 .build();
 
         manager.launchPinger(dependency);

@@ -18,18 +18,9 @@ public class SimpleDependency extends AbstractDependency {
     @Nonnull private final CheckMethod checkMethod;
 
     // For builder use only
-    private SimpleDependency(
-            @Nonnull final String id,
-            @Nonnull final CheckMethod checkMethod,
-            @Nonnull final String description,
-            final long timeout,
-            final long pingPeriod,
-            @Nonnull final Urgency urgency,
-            @Nonnull final DependencyType type,
-            final String servicePool
-    ) {
-        super(id, description, timeout, pingPeriod, urgency, type, servicePool);
-        this.checkMethod = checkMethod;
+    private SimpleDependency(@Nonnull final Builder builder) {
+        super(builder);
+        this.checkMethod = Preconditions.checkNotNull(builder.getCheckMethod(), "Cannot construct a simple dependency with a null check method");;
     }
 
     @Override
@@ -54,18 +45,15 @@ public class SimpleDependency extends AbstractDependency {
             return this;
         }
 
+        @Nullable
+        public CheckMethod getCheckMethod() {
+            return checkMethod;
+        }
+
         @Override
         public SimpleDependency build() {
             final CheckMethod checkMethod = Preconditions.checkNotNull(this.checkMethod, "Cannot construct a simple dependency with a null check method");
-            return new SimpleDependency(
-                    getId(),
-                    checkMethod,
-                    getDescription(),
-                    getTimeout(),
-                    getPingPeriod(),
-                    getUrgency(),
-                    getType(),
-                    getServicePool());
+            return new SimpleDependency(this);
         }
     }
 }

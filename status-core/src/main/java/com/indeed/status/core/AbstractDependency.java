@@ -25,6 +25,7 @@ public abstract class AbstractDependency implements Dependency {
     public static final long DEFAULT_PING_PERIOD = 30*1000; // 30 seconds
     public static final DependencyType DEFAULT_TYPE = DependencyType.StandardDependencyTypes.OTHER;
     public static final String DEFAULT_SERVICE_POOL = "not specified";
+    protected static final String DEFAULT_DOCUMENTATION_URL = "http://www.example.com/<dependency-id>";
 
     /**
      * @deprecated Instead, use {@link AbstractDependency#AbstractDependency(String, String, long, long, Urgency, DependencyType, String)}.
@@ -40,6 +41,10 @@ public abstract class AbstractDependency implements Dependency {
         this(id, description, timeout, pingPeriod, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
     }
 
+    /**
+     * @deprecated Instead, use {@link AbstractDependency#AbstractDependency(String, String, long, long, Urgency, DependencyType, String)}.
+     */
+    @Deprecated
     protected AbstractDependency(
             @Nonnull final String id,
             @Nonnull final String description,
@@ -47,8 +52,7 @@ public abstract class AbstractDependency implements Dependency {
             final long pingPeriod,
             @Nonnull final Urgency urgency,
             @Nonnull final DependencyType type,
-            final String servicePool
-    ) {
+            final String servicePool) {
         this.id = Preconditions.checkNotNull(id, "Missing id");
         this.description = Strings.nullToEmpty(description);
         this.timeout = timeout;
@@ -56,6 +60,18 @@ public abstract class AbstractDependency implements Dependency {
         this.urgency = Preconditions.checkNotNull(urgency, "Missing urgency");
         this.type = type;
         this.servicePool = servicePool;
+        this.documentationUrl = DEFAULT_DOCUMENTATION_URL;
+    }
+
+    protected AbstractDependency(@Nonnull final AbstractDependency.Builder<? extends AbstractDependency, ?> builder) {
+        this.id = Preconditions.checkNotNull(builder.getId(), "Missing id");
+        this.description = Strings.nullToEmpty(builder.getDescription());
+        this.timeout = builder.getTimeout();
+        this.pingPeriod = builder.getPingPeriod();
+        this.urgency = Preconditions.checkNotNull(builder.getUrgency(), "Missing urgency");
+        this.type = Preconditions.checkNotNull(builder.getType(), "Missing type");
+        this.servicePool = Strings.nullToEmpty(builder.getServicePool());
+        this.documentationUrl = Strings.nullToEmpty(builder.getDocumentationUrl());
     }
 
     @Override
@@ -68,8 +84,9 @@ public abstract class AbstractDependency implements Dependency {
         return description;
     }
 
+    @Override
     public String getDocumentationUrl() {
-        return "http://example.com/?" + id; // todo: this should be abstract so that everything is documented
+        return documentationUrl;
     }
 
     @Override
@@ -114,6 +131,7 @@ public abstract class AbstractDependency implements Dependency {
     private final Urgency urgency;
     private final DependencyType type;
     private final String servicePool;
+    private final String documentationUrl;
 
     public abstract static class Builder<T extends AbstractDependency, B extends Builder<T, B>> {
         /**
@@ -147,10 +165,15 @@ public abstract class AbstractDependency implements Dependency {
         @Nonnull
         protected DependencyType type = DEFAULT_TYPE;
         /**
-         * @deprecated Direct field access deprecated; use {@link #getServicePool()} ()} instead.
+         * @deprecated Direct field access deprecated; use {@link #getServicePool()} instead.
          */
         @Nonnull
         protected String servicePool = DEFAULT_SERVICE_POOL;
+        /**
+         * @deprecated Direct field access deprecated; use {@link #getDocumentationUrl()} instead.
+         */
+        @Nonnull
+        protected String documentationUrl = DEFAULT_DOCUMENTATION_URL;
 
         protected Builder() {
         }
@@ -243,6 +266,19 @@ public abstract class AbstractDependency implements Dependency {
         public B setServicePool(@Nonnull final String servicePool) {
             //noinspection deprecation -- not deprecated for internal use.
             this.servicePool = servicePool;
+            return cast();
+        }
+
+        @Nonnull
+        public String getDocumentationUrl() {
+            //noinspection deprecation -- not deprecated for internal use.
+            return documentationUrl;
+        }
+
+        @Nonnull
+        public B setDocumentationUrl(@Nonnull final String documentationUrl) {
+            //noinspection deprecation -- not deprecated for internal use.
+            this.documentationUrl = documentationUrl;
             return cast();
         }
 

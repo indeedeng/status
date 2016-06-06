@@ -1,5 +1,6 @@
 package com.indeed.status.core;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.indeed.util.core.time.DefaultWallClock;
@@ -142,6 +143,10 @@ public abstract class PingableDependency extends AbstractDependency {
         this(id, description, timeout, pingPeriod, urgency, type, servicePool, new DefaultWallClock(), toggle);
     }
 
+    /**
+     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
+     */
+    @Deprecated
     protected PingableDependency(
             @Nonnull final String id,
             @Nonnull final String description,
@@ -157,6 +162,15 @@ public abstract class PingableDependency extends AbstractDependency {
 
         this.wallClock = wallClock;
         this.toggle = toggle;
+    }
+
+    protected PingableDependency(
+            final PingableDependency.Builder<? extends PingableDependency, ?> builder
+    ) {
+        super(builder);
+
+        this.wallClock = Preconditions.checkNotNull(builder.getWallClock(), "wallclock required");
+        this.toggle = Preconditions.checkNotNull(builder.getToggle(), "toggle required");
     }
 
     public CheckResult call() throws Exception {
