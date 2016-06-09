@@ -64,6 +64,11 @@ public class AbstractStatusUpdateListener implements StatusUpdateListener {
     }
 
     @Override
+    public void onChecked(@Nonnull final Dependency source, @Nonnull final CheckResult result) {
+        // Do not do anything by default
+    }
+
+    @Override
     public void onAdded(@Nonnull final Dependency dependency) {
         // Nothing to do by default
     }

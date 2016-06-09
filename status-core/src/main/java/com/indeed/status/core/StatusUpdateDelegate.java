@@ -43,6 +43,24 @@ class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateListener
     }
 
     @Override
+    public void onChecked (@Nonnull final Dependency source, @Nonnull final CheckResult result) {
+        if (log.isTraceEnabled()) {
+            log.trace("Notifying " + listeners.size() + " listeners of the check of " + source + " resulting in " + result);
+        }
+
+        for (final StatusUpdateListener listener: listeners) {
+            try {
+                listener.onChecked(source, result);
+
+            } catch(final RuntimeException e) {
+                log.error("Status update listeners should not throw errors. Something must be tragically wrong.", e);
+
+                // Swallow runtime exceptions. Allow Errors through.
+            }
+        }
+    }
+
+    @Override
     public void onAdded(@Nonnull final Dependency dependency) {
         for (final StatusUpdateListener listener: listeners) {
             try {
