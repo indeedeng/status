@@ -9,7 +9,9 @@ import com.google.common.io.Resources;
 import com.indeed.util.core.time.StoppedClock;
 import org.apache.log4j.Logger;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
@@ -29,16 +31,24 @@ import static org.junit.Assert.assertEquals;
  *
  */
 public class CheckResultSystemReportTest {
-    private TimeZone originalTimeZone;
-    @Before
-    public void pinTimeZone() {
+    
+    private static TimeZone originalTimeZone;
+    private static Calendar originalCalendar;
+
+    @BeforeClass
+    public static void pinTimeZone() {
         originalTimeZone = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone("GMT-6"));
+        final TimeZone pinnedTimeZone = TimeZone.getTimeZone("GMT-6");
+        final Calendar pinnedCalendar = Calendar.getInstance(pinnedTimeZone);
+        TimeZone.setDefault(pinnedTimeZone);
+        originalCalendar = CheckResult.DATE_FORMAT.get().getCalendar();
+        CheckResult.DATE_FORMAT.get().setCalendar(pinnedCalendar);
     }
 
-    @After
-    public void restoreTimeZone() {
+    @AfterClass
+    public static void restoreTimeZone() {
         TimeZone.setDefault(originalTimeZone);
+        CheckResult.DATE_FORMAT.get().setCalendar(originalCalendar);
     }
 
     @Test
