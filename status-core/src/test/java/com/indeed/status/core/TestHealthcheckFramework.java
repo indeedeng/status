@@ -14,15 +14,13 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.List;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
@@ -351,6 +349,41 @@ public class TestHealthcheckFramework {
                 CheckResult.DATE_FORMAT.get().format(new Date(now)), result.getDate());
     }
 
+    @Test
+    public void testConcurrentDependencyChecksWithSameID() throws Exception {
+        final ExecutorService executorService = Executors.newFixedThreadPool(10);
+        final Dependency longDependency = new PingableDependency("dep", "description", Urgency.REQUIRED) {
+            @Override
+            public void ping() throws Exception {
+                Thread.sleep(1000);
+            }
+        };
+
+        final Callable<CheckResult> testcallable = new Callable<CheckResult>() {
+            @Override
+            public CheckResult call() throws Exception {
+                final DependencyChecker checker = DependencyChecker.newBuilder()
+                        .setExecutorService(executorService)
+                        .setSystemReporter(systemReporter)
+                        .build();
+
+                return checker.evaluate(longDependency);
+            }
+        };
+
+        final List<Future<CheckResult>> futures = executorService.invokeAll(ImmutableList.of(testcallable, testcallable, testcallable));
+        int outageCount = 0;
+        for (final Future<CheckResult> future : futures) {
+            final CheckResult checkResult = future.get();
+            if (checkResult.getStatus() == CheckStatus.OUTAGE) {
+                outageCount++;
+                assertEquals("Health check task was cancelled.", checkResult.getThrowable().getMessage());
+            } else {
+                assertEquals(CheckStatus.OK, checkResult.getStatus());
+            }
+        }
+        assertEquals(1, outageCount);
+    }
 
     private AbstractDependencyManager newDependencyManager() throws Exception {
         return new AbstractDependencyManager() {};

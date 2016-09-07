@@ -2,14 +2,15 @@ package com.indeed.status.core;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.indeed.util.core.time.DefaultWallClock;
 import com.indeed.util.core.time.WallClock;
 import org.apache.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -31,6 +32,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     @Nonnull private final DependencyExecutor dependencyExecutor;
     @Nonnull private final SystemReporter systemReporter;
     @Nonnull private final Logger log;
+    @Nonnull private static final Map<String, List<Future>> inflightDependencyChecks = Maps.newHashMap();
 
     // For builder and subclass use only
     protected DependencyChecker(
@@ -133,7 +135,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         Future<CheckResult> future = null;
 
         try {
-            future = dependencyExecutor.submit(dependency);
+            future = submit(dependency);
 
             results.handleInit(dependency);
             results.handleExecute(dependency);
@@ -192,7 +194,37 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
                         .build();
             }
 
+            resolveFuture(dependency, future);
             finalizeAndRecord(dependency, results, evaluationResult);
+        }
+    }
+
+    private void resolveFuture(@Nonnull final Dependency dependency, final Future<CheckResult> future) {
+        synchronized(inflightDependencyChecks) {
+            final List<Future> futuresList = inflightDependencyChecks.get(dependency.getId());
+            if (futuresList != null) {
+                futuresList.remove(future);
+                if (futuresList.isEmpty()) {
+                    inflightDependencyChecks.remove(dependency.getId());
+                }
+            }
+        }
+    }
+
+    @Nonnull
+    private Future<CheckResult> submit(@Nonnull final Dependency dependency) {
+        synchronized(inflightDependencyChecks) {
+            final String dependencyId = dependency.getId();
+            if (!inflightDependencyChecks.containsKey(dependencyId)) {
+                inflightDependencyChecks.put(dependencyId, Lists.<Future>newLinkedList());
+            }
+            final List<Future> futuresList = inflightDependencyChecks.get(dependencyId);
+            final Future<CheckResult> future = dependencyExecutor.submit(dependency);
+            futuresList.add(future);
+            if (futuresList.size() > 2) {
+                cancel(futuresList.get(0));
+            }
+            return future;
         }
     }
 
