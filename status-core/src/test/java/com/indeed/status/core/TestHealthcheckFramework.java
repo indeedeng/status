@@ -14,13 +14,17 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
-import javax.annotation.concurrent.Immutable;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
@@ -358,15 +362,14 @@ public class TestHealthcheckFramework {
                 Thread.sleep(1000);
             }
         };
+        final DependencyChecker checker = DependencyChecker.newBuilder()
+                .setExecutorService(executorService)
+                .setSystemReporter(systemReporter)
+                .build();
 
         final Callable<CheckResult> testcallable = new Callable<CheckResult>() {
             @Override
             public CheckResult call() throws Exception {
-                final DependencyChecker checker = DependencyChecker.newBuilder()
-                        .setExecutorService(executorService)
-                        .setSystemReporter(systemReporter)
-                        .build();
-
                 return checker.evaluate(longDependency);
             }
         };
@@ -377,7 +380,8 @@ public class TestHealthcheckFramework {
             final CheckResult checkResult = future.get();
             if (checkResult.getStatus() == CheckStatus.OUTAGE) {
                 outageCount++;
-                assertEquals("Health check task was cancelled.", checkResult.getThrowable().getMessage());
+                assertEquals("Health check failed to launch due to too many checks already being in flight. Please dump /private/v and thread-state and contact dev.", checkResult.getThrowable().getMessage());
+                assertEquals("Too many checks of dep are already in flight", checkResult.getThrowable().getCause().getMessage());
             } else {
                 assertEquals(CheckStatus.OK, checkResult.getStatus());
             }

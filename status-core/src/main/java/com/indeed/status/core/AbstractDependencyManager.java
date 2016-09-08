@@ -268,11 +268,11 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         final long dependencyPingPeriod = dependency.getPingPeriod();
         if (dependencyPingPeriod <= 0 || dependencyPingPeriod == AbstractDependency.DEFAULT_PING_PERIOD) {
             log.info("Creating pinger with ping period " + pingPeriod);
-            pinger = new DependencyPinger(threadPool, dependency, pingPeriod, checker.getSystemReporter());
+            pinger = new DependencyPinger(dependency, pingPeriod, checker);
 
         } else {
             log.info("Creating pinger with ping period " + dependency.getPingPeriod());
-            pinger = new DependencyPinger(threadPool, dependency, checker.getSystemReporter());
+            pinger = new DependencyPinger(dependency, checker);
         }
         return pinger;
     }

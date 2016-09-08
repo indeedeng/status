@@ -2,7 +2,6 @@ package com.indeed.status.core;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.indeed.util.core.time.WallClock;
 import org.apache.log4j.Logger;
@@ -10,7 +9,6 @@ import org.apache.log4j.Logger;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -19,6 +17,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Standalone evaluator of {@link Dependency} objects.
@@ -32,7 +33,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     @Nonnull private final DependencyExecutor dependencyExecutor;
     @Nonnull private final SystemReporter systemReporter;
     @Nonnull private final Logger log;
-    @Nonnull private static final Map<String, List<Future>> inflightDependencyChecks = Maps.newHashMap();
+    @Nonnull private final ConcurrentMap<String, AtomicInteger> numberChecksInFlight = new ConcurrentHashMap<>();
 
     // For builder and subclass use only
     protected DependencyChecker(
@@ -179,6 +180,9 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             //  nobody cares about the wrapping ExecutionException
             t = new CheckException("Health-check failed for unknown reason. Please dump /private/v and thread-state and contact dev.", e.getCause());
 
+        } catch (final IllegalStateException e) {
+            log.warn("Too many dependency checks are in flight.");
+            t = new CheckException("Health check failed to launch due to too many checks already being in flight. Please dump /private/v and thread-state and contact dev.", e);
         } catch (final Throwable e) {
             t = new CheckException("Health-check failed for unknown reason. Please dump /private/v and thread-state and contact dev.", e);
 
@@ -194,38 +198,20 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
                         .build();
             }
 
-            resolveFuture(dependency, future);
             finalizeAndRecord(dependency, results, evaluationResult);
-        }
-    }
-
-    private void resolveFuture(@Nonnull final Dependency dependency, final Future<CheckResult> future) {
-        synchronized(inflightDependencyChecks) {
-            final List<Future> futuresList = inflightDependencyChecks.get(dependency.getId());
-            if (futuresList != null) {
-                futuresList.remove(future);
-                if (futuresList.isEmpty()) {
-                    inflightDependencyChecks.remove(dependency.getId());
-                }
-            }
         }
     }
 
     @Nonnull
     private Future<CheckResult> submit(@Nonnull final Dependency dependency) {
-        synchronized(inflightDependencyChecks) {
-            final String dependencyId = dependency.getId();
-            if (!inflightDependencyChecks.containsKey(dependencyId)) {
-                inflightDependencyChecks.put(dependencyId, Lists.<Future>newLinkedList());
-            }
-            final List<Future> futuresList = inflightDependencyChecks.get(dependencyId);
-            final Future<CheckResult> future = dependencyExecutor.submit(dependency);
-            futuresList.add(future);
-            if (futuresList.size() > 2) {
-                cancel(futuresList.get(0));
-            }
-            return future;
+        final String dependencyId = dependency.getId();
+        numberChecksInFlight.putIfAbsent(dependencyId, new AtomicInteger(0));
+        final AtomicInteger numberInFlight = numberChecksInFlight.get(dependencyId);
+        if (numberInFlight.incrementAndGet() > 2) {
+            throw new IllegalStateException(String.format("Too many checks of %s are already in flight", dependencyId));
         }
+        final Future<CheckResult> future = dependencyExecutor.submit(dependency);
+        return future;
     }
 
     private void cancel(@Nonnull final Future<?>... futures) {
@@ -257,6 +243,8 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
             } catch (final Exception e) {
                 log.error("Unexpected exception during supposedly safe finalization operation", e);
+            } finally {
+                numberChecksInFlight.get(dependency.getId()).decrementAndGet();
             }
         }
     }
