@@ -356,28 +356,26 @@ public class TestHealthcheckFramework {
     @Test
     public void testConcurrentDependencyChecksWithSameID() throws Exception {
         final ExecutorService executorService = Executors.newFixedThreadPool(10);
+        final AbstractDependencyManager dependencyManager = newDependencyManager();
         final Dependency longDependency = new PingableDependency("dep", "description", Urgency.REQUIRED) {
             @Override
             public void ping() throws Exception {
                 Thread.sleep(1000);
             }
         };
-        final DependencyChecker checker = DependencyChecker.newBuilder()
-                .setExecutorService(executorService)
-                .setSystemReporter(systemReporter)
-                .build();
+        dependencyManager.addDependency(longDependency);
 
-        final Callable<CheckResult> testcallable = new Callable<CheckResult>() {
+        final Callable<CheckResultSet> testcallable = new Callable<CheckResultSet>() {
             @Override
-            public CheckResult call() throws Exception {
-                return checker.evaluate(longDependency);
+            public CheckResultSet call() throws Exception {
+                return dependencyManager.evaluate();
             }
         };
 
-        final List<Future<CheckResult>> futures = executorService.invokeAll(ImmutableList.of(testcallable, testcallable, testcallable));
+        final List<Future<CheckResultSet>> futures = executorService.invokeAll(ImmutableList.of(testcallable, testcallable, testcallable));
         int outageCount = 0;
-        for (final Future<CheckResult> future : futures) {
-            final CheckResult checkResult = future.get();
+        for (final Future<CheckResultSet> future : futures) {
+            final CheckResult checkResult = future.get().get("dep");
             if (checkResult.getStatus() == CheckStatus.OUTAGE) {
                 outageCount++;
                 assertEquals("Health check failed to launch due to too many checks already being in flight. Please dump /private/v and thread-state and contact dev.", checkResult.getThrowable().getMessage());
