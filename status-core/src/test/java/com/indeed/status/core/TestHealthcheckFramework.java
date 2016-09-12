@@ -356,7 +356,7 @@ public class TestHealthcheckFramework {
     @Test
     public void testConcurrentDependencyChecksWithSameID() throws Exception {
         final ExecutorService executorService = Executors.newFixedThreadPool(10);
-        final AbstractDependencyManager dependencyManager = newDependencyManager();
+        final AbstractDependencyManager dependencyManager = new AbstractDependencyManager(null, null, AbstractDependencyManager.newDefaultThreadPool(), new SystemReporter(), true) {};
         final Dependency longDependency = new PingableDependency("dep", "description", Urgency.REQUIRED) {
             @Override
             public void ping() throws Exception {
@@ -438,7 +438,7 @@ public class TestHealthcheckFramework {
     }
     private class InterruptingChecker extends DependencyChecker {
         public InterruptingChecker (final SimpleSupplier<Boolean> shouldInterrupt, final SimpleSupplier<Boolean> testInvalid) {
-            super(log, new InterruptingExecutor(Executors.newSingleThreadExecutor(), shouldInterrupt, testInvalid), systemReporter);
+            super(log, new InterruptingExecutor(Executors.newSingleThreadExecutor(), shouldInterrupt, testInvalid), systemReporter, false);
         }
     }
 
@@ -461,7 +461,7 @@ public class TestHealthcheckFramework {
     }
     private class CancelingChecker extends DependencyChecker {
         public CancelingChecker (final SimpleSupplier<Boolean> shouldCancel) {
-            super(log, new CancelingExecutor(Executors.newSingleThreadExecutor(), shouldCancel), systemReporter);
+            super(log, new CancelingExecutor(Executors.newSingleThreadExecutor(), shouldCancel), systemReporter, false);
         }
     }
 

@@ -34,16 +34,19 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     @Nonnull private final SystemReporter systemReporter;
     @Nonnull private final Logger log;
     @Nonnull private final ConcurrentMap<String, AtomicInteger> numberChecksInFlight = new ConcurrentHashMap<>();
+    private final boolean throttle;
 
     // For builder and subclass use only
     protected DependencyChecker(
             @Nonnull final Logger logger,
             @Nonnull final DependencyExecutor dependencyExecutor,
-            @Nonnull final SystemReporter systemReporter
+            @Nonnull final SystemReporter systemReporter,
+            final boolean throttle
     ) {
         this.log = logger;
         this.dependencyExecutor = dependencyExecutor;
         this.systemReporter = systemReporter;
+        this.throttle = throttle;
     }
 
     @Nonnull
@@ -204,11 +207,13 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
     @Nonnull
     private Future<CheckResult> submit(@Nonnull final Dependency dependency) {
-        final String dependencyId = dependency.getId();
-        numberChecksInFlight.putIfAbsent(dependencyId, new AtomicInteger(0));
-        final AtomicInteger numberInFlight = numberChecksInFlight.get(dependencyId);
-        if (numberInFlight.incrementAndGet() > 2) {
-            throw new IllegalStateException(String.format("Too many checks of %s are already in flight", dependencyId));
+        if (throttle) {
+            final String dependencyId = dependency.getId();
+            numberChecksInFlight.putIfAbsent(dependencyId, new AtomicInteger(0));
+            final AtomicInteger numberInFlight = numberChecksInFlight.get(dependencyId);
+            if (numberInFlight.incrementAndGet() > 2) {
+                throw new IllegalStateException(String.format("Too many checks of %s are already in flight", dependencyId));
+            }
         }
         final Future<CheckResult> future = dependencyExecutor.submit(dependency);
         return future;
@@ -244,7 +249,9 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             } catch (final Exception e) {
                 log.error("Unexpected exception during supposedly safe finalization operation", e);
             } finally {
-                numberChecksInFlight.get(dependency.getId()).decrementAndGet();
+                if (throttle) {
+                    numberChecksInFlight.get(dependency.getId()).decrementAndGet();
+                }
             }
         }
     }
@@ -349,6 +356,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         private ExecutorService executorService;
         @Nonnull
         private SystemReporter systemReporter = new SystemReporter();
+        private boolean throttle = false;
 
         private Builder() {
         }
@@ -368,13 +376,18 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             return this;
         }
 
+        public Builder setThrottle(@Nonnull final boolean throttle) {
+            this.throttle = throttle;
+            return this;
+        }
+
         public DependencyChecker build() {
             final ExecutorService executorService = Preconditions.checkNotNull(
                     this.executorService,
                     "Cannot configure a dependency checker with a null executor service.");
             final DependencyExecutor dependencyExecutor = new DependencyExecutorSet(executorService);
 
-            return new DependencyChecker(_logger, dependencyExecutor, systemReporter);
+            return new DependencyChecker(_logger, dependencyExecutor, systemReporter, throttle);
         }
     }
 }
