@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author matts
@@ -379,12 +380,38 @@ public class TestHealthcheckFramework {
             if (checkResult.getStatus() == CheckStatus.OUTAGE) {
                 outageCount++;
                 assertEquals("Health check failed to launch due to too many checks already being in flight. Please dump /private/v and thread-state and contact dev.", checkResult.getThrowable().getMessage());
-                assertEquals("Too many checks of dep are already in flight", checkResult.getThrowable().getCause().getMessage());
+                assertEquals("Unable to ping dependency dep because there are already two previous pings that haven't returned. To turn off this behavior set throttle to false.", checkResult.getThrowable().getCause().getMessage());
             } else {
                 assertEquals(CheckStatus.OK, checkResult.getStatus());
             }
         }
         assertEquals(1, outageCount);
+    }
+
+    @Test
+    public void testConcurrentDependencyChecksWithSameIDNoThrottle() throws Exception {
+        final ExecutorService executorService = Executors.newFixedThreadPool(10);
+        final AbstractDependencyManager dependencyManager = newDependencyManager();
+        final Dependency longDependency = new PingableDependency("dep", "description", Urgency.REQUIRED) {
+            @Override
+            public void ping() throws Exception {
+                Thread.sleep(1000);
+            }
+        };
+        dependencyManager.addDependency(longDependency);
+
+        final Callable<CheckResultSet> testcallable = new Callable<CheckResultSet>() {
+            @Override
+            public CheckResultSet call() throws Exception {
+                return dependencyManager.evaluate();
+            }
+        };
+
+        final List<Future<CheckResultSet>> futures = executorService.invokeAll(ImmutableList.of(testcallable, testcallable, testcallable));
+        for (final Future<CheckResultSet> future : futures) {
+            final CheckResult checkResult = future.get().get("dep");
+            assertEquals(CheckStatus.OK, checkResult.getStatus());
+        }
     }
 
     private AbstractDependencyManager newDependencyManager() throws Exception {

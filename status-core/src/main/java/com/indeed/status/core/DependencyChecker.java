@@ -37,6 +37,18 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     private final boolean throttle;
 
     // For builder and subclass use only
+    /**
+     * @deprecated Use {@link DependencyChecker#DependencyChecker(Logger, DependencyExecutor, SystemReporter, boolean)} instead.
+     */
+    @Deprecated
+    protected DependencyChecker(
+            @Nonnull final Logger logger,
+            @Nonnull final DependencyExecutor dependencyExecutor,
+            @Nonnull final SystemReporter systemReporter
+    ) {
+        this(logger, dependencyExecutor, systemReporter, false);
+    }
+
     protected DependencyChecker(
             @Nonnull final Logger logger,
             @Nonnull final DependencyExecutor dependencyExecutor,
@@ -212,7 +224,8 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             numberChecksInFlight.putIfAbsent(dependencyId, new AtomicInteger(0));
             final AtomicInteger numberInFlight = numberChecksInFlight.get(dependencyId);
             if (numberInFlight.incrementAndGet() > 2) {
-                throw new IllegalStateException(String.format("Too many checks of %s are already in flight", dependencyId));
+                throw new IllegalStateException(
+                        String.format("Unable to ping dependency %s because there are already two previous pings that haven't returned. To turn off this behavior set throttle to false.", dependencyId));
             }
         }
         final Future<CheckResult> future = dependencyExecutor.submit(dependency);
@@ -250,6 +263,10 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
                 log.error("Unexpected exception during supposedly safe finalization operation", e);
             } finally {
                 if (throttle) {
+                    if (numberChecksInFlight.get(dependency.getId()) == null) {
+                        log.error(String.format("Dependency %s doesn't have a number tracking checks in flight while finalizing. Please investigate, this shouldn't ever happen", dependency.getId()));
+                        numberChecksInFlight.putIfAbsent(dependency.getId(), new AtomicInteger(1));
+                    }
                     numberChecksInFlight.get(dependency.getId()).decrementAndGet();
                 }
             }
