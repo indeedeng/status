@@ -3,7 +3,6 @@ package com.indeed.status.core;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import com.indeed.util.core.time.DefaultWallClock;
 import com.indeed.util.core.time.WallClock;
 import org.apache.log4j.Logger;
 
@@ -18,6 +17,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Standalone evaluator of {@link Dependency} objects.
@@ -31,16 +33,32 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     @Nonnull private final DependencyExecutor dependencyExecutor;
     @Nonnull private final SystemReporter systemReporter;
     @Nonnull private final Logger log;
+    @Nonnull private final ConcurrentMap<String, AtomicInteger> numberChecksInFlight = new ConcurrentHashMap<>();
+    private final boolean throttle;
 
     // For builder and subclass use only
+    /**
+     * @deprecated Use {@link DependencyChecker#DependencyChecker(Logger, DependencyExecutor, SystemReporter, boolean)} instead.
+     */
+    @Deprecated
     protected DependencyChecker(
             @Nonnull final Logger logger,
             @Nonnull final DependencyExecutor dependencyExecutor,
             @Nonnull final SystemReporter systemReporter
     ) {
+        this(logger, dependencyExecutor, systemReporter, false);
+    }
+
+    protected DependencyChecker(
+            @Nonnull final Logger logger,
+            @Nonnull final DependencyExecutor dependencyExecutor,
+            @Nonnull final SystemReporter systemReporter,
+            final boolean throttle
+    ) {
         this.log = logger;
         this.dependencyExecutor = dependencyExecutor;
         this.systemReporter = systemReporter;
+        this.throttle = throttle;
     }
 
     @Nonnull
@@ -133,7 +151,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         Future<CheckResult> future = null;
 
         try {
-            future = dependencyExecutor.submit(dependency);
+            future = submit(dependency);
 
             results.handleInit(dependency);
             results.handleExecute(dependency);
@@ -177,6 +195,9 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             //  nobody cares about the wrapping ExecutionException
             t = new CheckException("Health-check failed for unknown reason. Please dump /private/v and thread-state and contact dev.", e.getCause());
 
+        } catch (final IllegalStateException e) {
+            log.warn("Too many dependency checks are in flight.");
+            t = new CheckException("Health check failed to launch due to too many checks already being in flight. Please dump /private/v and thread-state and contact dev.", e);
         } catch (final Throwable e) {
             t = new CheckException("Health-check failed for unknown reason. Please dump /private/v and thread-state and contact dev.", e);
 
@@ -194,6 +215,21 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
             finalizeAndRecord(dependency, results, evaluationResult);
         }
+    }
+
+    @Nonnull
+    private Future<CheckResult> submit(@Nonnull final Dependency dependency) {
+        if (throttle) {
+            final String dependencyId = dependency.getId();
+            numberChecksInFlight.putIfAbsent(dependencyId, new AtomicInteger(0));
+            final AtomicInteger numberInFlight = numberChecksInFlight.get(dependencyId);
+            if (numberInFlight.incrementAndGet() > 2) {
+                throw new IllegalStateException(
+                        String.format("Unable to ping dependency %s because there are already two previous pings that haven't returned. To turn off this behavior set throttle to false.", dependencyId));
+            }
+        }
+        final Future<CheckResult> future = dependencyExecutor.submit(dependency);
+        return future;
     }
 
     private void cancel(@Nonnull final Future<?>... futures) {
@@ -225,6 +261,14 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
             } catch (final Exception e) {
                 log.error("Unexpected exception during supposedly safe finalization operation", e);
+            } finally {
+                if (throttle) {
+                    if (numberChecksInFlight.get(dependency.getId()) == null) {
+                        log.error(String.format("Dependency %s doesn't have a number tracking checks in flight while finalizing. Please investigate, this shouldn't ever happen", dependency.getId()));
+                        numberChecksInFlight.putIfAbsent(dependency.getId(), new AtomicInteger(1));
+                    }
+                    numberChecksInFlight.get(dependency.getId()).decrementAndGet();
+                }
             }
         }
     }
@@ -329,6 +373,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         private ExecutorService executorService;
         @Nonnull
         private SystemReporter systemReporter = new SystemReporter();
+        private boolean throttle = false;
 
         private Builder() {
         }
@@ -348,13 +393,18 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             return this;
         }
 
+        public Builder setThrottle(@Nonnull final boolean throttle) {
+            this.throttle = throttle;
+            return this;
+        }
+
         public DependencyChecker build() {
             final ExecutorService executorService = Preconditions.checkNotNull(
                     this.executorService,
                     "Cannot configure a dependency checker with a null executor service.");
             final DependencyExecutor dependencyExecutor = new DependencyExecutorSet(executorService);
 
-            return new DependencyChecker(_logger, dependencyExecutor, systemReporter);
+            return new DependencyChecker(_logger, dependencyExecutor, systemReporter, throttle);
         }
     }
 }

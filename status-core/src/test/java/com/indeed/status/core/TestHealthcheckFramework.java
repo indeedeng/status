@@ -17,6 +17,8 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author matts
@@ -351,6 +354,65 @@ public class TestHealthcheckFramework {
                 CheckResult.DATE_FORMAT.get().format(new Date(now)), result.getDate());
     }
 
+    @Test
+    public void testConcurrentDependencyChecksWithSameID() throws Exception {
+        final ExecutorService executorService = Executors.newFixedThreadPool(10);
+        final AbstractDependencyManager dependencyManager = new AbstractDependencyManager(null, null, AbstractDependencyManager.newDefaultThreadPool(), new SystemReporter(), true) {};
+        final Dependency longDependency = new PingableDependency("dep", "description", Urgency.REQUIRED) {
+            @Override
+            public void ping() throws Exception {
+                Thread.sleep(1000);
+            }
+        };
+        dependencyManager.addDependency(longDependency);
+
+        final Callable<CheckResultSet> testcallable = new Callable<CheckResultSet>() {
+            @Override
+            public CheckResultSet call() throws Exception {
+                return dependencyManager.evaluate();
+            }
+        };
+
+        final List<Future<CheckResultSet>> futures = executorService.invokeAll(ImmutableList.of(testcallable, testcallable, testcallable));
+        int outageCount = 0;
+        for (final Future<CheckResultSet> future : futures) {
+            final CheckResult checkResult = future.get().get("dep");
+            if (checkResult.getStatus() == CheckStatus.OUTAGE) {
+                outageCount++;
+                assertEquals("Health check failed to launch due to too many checks already being in flight. Please dump /private/v and thread-state and contact dev.", checkResult.getThrowable().getMessage());
+                assertEquals("Unable to ping dependency dep because there are already two previous pings that haven't returned. To turn off this behavior set throttle to false.", checkResult.getThrowable().getCause().getMessage());
+            } else {
+                assertEquals(CheckStatus.OK, checkResult.getStatus());
+            }
+        }
+        assertEquals(1, outageCount);
+    }
+
+    @Test
+    public void testConcurrentDependencyChecksWithSameIDNoThrottle() throws Exception {
+        final ExecutorService executorService = Executors.newFixedThreadPool(10);
+        final AbstractDependencyManager dependencyManager = newDependencyManager();
+        final Dependency longDependency = new PingableDependency("dep", "description", Urgency.REQUIRED) {
+            @Override
+            public void ping() throws Exception {
+                Thread.sleep(1000);
+            }
+        };
+        dependencyManager.addDependency(longDependency);
+
+        final Callable<CheckResultSet> testcallable = new Callable<CheckResultSet>() {
+            @Override
+            public CheckResultSet call() throws Exception {
+                return dependencyManager.evaluate();
+            }
+        };
+
+        final List<Future<CheckResultSet>> futures = executorService.invokeAll(ImmutableList.of(testcallable, testcallable, testcallable));
+        for (final Future<CheckResultSet> future : futures) {
+            final CheckResult checkResult = future.get().get("dep");
+            assertEquals(CheckStatus.OK, checkResult.getStatus());
+        }
+    }
 
     private AbstractDependencyManager newDependencyManager() throws Exception {
         return new AbstractDependencyManager() {};
@@ -403,7 +465,7 @@ public class TestHealthcheckFramework {
     }
     private class InterruptingChecker extends DependencyChecker {
         public InterruptingChecker (final SimpleSupplier<Boolean> shouldInterrupt, final SimpleSupplier<Boolean> testInvalid) {
-            super(log, new InterruptingExecutor(Executors.newSingleThreadExecutor(), shouldInterrupt, testInvalid), systemReporter);
+            super(log, new InterruptingExecutor(Executors.newSingleThreadExecutor(), shouldInterrupt, testInvalid), systemReporter, false);
         }
     }
 
@@ -426,7 +488,7 @@ public class TestHealthcheckFramework {
     }
     private class CancelingChecker extends DependencyChecker {
         public CancelingChecker (final SimpleSupplier<Boolean> shouldCancel) {
-            super(log, new CancelingExecutor(Executors.newSingleThreadExecutor(), shouldCancel), systemReporter);
+            super(log, new CancelingExecutor(Executors.newSingleThreadExecutor(), shouldCancel), systemReporter, false);
         }
     }
 

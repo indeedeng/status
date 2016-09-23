@@ -93,6 +93,15 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         this(appName, logger, newDefaultThreadPool(), systemReporter);
     }
 
+    public AbstractDependencyManager(
+            final String appName,
+            final Logger logger,
+            @Nonnull final SystemReporter systemReporter,
+            final boolean throttleDependencyChecks
+    ) {
+        this(appName, logger, newDefaultThreadPool(), systemReporter, throttleDependencyChecks);
+    }
+
     public AbstractDependencyManager (final Logger logger) {
         this(null, logger, newDefaultThreadPool());
     }
@@ -136,10 +145,27 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
                 appName,
                 logger,
                 threadPool,
+                systemReporter,
+                false);
+    }
+
+    public AbstractDependencyManager(
+            @Nullable final String appName,
+            @Nullable final Logger logger,
+            @Nonnull final ThreadPoolExecutor threadPool,
+            @Nonnull final SystemReporter systemReporter,
+            final boolean throttleDependencyChecks
+    ) {
+
+        this(
+                appName,
+                logger,
+                threadPool,
                 DependencyChecker.newBuilder()
                         .setExecutorService(threadPool)
                         .setLogger(logger)
                         .setSystemReporter(systemReporter)
+                        .setThrottle(throttleDependencyChecks)
                         .build());
     }
 
@@ -268,11 +294,11 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         final long dependencyPingPeriod = dependency.getPingPeriod();
         if (dependencyPingPeriod <= 0 || dependencyPingPeriod == AbstractDependency.DEFAULT_PING_PERIOD) {
             log.info("Creating pinger with ping period " + pingPeriod);
-            pinger = new DependencyPinger(threadPool, dependency, pingPeriod, checker.getSystemReporter());
+            pinger = new DependencyPinger(dependency, pingPeriod, checker);
 
         } else {
             log.info("Creating pinger with ping period " + dependency.getPingPeriod());
-            pinger = new DependencyPinger(threadPool, dependency, checker.getSystemReporter());
+            pinger = new DependencyPinger(dependency, checker);
         }
         return pinger;
     }

@@ -77,6 +77,13 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     }
 
     DependencyPinger(
+            @Nonnull final Dependency dependency,
+            @Nonnull final DependencyChecker checker
+    ) {
+        this(dependency, dependency.getPingPeriod(), checker);
+    }
+
+    DependencyPinger(
             @Nonnull final ExecutorService executorService,
             @Nonnull final Dependency dependency,
             @Nonnull final SystemReporter systemReporter
@@ -90,11 +97,19 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
             final long pingPeriod,
             @Nonnull final SystemReporter systemReporter
     ) {
-        this.checker = DependencyChecker.newBuilder()
+        this(dependency, pingPeriod, DependencyChecker.newBuilder()
                 .setExecutorService(executorService)
                 .setLogger(log)
                 .setSystemReporter(systemReporter)
-                .build();
+                .build());
+    }
+
+    DependencyPinger (
+            @Nonnull final Dependency dependency,
+            final long pingPeriod,
+            @Nonnull final DependencyChecker dependencyChecker
+    ) {
+        this.checker = dependencyChecker;
         this.dependency = dependency;
         this.pingPeriod = pingPeriod;
 
