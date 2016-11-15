@@ -314,6 +314,10 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
                 null == existing,
                 "Can't have two dependencies with the same ID [%s]. Check your setup.", dependency.getId());
 
+        if (dependency instanceof PingableDependency) {
+            ((PingableDependency) dependency).setThrottle(checker.getThrottle());
+        }
+
         // Direct this through the update-handler so that we don't inadvertently alert ourselves that we added a dependency
         updateHandler.onAdded(dependency);
     }

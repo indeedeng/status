@@ -17,6 +17,7 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -356,36 +357,36 @@ public class TestHealthcheckFramework {
 
     @Test
     public void testConcurrentDependencyChecksWithSameID() throws Exception {
-        final ExecutorService executorService = Executors.newFixedThreadPool(10);
         final AbstractDependencyManager dependencyManager = new AbstractDependencyManager(null, null, AbstractDependencyManager.newDefaultThreadPool(), new SystemReporter(), true) {};
-        final Dependency longDependency = new PingableDependency("dep", "description", Urgency.REQUIRED) {
+        final Dependency longDependency = new PingableDependency("dep", "description", 100, Urgency.REQUIRED) {
             @Override
             public void ping() throws Exception {
-                Thread.sleep(1000);
+                long endTime = System.currentTimeMillis() + 1000;
+                while (System.currentTimeMillis() < endTime) {
+                }
             }
         };
         dependencyManager.addDependency(longDependency);
 
-        final Callable<CheckResultSet> testcallable = new Callable<CheckResultSet>() {
-            @Override
-            public CheckResultSet call() throws Exception {
-                return dependencyManager.evaluate();
-            }
-        };
+        final List<CheckResultSet> evaluateResults = new LinkedList<>();
+        evaluateResults.add(dependencyManager.evaluate());
+        evaluateResults.add(dependencyManager.evaluate());
+        evaluateResults.add(dependencyManager.evaluate());
 
-        final List<Future<CheckResultSet>> futures = executorService.invokeAll(ImmutableList.of(testcallable, testcallable, testcallable));
-        int outageCount = 0;
-        for (final Future<CheckResultSet> future : futures) {
-            final CheckResult checkResult = future.get().get("dep");
-            if (checkResult.getStatus() == CheckStatus.OUTAGE) {
-                outageCount++;
-                assertEquals("Health check failed to launch due to too many checks already being in flight. Please dump /private/v and thread-state and contact dev.", checkResult.getThrowable().getMessage());
-                assertEquals("Unable to ping dependency dep because there are already two previous pings that haven't returned. To turn off this behavior set throttle to false.", checkResult.getThrowable().getCause().getMessage());
+        int timeoutCount = 0;
+        for (final CheckResultSet result : evaluateResults) {
+            final CheckResult checkResult = result.get("dep");
+            assertEquals(CheckStatus.OUTAGE, checkResult.getStatus());
+            if (checkResult.getErrorMessage().equals("Timed out prior to completion")) {
+                timeoutCount++;
             } else {
-                assertEquals(CheckStatus.OK, checkResult.getStatus());
+                assertEquals("Exception thrown during ping", checkResult.getErrorMessage());
+                assertEquals(IllegalStateException.class, checkResult.getThrowable().getClass());
+                assertEquals("Unable to ping dependency dep because there are already two previous pings that haven't "
+                                + "returned. To turn off this behavior set throttle to false.", checkResult.getThrowable().getMessage());
             }
         }
-        assertEquals(1, outageCount);
+        assertEquals(2, timeoutCount);
     }
 
     @Test
