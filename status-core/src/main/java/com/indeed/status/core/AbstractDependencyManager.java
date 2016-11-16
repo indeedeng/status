@@ -308,18 +308,22 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     }
 
     public void addDependency(final Dependency dependency) {
-        final Dependency existing = dependencies.putIfAbsent(dependency.getId(), dependency);
+        final Dependency dependencyToAdd;
+
+        if (checker.getThrottle()) {
+            dependencyToAdd = new ThrottledDependencyWrapper(dependency);
+        } else {
+            dependencyToAdd = dependency;
+        }
+
+        final Dependency existing = dependencies.putIfAbsent(dependencyToAdd.getId(), dependencyToAdd);
 
         Preconditions.checkState(
                 null == existing,
-                "Can't have two dependencies with the same ID [%s]. Check your setup.", dependency.getId());
-
-        if (dependency instanceof PingableDependency) {
-            ((PingableDependency) dependency).setThrottle(checker.getThrottle());
-        }
+                "Can't have two dependencies with the same ID [%s]. Check your setup.", dependencyToAdd.getId());
 
         // Direct this through the update-handler so that we don't inadvertently alert ourselves that we added a dependency
-        updateHandler.onAdded(dependency);
+        updateHandler.onAdded(dependencyToAdd);
     }
 
     public Collection<Dependency> getDependencies() {

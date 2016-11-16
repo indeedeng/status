@@ -9,7 +9,6 @@ import com.indeed.util.core.time.WallClock;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The <code>PingableDependency</code> represents the simplest of dependencies, a dependency that executes and either
@@ -21,8 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class PingableDependency extends AbstractDependency {
     @Nonnull private final WallClock wallClock;
     @Nonnull private final Supplier<Boolean> toggle;
-    @Nonnull private final AtomicInteger numberOfRunningHealthChecks;
-    @Nonnull private boolean throttle;
 
     /**
      * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
@@ -165,8 +162,6 @@ public abstract class PingableDependency extends AbstractDependency {
 
         this.wallClock = wallClock;
         this.toggle = toggle;
-        this.numberOfRunningHealthChecks = new AtomicInteger(0);
-        this.throttle = false;
     }
 
     protected PingableDependency(
@@ -176,8 +171,6 @@ public abstract class PingableDependency extends AbstractDependency {
 
         this.wallClock = Preconditions.checkNotNull(builder.getWallClock(), "wallclock required");
         this.toggle = Preconditions.checkNotNull(builder.getToggle(), "toggle required");
-        this.numberOfRunningHealthChecks = new AtomicInteger(0);
-        this.throttle = false;
     }
 
     public CheckResult call() throws Exception {
@@ -188,15 +181,6 @@ public abstract class PingableDependency extends AbstractDependency {
             // Execute the unreliable method only if the toggle is set, allow products that have
             // dependencies on optionally available subsystems to avoid impossible healthchecks.
             if (toggle.get()) {
-                // Limit the number of running healthchecks here if the throttle is active, since
-                // DependencyChecker can't guarantee that it can cancel a running healthcheck.
-                if (throttle && numberOfRunningHealthChecks.incrementAndGet() > 2) {
-                    throw new IllegalStateException(
-                            String.format("Unable to ping dependency %s because there are already two previous pings that haven't " +
-                                    "returned. To turn off this behavior set throttle to false.", getId())
-                    );
-                }
-
                 ping();
             }
 
@@ -213,10 +197,6 @@ public abstract class PingableDependency extends AbstractDependency {
                     .setDuration(duration)
                     .setThrowable(e)
                     .build();
-        } finally {
-            if (toggle.get() && throttle) {
-                numberOfRunningHealthChecks.decrementAndGet();
-            }
         }
 
         return result;
@@ -238,15 +218,6 @@ public abstract class PingableDependency extends AbstractDependency {
      */
     protected String formatErrorMessage(@Nullable final Exception e) {
         return e == null ? "ok" : "Exception thrown during ping";
-    }
-
-    /**
-     * Sets whether this dependency will prevent ping from being called too many times
-     *
-     * @param throttle
-     */
-    protected void setThrottle(final boolean throttle) {
-        this.throttle = throttle;
     }
 
     public static abstract class Builder<T extends PingableDependency, B extends PingableDependency.Builder<T, B>> extends AbstractDependency.Builder<T, B> {
