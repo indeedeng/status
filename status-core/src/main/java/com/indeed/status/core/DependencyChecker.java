@@ -17,9 +17,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Standalone evaluator of {@link Dependency} objects.
@@ -33,7 +30,6 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     @Nonnull private final DependencyExecutor dependencyExecutor;
     @Nonnull private final SystemReporter systemReporter;
     @Nonnull private final Logger log;
-    @Nonnull private final ConcurrentMap<String, AtomicInteger> numberChecksInFlight = new ConcurrentHashMap<>();
     private final boolean throttle;
 
     // For builder and subclass use only
@@ -61,6 +57,8 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         this.throttle = throttle;
     }
 
+
+
     @Nonnull
     public SystemReporter getSystemReporter() {
         return systemReporter;
@@ -69,6 +67,10 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     @Nonnull
     public WallClock getWallClock() {
         return this.systemReporter.getWallClock();
+    }
+
+    public boolean getThrottle() {
+        return this.throttle;
     }
 
     @Nonnull
@@ -151,7 +153,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         Future<CheckResult> future = null;
 
         try {
-            future = submit(dependency);
+            future = dependencyExecutor.submit(dependency);
 
             results.handleInit(dependency);
             results.handleExecute(dependency);
@@ -217,21 +219,6 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         }
     }
 
-    @Nonnull
-    private Future<CheckResult> submit(@Nonnull final Dependency dependency) {
-        if (throttle) {
-            final String dependencyId = dependency.getId();
-            numberChecksInFlight.putIfAbsent(dependencyId, new AtomicInteger(0));
-            final AtomicInteger numberInFlight = numberChecksInFlight.get(dependencyId);
-            if (numberInFlight.incrementAndGet() > 2) {
-                throw new IllegalStateException(
-                        String.format("Unable to ping dependency %s because there are already two previous pings that haven't returned. To turn off this behavior set throttle to false.", dependencyId));
-            }
-        }
-        final Future<CheckResult> future = dependencyExecutor.submit(dependency);
-        return future;
-    }
-
     private void cancel(@Nonnull final Future<?>... futures) {
         for (final Future<?> future : futures) {
             try {
@@ -261,14 +248,6 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
 
             } catch (final Exception e) {
                 log.error("Unexpected exception during supposedly safe finalization operation", e);
-            } finally {
-                if (throttle) {
-                    if (numberChecksInFlight.get(dependency.getId()) == null) {
-                        log.error(String.format("Dependency %s doesn't have a number tracking checks in flight while finalizing. Please investigate, this shouldn't ever happen", dependency.getId()));
-                        numberChecksInFlight.putIfAbsent(dependency.getId(), new AtomicInteger(1));
-                    }
-                    numberChecksInFlight.get(dependency.getId()).decrementAndGet();
-                }
             }
         }
     }
