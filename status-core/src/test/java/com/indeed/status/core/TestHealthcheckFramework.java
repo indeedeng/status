@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -413,6 +414,55 @@ public class TestHealthcheckFramework {
             final CheckResult checkResult = future.get().get("dep");
             assertEquals(CheckStatus.OK, checkResult.getStatus());
         }
+    }
+
+    @Test
+    public void testDependencyManagerWithDependencyPingerDoesNotCreateNewThreads() throws Exception {
+        final DependencyExecutor dependencyExecutor = new DependencyExecutor() {
+            @Override
+            public Future<CheckResult> submit(Dependency dependency) {
+                throw new UnsupportedOperationException("You need to implement this");
+            }
+
+            @Override
+            public void resolve(Dependency dependency) {
+                throw new UnsupportedOperationException("You need to implement this");
+            }
+
+            @Override
+            public void shutdown() {
+                throw new UnsupportedOperationException("You need to implement this");
+            }
+
+            @Override
+            public boolean isShutdown() {
+                throw new UnsupportedOperationException("You need to implement this");
+            }
+
+            @Override
+            public void awaitTermination(long duration, TimeUnit unit) throws InterruptedException {
+                throw new UnsupportedOperationException("You need to implement this");
+            }
+        };
+        final Dependency dependency = new DependencyPinger(new AlwaysTrueDependencyBuilder().build());
+        final CheckResult result = dependency.call();
+        assertEquals(CheckStatus.OK, result.getStatus());
+
+        final DependencyChecker dependencyCheckerThrottled = new DependencyChecker(log, dependencyExecutor, new SystemReporter(), true);
+        final AbstractDependencyManager dependencyManagerThrottled = new AbstractDependencyManager(null, null, AbstractDependencyManager.newDefaultThreadPool(), dependencyCheckerThrottled) {};
+        dependencyManagerThrottled.addDependency(dependency);
+        final CheckResultSet resultSet = dependencyManagerThrottled.evaluate();
+        final CheckResultSet resultSet2 = dependencyManagerThrottled.evaluate();
+        assertEquals(CheckStatus.OK, resultSet.getSystemStatus());
+        assertEquals(CheckStatus.OK, resultSet2.getSystemStatus());
+
+        final DependencyChecker dependencyCheckerNotThrottled = new DependencyChecker(log, dependencyExecutor, new SystemReporter(), false);
+        final AbstractDependencyManager dependencyManagerNotThrottled = new AbstractDependencyManager(null, null, AbstractDependencyManager.newDefaultThreadPool(), dependencyCheckerNotThrottled) {};
+        dependencyManagerNotThrottled.addDependency(dependency);
+        final CheckResultSet resultSet3 = dependencyManagerNotThrottled.evaluate();
+        final CheckResultSet resultSet4 = dependencyManagerNotThrottled.evaluate();
+        assertEquals(CheckStatus.OK, resultSet3.getSystemStatus());
+        assertEquals(CheckStatus.OK, resultSet4.getSystemStatus());
     }
 
     private AbstractDependencyManager newDependencyManager() throws Exception {

@@ -310,7 +310,7 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     public void addDependency(final Dependency dependency) {
         final Dependency dependencyToAdd;
 
-        if (checker.getThrottle()) {
+        if (checker.getThrottle() && !(dependency instanceof DependencyPinger)) {
             dependencyToAdd = new ThrottledDependencyWrapper(dependency);
         } else {
             dependencyToAdd = dependency;
