@@ -420,28 +420,28 @@ public class TestHealthcheckFramework {
     public void testDependencyManagerWithDependencyPingerDoesNotCreateNewThreads() throws Exception {
         final DependencyExecutor dependencyExecutor = new DependencyExecutor() {
             @Override
-            public Future<CheckResult> submit(Dependency dependency) {
-                throw new UnsupportedOperationException("You need to implement this");
+            public Future<CheckResult> submit(final Dependency dependency) {
+                throw new AssertionError("Test should not be calling anything on the executor");
             }
 
             @Override
-            public void resolve(Dependency dependency) {
-                throw new UnsupportedOperationException("You need to implement this");
+            public void resolve(final Dependency dependency) {
+                throw new AssertionError("Test should not be calling anything on the executor");
             }
 
             @Override
             public void shutdown() {
-                throw new UnsupportedOperationException("You need to implement this");
+                throw new AssertionError("Test should not be calling anything on the executor");
             }
 
             @Override
             public boolean isShutdown() {
-                throw new UnsupportedOperationException("You need to implement this");
+                throw new AssertionError("Test should not be calling anything on the executor");
             }
 
             @Override
-            public void awaitTermination(long duration, TimeUnit unit) throws InterruptedException {
-                throw new UnsupportedOperationException("You need to implement this");
+            public void awaitTermination(final long duration, final TimeUnit unit) throws InterruptedException {
+                throw new AssertionError("Test should not be calling anything on the executor");
             }
         };
         final Dependency dependency = new DependencyPinger(new AlwaysTrueDependencyBuilder().build());
