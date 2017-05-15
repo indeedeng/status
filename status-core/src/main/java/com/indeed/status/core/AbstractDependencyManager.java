@@ -326,6 +326,10 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         updateHandler.onAdded(dependencyToAdd);
     }
 
+    public Dependency removeDependency(final String id) {
+        return dependencies.remove(id);
+    }
+
     public Collection<Dependency> getDependencies() {
         return Collections.unmodifiableCollection(dependencies.values());
     }
