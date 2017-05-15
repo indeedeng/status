@@ -9,7 +9,7 @@
 
     <artifactId>status-parent</artifactId>
     <name>Indeed Status Parent</name>
-    <version>1.0.21</version>
+    <version>1.0.22-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <licenses>
