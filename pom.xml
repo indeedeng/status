@@ -30,4 +30,8 @@
         <module>status-core</module>
         <module>status-web</module>
     </modules>
+
+    <properties>
+        <additionalparam>-Xdoclint:none</additionalparam>
+    </properties>
 </project>
