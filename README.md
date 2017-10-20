@@ -8,9 +8,6 @@ the current health of any internal aspects of the application.
 Constructing dependencies for various services is easy.
 Simply extend the `PingableDependency` and implement the ping method.
 If the ping method throws an exception, then the status of the dependency will be failing.
-The amount it affects the service is dependent upon the severity specified in the constructor.
-REQUIRED dependencies will cause the application to report an OUTAGE.
-STRONG will report a MAJOR status, WEAK will report a MINOR, and NONE will not change the state.
 
 ```java
 import com.indeed.status.core.PingableDependency
@@ -26,6 +23,24 @@ public class SimpleDependency extends PingableDependency {
         // code to check dependency (return void for GOOD! and throw and exception for BAD)
     }
 }
+```
+
+A `PingableDependency` returns one of two `CheckStatus`: `OK` and `OUTAGE`.
+For better control over a check, see `AbstractDependency`, `SimpleDependency`, or `ComparableDependency`.
+Based on the `CheckStatus` returned and the `Urgency` of the corresponding dependency, a systems health reflects as follows:
+
+| Status \ Urgency | REQUIRED | STRONG | WEAK   | NONE |
+| ---------------- | -------- | ------ | ------ | ---- |
+| OUTAGE           | OUTAGE   | MAJOR  | MINOR  | OK   |
+| MAJOR            | MAJOR    | MAJOR  | MINOR  | OK   |
+| MINOR            | MINOR    | MINOR  | MINOR  | OK   |
+| OK               | OK       | OK     | OK     | OK   |
+
+When evaluating a whole systems status, it computes the minimum health value of all dependencies.
+In other terms:
+
+```
+A Systems Status = min(dependency check status)
 ```
 
 ### Servlet Reporting
