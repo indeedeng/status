@@ -93,7 +93,7 @@ status.get("simple").getStatus();
 
 Healthchecks are pages within applications that take all the dependencies and dump their statuses in a JSON format
 They can help shed light into services that are currently unavailable or unhealthy.
-This feature is only available through the status-web package, but sim
+This feature is only available through the status-web package.
 
 ### Failing Healthchecks
 
