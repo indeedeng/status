@@ -1,6 +1,5 @@
 package com.indeed.status.core;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.indeed.util.core.time.WallClock;
@@ -358,7 +357,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         }
 
         public Builder setLogger(@Nullable final Logger logger) {
-            this._logger = Objects.firstNonNull(logger, DEFAULT_LOGGER);
+            this._logger = logger != null ? logger : DEFAULT_LOGGER;
             return this;
         }
 
