@@ -1,7 +1,6 @@
 package com.indeed.status.web;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
 import com.indeed.status.core.CheckReportHandler;
 import com.indeed.status.core.CheckResultSet;
 import com.indeed.status.core.CheckResultSystemReport;
@@ -37,7 +36,8 @@ public class PrivilegedReportHandler extends AbstractResponseWriter implements C
     }
 
     protected void setResponseHeaders ( final CheckResultSet resultSet ) {
-        final int httpStatusCode = Objects.firstNonNull(statusCodeMapper.apply(resultSet.getSystemStatus()), NO_STATUS_CODE);
+        final Integer systemStatusCode = statusCodeMapper.apply(resultSet.getSystemStatus());
+        final int httpStatusCode = systemStatusCode != null ? systemStatusCode : NO_STATUS_CODE;
 
         response.setStatus(httpStatusCode);
         response.setContentType("application/json");
