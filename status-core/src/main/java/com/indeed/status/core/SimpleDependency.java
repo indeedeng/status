@@ -8,7 +8,7 @@ import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * The <code>SimpleDependency</code> represents the most common form of dependency with a tiered result level.
- * <br/>
+ * <br>
  * See {@link SimplePingableDependency} for a version with a binary result level.
  *
  * @author matts

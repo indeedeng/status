@@ -22,7 +22,7 @@ public abstract class ComparableDependency<T extends Comparable<T>> extends Abst
     private final T maxMajor;
 
     /**
-     * @deprecated Instead, use {@link ComparableDependency#ComparableDependency(String, String, long, long, Urgency, DependencyType, String, T, T ,T)}.
+     * @deprecated Instead, use {@link #ComparableDependency(String, String, long, long, Urgency, DependencyType, String, Comparable, Comparable, Comparable)}.
      */
     @Deprecated
     public ComparableDependency(
