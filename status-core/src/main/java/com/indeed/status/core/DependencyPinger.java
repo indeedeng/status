@@ -297,6 +297,9 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
         }
     }
 
+    @Export(name = "consecutive-failures", doc = "Number of times failed consecutively")
+    public int getConsecutiveFailures() { return consecutiveFailures.get(); }
+
     @Override
     public long getPingPeriod () {
         return pingPeriod;
