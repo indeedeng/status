@@ -34,4 +34,12 @@
     <properties>
         <additionalparam>-Xdoclint:none</additionalparam>
     </properties>
+
+    <dependencies>
+      <dependency>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpclient</artifactId>
+          <version>4.5.5</version>
+      </dependency>
+    </dependencies>
 </project>
