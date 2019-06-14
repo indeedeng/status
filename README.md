@@ -1,6 +1,6 @@
 # Status
 
-Status is a project to help report the current state of external systems that an application depends on, as well as 
+Status is a project to help report the current state of external systems that an application depends on, as well as
 the current health of any internal aspects of the application.
 
 ## Dependency Management
@@ -12,12 +12,12 @@ If the ping method throws an exception, then the status of the dependency will b
 ```java
 import com.indeed.status.core.PingableDependency
 import com.indeed.status.core.Urgency;
- 
+
 public class SimpleDependency extends PingableDependency {
     private SimpleDependency() {
         super("simple", "my description", DEFAULT_TIMEOUT, DEFAULT_PING_PERIOD, Urgency.REQUIRED);
     }
- 
+
     @Override
     public void ping() throws Exception {
         // code to check dependency (return void for GOOD! and throw and exception for BAD)
@@ -49,14 +49,14 @@ By default, the status-web package provides an `AbstractDaemonCheckReportServlet
 
 ```java
 import com.indeed.status.web.AbstractDaemonCheckReportServlet;
- 
+
 public class StatusServlet extends AbstractDaemonCheckReportServlet {
     private final AbstractDependencyManager manager;
- 
+
     public StatusServlet(AbstractDependencyManager manager) {
         this.manager = manager;
     }
- 
+
     @Override
     protected AbstractDependencyManager newManager(ServletConfig config) {
         return manager;
@@ -234,6 +234,9 @@ Can be used without the status-web package and does not requires a web server.
 
 Provides components that can be used with web applications to provide a clean JSON dump of the current application status.
 Requires the status-core package and does require a web server that supports servlets.
+
+## Code of Conduct
+This project is governed by the [Contributor Covenant v 1.4.1](CODE_OF_CONDUCT.md)
 
 ## License
 
