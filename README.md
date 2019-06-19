@@ -1,6 +1,6 @@
 # Status
 
-![NetflixOSS Lifecycle](https://img.shields.io/osslifecycle/indeedeng/status.svg)
+![OSS Lifecycle](https://img.shields.io/osslifecycle/indeedeng/status.svg)
 
 Status is a project to help report the current state of external systems that an application depends on, as well as
 the current health of any internal aspects of the application.
