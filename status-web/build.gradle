@@ -12,7 +12,7 @@ dependencies {
     compile 'log4j:log4j'
 
     compileOnly 'com.google.code.findbugs:jsr305'
-    compileOnly 'org.apache.tomcat:tomcat-servlet-api'
+    compileOnly 'javax.servlet:javax.servlet-api'
 
     testCompile 'junit:junit'
     testCompile 'org.eclipse.jetty:jetty-webapp:8.1.8.v20121106'
