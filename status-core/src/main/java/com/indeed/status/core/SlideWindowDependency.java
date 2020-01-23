@@ -1,9 +1,5 @@
 package com.indeed.status.core;
 
-import com.indeed.status.core.AbstractDependency;
-import com.indeed.status.core.CheckResult;
-import com.indeed.status.core.CheckStatus;
-import com.indeed.status.core.Urgency;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayDeque;
@@ -12,7 +8,7 @@ import java.util.Iterator;
 
 /**
  * This dependency return the state according the average failed ratio in a given time window.
- *　@author xinjianz
+ * @author xinjianz
  */
 public abstract class SlideWindowDependency extends AbstractDependency {
 
