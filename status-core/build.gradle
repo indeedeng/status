@@ -10,7 +10,6 @@ dependencies {
     compile 'com.indeed:util-varexport:1.0.19'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.10'
     compile 'com.google.guava:guava'
-    compile 'org.apache.httpcomponents:httpclient:4.5.5'
 
     compileOnly 'com.google.code.findbugs:jsr305'
     testCompile 'junit:junit'
