@@ -1,0 +1,10 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    compile project(':status-core')
+    compile 'org.mongodb:mongo-java-driver:3.0.2'
+    compile 'org.springframework:spring-jdbc:4.1.7.RELEASE'
+    compile 'mysql:mysql-connector-java:5.1.6'
+}

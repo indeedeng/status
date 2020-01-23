@@ -1,0 +1,20 @@
+allprojects {
+    plugins.withType(JavaPlugin).whenPluginAdded {
+        repositories {
+            mavenCentral()
+        }
+        dependencies {
+            constraints {
+                compile 'junit:junit:4.13'
+                compile 'org.easymock:easymock:4.1'
+                compile 'javax.servlet:javax.servlet-api:3.0.1'
+                compile 'log4j:log4j:1.2.17'
+                compile 'com.google.guava:guava:19.0'
+                compile 'com.google.code.findbugs:jsr305:3.0.2'
+            }
+        }
+        tasks.withType(JavaCompile) {
+            options.encoding = "UTF-8"
+        }
+    }
+}

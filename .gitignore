@@ -1,2 +1,4 @@
 *.iml
-status-*/target/
+.idea/
+.gradle/
+build/
