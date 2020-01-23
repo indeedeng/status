@@ -12,7 +12,7 @@ Simply extend the `PingableDependency` and implement the ping method.
 If the ping method throws an exception, then the status of the dependency will be failing.
 
 ```java
-import com.indeed.status.core.PingableDependency
+import com.indeed.status.core.PingableDependency;
 import com.indeed.status.core.Urgency;
 
 public class SimpleDependency extends PingableDependency {

@@ -31,12 +31,12 @@ public class DependencyPingerTest {
         final StatusUpdateListener listener = EasyMock.createMock(StatusUpdateListener.class);
         final ControlledDependency dependency = ControlledDependency.build();
         dependency.setInError(true);
-        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency, systemReporter);
+        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.newDirectExecutorService(), dependency, systemReporter);
         pinger.addListener(listener);
 
-        final Capture<CheckResult> original = new Capture<CheckResult>();
-        final Capture<CheckResult> updated = new Capture<CheckResult>();
-        final Capture<CheckResult> checked = new Capture<CheckResult>();
+        final Capture<CheckResult> original = Capture.newInstance();
+        final Capture<CheckResult> updated = Capture.newInstance();
+        final Capture<CheckResult> checked = Capture.newInstance();
         EasyMock.reset(listener);
         listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
         listener.onChanged(EasyMock.same(pinger), EasyMock.<CheckResult>isNull(), EasyMock.capture(updated));
@@ -83,12 +83,12 @@ public class DependencyPingerTest {
     public void testWithUrgencyNone() throws Exception {
         final StatusUpdateListener listener = EasyMock.createMock(StatusUpdateListener.class);
         final ControlledDependency dependency = ControlledDependency.builder().setUrgency(Urgency.NONE).build();
-        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency, systemReporter);
+        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.newDirectExecutorService(), dependency, systemReporter);
         pinger.addListener(listener);
 
-        final Capture<CheckResult> original = new Capture<CheckResult>();
-        final Capture<CheckResult> updated = new Capture<CheckResult>();
-        final Capture<CheckResult> checked = new Capture<CheckResult>();
+        final Capture<CheckResult> original = Capture.newInstance();
+        final Capture<CheckResult> updated = Capture.newInstance();
+        final Capture<CheckResult> checked = Capture.newInstance();
         EasyMock.reset(listener);
 
         listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
@@ -134,7 +134,7 @@ public class DependencyPingerTest {
     public void testGradual() throws Exception {
         final ControlledDependency dependency = ControlledDependency.build();
         dependency.setInError(true);
-        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency, systemReporter);
+        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.newDirectExecutorService(), dependency, systemReporter);
 
         // with no successes
         // expect that first time, call will run something
@@ -184,7 +184,7 @@ public class DependencyPingerTest {
             }
         }).build();
         dependency.setInError(true);
-        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency, systemReporter);
+        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.newDirectExecutorService(), dependency, systemReporter);
 
         assertEquals(CheckStatus.OUTAGE, pinger.call().getStatus());
         assertEquals(1, dependency.getTimes());
@@ -206,7 +206,7 @@ public class DependencyPingerTest {
         final StatusUpdateListener listener3 = EasyMock.createMock(StatusUpdateListener.class);
         final ControlledDependency dependency = ControlledDependency.build();
         dependency.setInError(true);
-        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.sameThreadExecutor(), dependency, systemReporter);
+        final DependencyPinger pinger = new DependencyPinger(MoreExecutors.newDirectExecutorService(), dependency, systemReporter);
         pinger.addListener(listener1);
         pinger.addListener(listener2);
         pinger.addListener(listener3);
