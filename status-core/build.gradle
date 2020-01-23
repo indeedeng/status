@@ -2,7 +2,7 @@ plugins {
     id 'java'
 }
 
-ext['indeed.publish.name'] = 'status-parent'
+ext['indeed.publish.name'] = 'status-core'
 
 dependencies {
     compile 'log4j:log4j'
