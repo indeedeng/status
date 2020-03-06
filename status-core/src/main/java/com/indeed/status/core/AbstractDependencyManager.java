@@ -337,8 +337,11 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
 
     public Dependency removeDependency(final String id) {
         if (dependencyPingers.containsKey(id)) {
+            final ScheduledFuture<?> pinger = dependencyPingers.remove(id);
             // Cancel all future pings for this dependency, interrupting any current pings
-            dependencyPingers.remove(id).cancel(true);
+            if (pinger != null) {
+                pinger.cancel(true);
+            }
         }
 
         return dependencies.remove(id);
