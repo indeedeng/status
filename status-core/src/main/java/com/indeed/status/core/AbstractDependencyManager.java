@@ -289,9 +289,8 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         // unpredictably.
         pinger.addListener(updateHandler);
 
-        // When no pinger already exists, schedule the pinger and add it to the collection so it can be removed if/when
-        // AbstractDependencyManager#removeDependency is called. We don't need to throw an error
-        // for duplicate dependencies since that is handled in AbstractDependencyManager#addDependency
+        // Note: we can assume the id is unique and the dependency is not duplicated because of the check
+        // in AbstractDependencyManager#addDependency
         dependencyPingers.computeIfAbsent(dependency.getId(), dependencyId ->
                 executor.scheduleWithFixedDelay(pinger, 0, pinger.getPingPeriod(), TimeUnit.MILLISECONDS));
 
@@ -336,12 +335,10 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     }
 
     public Dependency removeDependency(final String id) {
-        if (dependencyPingers.containsKey(id)) {
-            final ScheduledFuture<?> pinger = dependencyPingers.remove(id);
-            // Cancel all future pings for this dependency, interrupting any current pings
-            if (pinger != null) {
-                pinger.cancel(true);
-            }
+        final ScheduledFuture<?> pinger = dependencyPingers.remove(id);
+        // Cancel all future pings for this dependency, interrupting any current pings
+        if (pinger != null) {
+            pinger.cancel(true);
         }
 
         return dependencies.remove(id);
