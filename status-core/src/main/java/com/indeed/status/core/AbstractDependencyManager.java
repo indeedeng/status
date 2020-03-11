@@ -20,6 +20,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor.AbortPolicy;
@@ -57,6 +58,10 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     ///  canonical view of each dependency. This map does <em>not</em> indicate the current status
     ///  of dependencies, but rather the set of dependencies that are registered with the system.
     @Nonnull private final ConcurrentMap<String, Dependency> dependencies = Maps.newConcurrentMap();
+
+    /// Collection of all dependency pingers that have been created to monitor the health of a dependency.
+    /// Once a dependency is removed from the manager, its associated pinger is cancelled.
+    @Nonnull private final ConcurrentMap<String, ScheduledFuture<?>> dependencyPingers = Maps.newConcurrentMap();
 
     private long pingPeriod = DEFAULT_PING_PERIOD;
 
@@ -284,7 +289,10 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         // unpredictably.
         pinger.addListener(updateHandler);
 
-        executor.scheduleWithFixedDelay(pinger, 0, pinger.getPingPeriod(), TimeUnit.MILLISECONDS);
+        // Note: we can assume the id is unique and the dependency is not duplicated because of the check
+        // in AbstractDependencyManager#addDependency
+        dependencyPingers.computeIfAbsent(dependency.getId(), dependencyId ->
+                executor.scheduleWithFixedDelay(pinger, 0, pinger.getPingPeriod(), TimeUnit.MILLISECONDS));
 
         addDependency(pinger);
     }
@@ -303,7 +311,7 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         return pinger;
     }
 
-    public Dependency getDependency ( final String id ) {
+    public Dependency getDependency (final String id) {
         return dependencies.get(id);
     }
 
@@ -327,6 +335,12 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     }
 
     public Dependency removeDependency(final String id) {
+        final ScheduledFuture<?> pinger = dependencyPingers.remove(id);
+        // Cancel all future pings for this dependency, interrupting any current pings
+        if (pinger != null) {
+            pinger.cancel(true);
+        }
+
         return dependencies.remove(id);
     }
 
