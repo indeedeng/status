@@ -8,12 +8,12 @@ dependencies {
     compile project(':status-core')
     compile 'com.indeed:util-core:1.0.19'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.7.9'
-    compile 'com.google.guava:guava'
-    compile 'log4j:log4j'
+    compile library('com.google.guava:guava')
+    compile library('log4j:log4j')
 
-    compileOnly 'com.google.code.findbugs:jsr305'
-    compileOnly 'javax.servlet:javax.servlet-api'
+    compileOnly library('com.google.code.findbugs:jsr305')
+    compileOnly library('javax.servlet:javax.servlet-api')
 
-    testCompile 'junit:junit'
+    testCompile library('junit:junit')
     testCompile 'org.eclipse.jetty:jetty-webapp:8.1.8.v20121106'
 }
