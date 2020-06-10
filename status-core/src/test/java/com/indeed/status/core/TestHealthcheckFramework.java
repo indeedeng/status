@@ -1,10 +1,8 @@
 package com.indeed.status.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ForwardingFuture;
 import com.indeed.status.core.CheckResult.Thrown;
 import com.indeed.status.core.DependencyChecker.DependencyExecutorSet;
 import com.indeed.util.core.time.StoppedClock;
@@ -20,18 +18,16 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author matts
@@ -92,73 +88,72 @@ public class TestHealthcheckFramework {
     }
 
     @Test
-    public void testInterruptedExecution() throws Exception {
-        final SimpleSupplier<Boolean> shouldInterrupt = new SimpleSupplier<>(false);
-        final SimpleSupplier<Boolean> testInvalid = new SimpleSupplier<>(false);
+    public void testInterruptedExceptionInPing() {
+        final SimplePingableDependency dependency = new SimplePingableDependency.Builder()
+                .setId("an-id")
+                .setDescription("a-description")
+                .setPingMethod(() -> {
+                    throw new InterruptedException("a-test-interrupted-exception");
+                })
+                .build();
 
-        // First test what happens if the checker thread gets interrupted...
-        {
-            final AbstractDependencyManager manager = newDependencyManager();
-            final String id = "id";
-            //noinspection deprecation
-            final Dependency dependency = new PingableDependency(id, "description", Urgency.REQUIRED) {
-                @Override
-                public void ping () throws Exception {
-                    if (shouldInterrupt.get()) {
-                        final Thread thread = Thread.currentThread();
-                        log.info("Attempting to interrupt thread '" + thread.getName() + "'.");
-                        thread.interrupt();
-                        Thread.sleep(1000);
+        final AbstractDependencyManager manager = newDependencyManager();
+        manager.addDependency(
+                dependency
+        );
 
-                        // Shouldn't be able to get here. Can't assert inside this method since it would
-                        //  just be caught by the framework. Flag it for later failure.
-                        testInvalid.set(true);
+        try {
+            assertEquals(CheckStatus.OUTAGE, manager.evaluate(dependency.getId()).getStatus());
+        } finally {
+            manager.shutdown();
+        }
+    }
+
+    @Test
+    public void testEvaluateRespsectsInterruption() throws InterruptedException {
+        final AtomicBoolean pingCanceled = new AtomicBoolean(false);
+        final SimplePingableDependency dependency = new SimplePingableDependency.Builder()
+                .setId("an-id")
+                .setDescription("a-description")
+                .setPingMethod((Runnable) () -> {
+                    final int forever = 42_000_000;
+                    try {
+                        Thread.sleep(forever);
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        pingCanceled.set(true);
                     }
+                })
+                .build();
 
-                    // Otherwise, quietly pass.
-                }
+        final CheckResult checkResult;
+        final boolean interrupted;
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            final AbstractDependencyManager manager = new AbstractDependencyManager(
+                    "an-app",
+                    log,
+                    new DependencyChecker(log, new ThreadedDependencyExecutor(executor), systemReporter, false)
+            ) {
             };
-
             manager.addDependency(dependency);
 
-            shouldInterrupt.set(false);
-            assertEquals(CheckStatus.OK, manager.evaluate(id).getStatus());
-            assertTrue(!testInvalid.get());
-
-            shouldInterrupt.set(true);
-            assertEquals(CheckStatus.OUTAGE, manager.evaluate(id).getStatus());
-            assertTrue(!testInvalid.get());
-
-            // Just to confirm, make sure that we're able to reenter a good state.
-            shouldInterrupt.set(false);
-            assertEquals(CheckStatus.OK, manager.evaluate(id).getStatus());
-            assertTrue(!testInvalid.get());
+            Thread.currentThread().interrupt();
+            checkResult = manager.evaluate(dependency.getId());
+        } finally {
+            interrupted = Thread.interrupted();
+            executor.shutdownNow();
+            assertTrue(
+                    "Executor did not shut down fast enough; " +
+                            "see if the submitted task respects interruption",
+                    executor.awaitTermination(1, TimeUnit.SECONDS)
+            );
         }
 
-        // Then check what happens if the health checker itself gets twiddled.
-        {
-            final DependencyChecker interruptingChecker = new InterruptingChecker(shouldInterrupt, testInvalid);
-            final AbstractDependencyManager manager = new AbstractDependencyManager(null, null, interruptingChecker) {};
-            manager.addDependency(DEP_ALWAYS_TRUE);
+        assertTrue("manager.evaluate() reset interrupted flag unexpectedly", interrupted);
 
-            shouldInterrupt.set(false);
-            assertEquals(CheckStatus.OK, Preconditions.checkNotNull(manager.evaluate(DEP_ALWAYS_TRUE.getId())).getStatus());
-            assertTrue(!testInvalid.get());
-
-            shouldInterrupt.set(true);
-            assertEquals(
-                    "Expected the system to report an error if the health-check thread itself got interrupted for some reason.",
-                    CheckStatus.OUTAGE, Preconditions.checkNotNull(manager.evaluate(DEP_ALWAYS_TRUE.getId())).getStatus());
-            assertTrue(!testInvalid.get());
-
-            shouldInterrupt.set(false);
-            final CheckResult recovery = Preconditions.checkNotNull(manager.evaluate(DEP_ALWAYS_TRUE.getId()));
-            assertEquals(
-                    "Didn't recover properly from the interrupted thread: " + new ObjectMapper().writeValueAsString(recovery),
-                    CheckStatus.OK, recovery.getStatus());
-            assertTrue(!testInvalid.get());
-
-        }
+        assertNotNull(checkResult);
+        assertEquals(CheckStatus.OUTAGE, checkResult.getStatus());
     }
 
     /// Make sure timeout checks work the way that we expect.
@@ -465,59 +460,8 @@ public class TestHealthcheckFramework {
         assertEquals(CheckStatus.OK, resultSet4.getSystemStatus());
     }
 
-    private AbstractDependencyManager newDependencyManager() throws Exception {
+    private AbstractDependencyManager newDependencyManager() {
         return new AbstractDependencyManager() {};
-    }
-
-
-    private static class InterruptingExecutor extends ThreadedDependencyExecutor {
-        private final SimpleSupplier<Boolean> shouldInterrupt;
-        private final SimpleSupplier<Boolean> testInvalid;
-
-        private InterruptingExecutor (final ExecutorService executor, final SimpleSupplier<Boolean> shouldInterrupt, final SimpleSupplier<Boolean> testInvalid) {
-            super(executor);
-            this.shouldInterrupt = shouldInterrupt;
-            this.testInvalid = testInvalid;
-        }
-
-        @Override
-        public Future<CheckResult> submit (final Dependency dependency) {
-            final Future<CheckResult> delegate = super.submit(dependency);
-
-            return new ForwardingFuture<CheckResult>() {
-                @Override
-                protected Future<CheckResult> delegate() {
-                    return delegate;
-                }
-
-                @Override
-                public CheckResult get () throws InterruptedException, ExecutionException {
-                    doInterrupt();
-                    return super.get();
-                }
-
-                @Override
-                public CheckResult get (final long l, @Nonnull final TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
-                    doInterrupt();
-                    return super.get(l, timeUnit);
-                }
-
-                private void doInterrupt() throws InterruptedException {
-                    if (shouldInterrupt.get()) {
-                        Thread.currentThread().interrupt();
-                        Thread.sleep(1000);
-
-                        // Shouldn't get here.
-                        testInvalid.set(true);
-                    }
-                }
-            };
-        }
-    }
-    private class InterruptingChecker extends DependencyChecker {
-        public InterruptingChecker (final SimpleSupplier<Boolean> shouldInterrupt, final SimpleSupplier<Boolean> testInvalid) {
-            super(log, new InterruptingExecutor(Executors.newSingleThreadExecutor(), shouldInterrupt, testInvalid), systemReporter, false);
-        }
     }
 
     private static class CancelingExecutor extends ThreadedDependencyExecutor {

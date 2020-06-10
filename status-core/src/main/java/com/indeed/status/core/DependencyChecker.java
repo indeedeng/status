@@ -166,12 +166,19 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
             }
 
         } catch (final InterruptedException e) {
-            // Do NOT interrupt the current thread if the future was interrupted; record the failure and let the
-            // master thread continue.
-            // todo(cameron): Why would we not want to set Thread.interrupted()?
-            t = new CheckException("Operation interrupted", e);
+            Thread.currentThread().interrupt();
+
             cancel(future);
 
+            evaluationResult = CheckResult
+                    .newBuilder(
+                            dependency,
+                            CheckStatus.OUTAGE,
+                            "The thread requesting dependency evaluation got interrupted"
+                    )
+                    .setTimestamp(timestamp)
+                    .setDuration(wallClock.currentTimeMillis() - timestamp)
+                    .build();
         } catch (final CancellationException e) {
             log.warn("Task has completed, but was previously cancelled. This is probably okay, but shouldn't happen often.");
             t = new CheckException("Health check task was cancelled.", e);
