@@ -341,7 +341,13 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
             pinger.cancel(true);
         }
 
-        return dependencies.remove(id);
+        final Dependency removedDependency = dependencies.remove(id);
+
+        if (removedDependency != null) {
+            updateHandler.onRemoved(removedDependency);
+        }
+
+        return removedDependency;
     }
 
     public Collection<Dependency> getDependencies() {
@@ -361,6 +367,11 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     @Override
     public void onChecked(@Nonnull final Dependency source, @Nonnull final CheckResult result) {
         updateHandler.onChecked(source, result);
+    }
+
+    @Override
+    public void onRemoved(@Nonnull final Dependency dependency) {
+        updateHandler.onRemoved(dependency);
     }
 
     @Override
