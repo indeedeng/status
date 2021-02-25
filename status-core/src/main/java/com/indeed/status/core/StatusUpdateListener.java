@@ -46,4 +46,11 @@ public interface StatusUpdateListener {
      * @param dependency The dependency being added.
      */
     void onAdded(@Nonnull final Dependency dependency);
+
+    /**
+     * Triggered when a dependency is removed
+     *
+     * @param dependency The dependency being removed.
+     */
+    default void onRemoved(@Nonnull final Dependency dependency) {}
 }

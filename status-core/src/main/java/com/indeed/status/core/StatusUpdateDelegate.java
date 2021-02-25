@@ -75,6 +75,20 @@ class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateListener
     }
 
     @Override
+    public void onRemoved(@Nonnull final Dependency dependency) {
+        for (final StatusUpdateListener listener: listeners) {
+            try {
+                listener.onRemoved(dependency);
+
+            } catch(RuntimeException e) {
+                log.error("Status update listeners should not throw errors. Something must be tragically wrong.", e);
+
+                // Swallow runtime exceptions. Allow Errors through.
+            }
+        }
+    }
+
+    @Override
     public void addListener (final StatusUpdateListener listener) {
         listeners.add(listener);
     }
