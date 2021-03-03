@@ -8,7 +8,7 @@ dependencies {
     compile library('log4j:log4j')
     compile 'com.indeed:util-core:1.0.19'
     compile 'com.indeed:util-varexport:1.0.19'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.10'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1'
     compile library('com.google.guava:guava')
 
     compileOnly library('com.google.code.findbugs:jsr305')

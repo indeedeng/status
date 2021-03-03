@@ -7,7 +7,7 @@ ext['indeed.publish.name'] = 'status-web'
 dependencies {
     compile project(':status-core')
     compile 'com.indeed:util-core:1.0.19'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.9'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1'
     compile library('com.google.guava:guava')
     compile library('log4j:log4j')
 
