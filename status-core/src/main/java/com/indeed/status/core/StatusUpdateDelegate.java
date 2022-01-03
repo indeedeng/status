@@ -1,7 +1,8 @@
 package com.indeed.status.core;
 
 import com.google.common.collect.Lists;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -15,7 +16,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author matts
  */
 class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateListener {
-    private static final Logger log = Logger.getLogger(StatusUpdateDelegate.class);
+    private static final Logger log = LoggerFactory.getLogger(StatusUpdateDelegate.class);
 
     private final List<StatusUpdateListener> listeners;
 

@@ -1,6 +1,7 @@
 package com.indeed.status.core;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -12,7 +13,7 @@ import javax.annotation.Nullable;
  */
 @SuppressWarnings ({"UnusedParameters"})
 public class AbstractStatusUpdateListener implements StatusUpdateListener {
-    private static final Logger log = Logger.getLogger(AbstractStatusUpdateListener.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractStatusUpdateListener.class);
 
     /**
      * Use provided functions if you would like to use this class. If you want to make your

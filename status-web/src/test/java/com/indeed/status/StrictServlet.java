@@ -29,7 +29,7 @@ public class StrictServlet extends AbstractDaemonCheckReportServlet {
 
     @Override
     protected CheckReportHandler newHandler(HttpServletRequest request, HttpServletResponse response, Function<CheckStatus, Integer> mapper) {
-        return new PrivilegedReportHandler(mapper, response, log) {
+        return new PrivilegedReportHandler(mapper, response) {
             @Override
             protected boolean isDetailed() {
                 return false;

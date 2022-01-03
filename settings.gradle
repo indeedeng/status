@@ -1,3 +1,4 @@
 include 'status-core'
 include 'status-web'
 include 'status-samples'
+include 'log4j1dummyshim'

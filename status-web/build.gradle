@@ -9,7 +9,7 @@ dependencies {
     compile 'com.indeed:util-core:1.0.19'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1'
     compile library('com.google.guava:guava')
-    compile library('log4j:log4j')
+    compile library('org.slf4j:slf4j-api')
 
     compileOnly library('com.google.code.findbugs:jsr305')
     compileOnly library('javax.servlet:javax.servlet-api')

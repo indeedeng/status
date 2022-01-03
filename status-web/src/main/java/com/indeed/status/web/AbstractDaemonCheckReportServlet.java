@@ -5,7 +5,8 @@ import com.indeed.status.core.AbstractDependencyManager;
 import com.indeed.status.core.CheckReportHandler;
 import com.indeed.status.core.CheckResultSet;
 import com.indeed.status.core.CheckStatus;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -19,7 +20,7 @@ import java.io.IOException;
  */
 abstract public class AbstractDaemonCheckReportServlet extends HttpServlet {
     /// Instance logger available for use by subclasses.
-    protected final Logger log = Logger.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
     // Set-once, read-many
     private AbstractDependencyManager manager;
 
@@ -61,7 +62,7 @@ abstract public class AbstractDaemonCheckReportServlet extends HttpServlet {
     }
 
     protected CheckReportHandler newHandler(HttpServletRequest request, HttpServletResponse response, Function<CheckStatus, Integer> mapper) {
-        return new PrivilegedReportHandler(mapper, response, log);
+        return new PrivilegedReportHandler(mapper, response);
     }
 
     protected Function<CheckStatus, Integer> newStatusMapper(HttpServletRequest request) {

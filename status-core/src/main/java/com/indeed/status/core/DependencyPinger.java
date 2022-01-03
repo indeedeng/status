@@ -2,18 +2,15 @@ package com.indeed.status.core;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.indeed.util.core.LongRecentEventsCounter;
 import com.indeed.util.varexport.Export;
 import com.indeed.util.varexport.VarExporter;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Iterator;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -28,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @VisibleForTesting /* Do not use in production code outside webapp-common */
 public class DependencyPinger implements Dependency, StatusUpdateProducer, Runnable {
-    private static final Logger log = Logger.getLogger(DependencyPinger.class);
+    private static final Logger log = LoggerFactory.getLogger(DependencyPinger.class);
 
     /// The ping period respected by this dependency. This will be equal to the particular ping period for the
     ///  underlying dependency or the specified override, depending on the constructor used.
@@ -52,66 +49,17 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     @Nonnull
     private final Dependency dependency;
 
-    /**
-     * @deprecated Use {@link #DependencyPinger(Dependency, SystemReporter)} instead.
-     */
+    @VisibleForTesting
     public DependencyPinger(@Nonnull final Dependency dependency) {
-        this(dependency, new SystemReporter());
-    }
-
-    DependencyPinger(
-            @Nonnull final Dependency dependency,
-            @Nonnull final SystemReporter systemReporter
-    ) {
-        this(Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
-                .setNameFormat("dependency-pinger-%d")
-                .setDaemon(true)
-                .setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
-                    @Override
-                    public void uncaughtException(final Thread t, final Throwable e) {
-                        log.error("Uncaught throwable in thread " + t.getName() + "/" + t.getId(), e);
-                    }
-                })
-                .build()
-        ), dependency, systemReporter);
-    }
-
-    DependencyPinger(
-            @Nonnull final Dependency dependency,
-            @Nonnull final DependencyChecker checker
-    ) {
-        this(dependency, dependency.getPingPeriod(), checker);
-    }
-
-    DependencyPinger(
-            @Nonnull final ExecutorService executorService,
-            @Nonnull final Dependency dependency,
-            @Nonnull final SystemReporter systemReporter
-    ) {
-        this(executorService, dependency, dependency.getPingPeriod(), systemReporter);
-    }
-
-    DependencyPinger (
-            @Nonnull final ExecutorService executorService,
-            @Nonnull final Dependency dependency,
-            final long pingPeriod,
-            @Nonnull final SystemReporter systemReporter
-    ) {
-        this(dependency, pingPeriod, DependencyChecker.newBuilder()
-                .setExecutorService(executorService)
-                .setLogger(log)
-                .setSystemReporter(systemReporter)
+        this(ImmutableDependencyPingerParams.builder()
+                .dependency(dependency)
                 .build());
     }
 
-    DependencyPinger (
-            @Nonnull final Dependency dependency,
-            final long pingPeriod,
-            @Nonnull final DependencyChecker dependencyChecker
-    ) {
-        this.checker = dependencyChecker;
-        this.dependency = dependency;
-        this.pingPeriod = pingPeriod;
+    public DependencyPinger(final DependencyPingerParams params) {
+        this.checker = params.checker();
+        this.dependency = params.dependency();
+        this.pingPeriod = params.pingPeriod();
 
         VarExporter.forNamespace(DependencyPinger.class.getSimpleName() + "-" + this.dependency.getId()).includeInGlobal().export(this, "");
     }
