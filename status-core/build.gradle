@@ -3,8 +3,8 @@ indeedLibrary.name = 'status-core'
 
 dependencies {
     implementation libs.log4j
-    implementation 'com.indeed:util-core:latest.integration'
-    implementation 'com.indeed:util-varexport:latest.integration'
+    implementation libs.indeedUtilCore
+    implementation libs.indeedUtilVarexport
     implementation libs.jackson
     implementation libs.guava
 

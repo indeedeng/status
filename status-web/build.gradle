@@ -3,8 +3,8 @@ indeedLibrary.name = 'status-web'
 
 dependencies {
     implementation project(':status-core')
-    implementation 'com.indeed:util-core:1.0.19'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1'
+    implementation libs.indeedUtilCore
+    implementation libs.jackson
     implementation libs.guava
     implementation libs.log4j
 
