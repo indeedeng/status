@@ -1,15 +1,14 @@
 package com.indeed.status.sample;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.indeed.status.core.CheckResultSet;
 import com.indeed.status.core.Dependency;
 import com.mongodb.MongoClient;
-import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.mysql.cj.jdbc.MysqlDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.StringWriter;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
