@@ -8,27 +8,29 @@ import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * The {@link AbstractDependency} provides a convenience base class for implementers of
- *  the {@link Dependency} interface. All primitive properties are captured here as fields,
- *  leaving on the {@link #call} method to be implemented.
+ * The {@link AbstractDependency} provides a convenience base class for implementers of the {@link
+ * Dependency} interface. All primitive properties are captured here as fields, leaving on the
+ * {@link #call} method to be implemented.
  */
 @ThreadSafe
 public abstract class AbstractDependency implements Dependency {
     /*
-        Default values that may be used by subclasses. Don't want to 'bless' these by
-         adding to constructors here; better would be to offer a builder that used the
-         default values. Lots of projects are using the convenience classes like
-         pingable dependency, though, so for now we'll just push the permutation as
-         low in the class hierarchy as we can.
-     */
-    public static final long DEFAULT_TIMEOUT = 10*1000; // 10 seconds
-    public static final long DEFAULT_PING_PERIOD = 30*1000; // 30 seconds
+       Default values that may be used by subclasses. Don't want to 'bless' these by
+        adding to constructors here; better would be to offer a builder that used the
+        default values. Lots of projects are using the convenience classes like
+        pingable dependency, though, so for now we'll just push the permutation as
+        low in the class hierarchy as we can.
+    */
+    public static final long DEFAULT_TIMEOUT = 10 * 1000; // 10 seconds
+    public static final long DEFAULT_PING_PERIOD = 30 * 1000; // 30 seconds
     public static final DependencyType DEFAULT_TYPE = DependencyType.StandardDependencyTypes.OTHER;
     public static final String DEFAULT_SERVICE_POOL = "not specified";
-    protected static final String DEFAULT_DOCUMENTATION_URL = "http://www.example.com/<dependency-id>";
+    protected static final String DEFAULT_DOCUMENTATION_URL =
+            "http://www.example.com/<dependency-id>";
 
     /**
-     * @deprecated Instead, use {@link AbstractDependency#AbstractDependency(String, String, long, long, Urgency, DependencyType, String)}.
+     * @deprecated Instead, use {@link AbstractDependency#AbstractDependency(String, String, long,
+     *     long, Urgency, DependencyType, String)}.
      */
     @Deprecated
     protected AbstractDependency(
@@ -36,13 +38,13 @@ public abstract class AbstractDependency implements Dependency {
             @Nonnull final String description,
             final long timeout,
             final long pingPeriod,
-            @Nonnull final Urgency urgency
-    ) {
+            @Nonnull final Urgency urgency) {
         this(id, description, timeout, pingPeriod, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
     }
 
     /**
-     * @deprecated Instead, use {@link AbstractDependency#AbstractDependency(String, String, long, long, Urgency, DependencyType, String)}.
+     * @deprecated Instead, use {@link AbstractDependency#AbstractDependency(String, String, long,
+     *     long, Urgency, DependencyType, String)}.
      */
     @Deprecated
     protected AbstractDependency(
@@ -63,7 +65,8 @@ public abstract class AbstractDependency implements Dependency {
         this.documentationUrl = DEFAULT_DOCUMENTATION_URL;
     }
 
-    protected AbstractDependency(@Nonnull final AbstractDependency.Builder<? extends AbstractDependency, ?> builder) {
+    protected AbstractDependency(
+            @Nonnull final AbstractDependency.Builder<? extends AbstractDependency, ?> builder) {
         this.id = Preconditions.checkNotNull(builder.getId(), "Missing id");
         this.description = Strings.nullToEmpty(builder.getDescription());
         this.timeout = builder.getTimeout();
@@ -113,7 +116,7 @@ public abstract class AbstractDependency implements Dependency {
         return servicePool;
     }
 
-    public String toString () {
+    public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("Dependency");
         sb.append("{urgency=").append(urgency);
@@ -134,49 +137,26 @@ public abstract class AbstractDependency implements Dependency {
     private final String documentationUrl;
 
     public abstract static class Builder<T extends AbstractDependency, B extends Builder<T, B>> {
-        /**
-         * @deprecated Direct field access deprecated; use {@link #getId()} instead.
-         */
-        @Nonnull
-        protected String id = "";
-        /**
-         * @deprecated Direct field access deprecated; use {@link #getDescription()} instead.
-         */
-        @Nonnull
-        protected String description = "";
-        /**
-         * @deprecated Direct field access deprecated; use {@link #getTimeout()} instead.
-         */
-        @Nonnegative
-        protected long timeout = DEFAULT_TIMEOUT;
-        /**
-         * @deprecated Direct field access deprecated; use {@link #getPingPeriod()} instead.
-         */
-        @Nonnegative
-        protected long pingPeriod = DEFAULT_PING_PERIOD;
-        /**
-         * @deprecated Direct field access deprecated; use {@link #getUrgency()} instead.
-         */
-        @Nonnull
-        protected Urgency urgency = Urgency.UNKNOWN;
-        /**
-         * @deprecated Direct field access deprecated; use {@link #getType()} instead.
-         */
-        @Nonnull
-        protected DependencyType type = DEFAULT_TYPE;
-        /**
-         * @deprecated Direct field access deprecated; use {@link #getServicePool()} instead.
-         */
-        @Nonnull
-        protected String servicePool = DEFAULT_SERVICE_POOL;
+        /** @deprecated Direct field access deprecated; use {@link #getId()} instead. */
+        @Nonnull protected String id = "";
+        /** @deprecated Direct field access deprecated; use {@link #getDescription()} instead. */
+        @Nonnull protected String description = "";
+        /** @deprecated Direct field access deprecated; use {@link #getTimeout()} instead. */
+        @Nonnegative protected long timeout = DEFAULT_TIMEOUT;
+        /** @deprecated Direct field access deprecated; use {@link #getPingPeriod()} instead. */
+        @Nonnegative protected long pingPeriod = DEFAULT_PING_PERIOD;
+        /** @deprecated Direct field access deprecated; use {@link #getUrgency()} instead. */
+        @Nonnull protected Urgency urgency = Urgency.UNKNOWN;
+        /** @deprecated Direct field access deprecated; use {@link #getType()} instead. */
+        @Nonnull protected DependencyType type = DEFAULT_TYPE;
+        /** @deprecated Direct field access deprecated; use {@link #getServicePool()} instead. */
+        @Nonnull protected String servicePool = DEFAULT_SERVICE_POOL;
         /**
          * @deprecated Direct field access deprecated; use {@link #getDocumentationUrl()} instead.
          */
-        @Nonnull
-        protected String documentationUrl = DEFAULT_DOCUMENTATION_URL;
+        @Nonnull protected String documentationUrl = DEFAULT_DOCUMENTATION_URL;
 
-        protected Builder() {
-        }
+        protected Builder() {}
 
         public abstract AbstractDependency build();
 

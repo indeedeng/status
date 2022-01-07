@@ -4,21 +4,26 @@ import com.indeed.status.core.test.ControlledDependency;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-/**
- * author: cameron
- */
+/** author: cameron */
 public class AbstractStatusUpdateListenerTest {
     @Test
     public void testLevel() throws Exception {
         final ControlledDependency dep = ControlledDependency.build();
-        final AbstractStatusUpdateListener listener = EasyMock.createMock(AbstractStatusUpdateListener.class);
+        final AbstractStatusUpdateListener listener =
+                EasyMock.createMock(AbstractStatusUpdateListener.class);
         final CheckResult OK = CheckResult.newBuilder(dep, CheckStatus.OK, "ok").build();
-        final CheckResult MINOR = CheckResult.newBuilder(dep, CheckStatus.MINOR, "minor out")
-                .setThrowable(ControlledDependency.EXCEPTION).build();
-        final CheckResult MAJOR = CheckResult.newBuilder(dep, CheckStatus.MAJOR, "major out")
-                .setThrowable(ControlledDependency.EXCEPTION).build();
-        final CheckResult OUTAGE = CheckResult.newBuilder(dep, CheckStatus.OUTAGE, "outage")
-                .setThrowable(ControlledDependency.EXCEPTION).build();
+        final CheckResult MINOR =
+                CheckResult.newBuilder(dep, CheckStatus.MINOR, "minor out")
+                        .setThrowable(ControlledDependency.EXCEPTION)
+                        .build();
+        final CheckResult MAJOR =
+                CheckResult.newBuilder(dep, CheckStatus.MAJOR, "major out")
+                        .setThrowable(ControlledDependency.EXCEPTION)
+                        .build();
+        final CheckResult OUTAGE =
+                CheckResult.newBuilder(dep, CheckStatus.OUTAGE, "outage")
+                        .setThrowable(ControlledDependency.EXCEPTION)
+                        .build();
 
         EasyMock.reset(listener);
 

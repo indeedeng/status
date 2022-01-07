@@ -8,9 +8,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 
-/**
- * @author matts
- */
+/** @author matts */
 public class Jackson {
     private static final ObjectMapper DEFAULT_MAPPER = new ObjectMapper();
 
@@ -26,7 +24,8 @@ public class Jackson {
         return sw.toString();
     }
 
-    public static void prettyPrint (final Writer out, final Object o, final ObjectMapper mapper) throws IOException {
+    public static void prettyPrint(final Writer out, final Object o, final ObjectMapper mapper)
+            throws IOException {
         final JsonFactory factory = mapper.getJsonFactory();
         final JsonGenerator generator = factory.createJsonGenerator(out).useDefaultPrettyPrinter();
         mapper.writeValue(generator, o);

@@ -6,19 +6,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.annotation.Nonnull;
 
-/**
- * @author pitz@indeed.com (Jeremy Pitzeruse)
- */
+/** @author pitz@indeed.com (Jeremy Pitzeruse) */
 public class MySqlDatabaseDependency extends PingableDependency {
     private final JdbcTemplate testdb;
 
-    public MySqlDatabaseDependency(@Nonnull final String id,
-                                   @Nonnull final JdbcTemplate testdb) {
-        super(
-                "mysql-database-" + id,
-                "MySql Database Dependency [" + id + ']',
-                Urgency.REQUIRED
-        );
+    public MySqlDatabaseDependency(@Nonnull final String id, @Nonnull final JdbcTemplate testdb) {
+        super("mysql-database-" + id, "MySql Database Dependency [" + id + ']', Urgency.REQUIRED);
 
         this.testdb = testdb;
     }

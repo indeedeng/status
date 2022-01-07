@@ -18,8 +18,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * The {@link DependencyPinger} is a modification of the HCv2 ServicePinger class that keeps the
- *  idea of consecutive failures and slowly downgrading status, but uses abstractions from the HCv3
- *  system.
+ * idea of consecutive failures and slowly downgrading status, but uses abstractions from the HCv3
+ * system.
  *
  * @author matts Cloned and modified from ServicePinger.java
  */
@@ -27,33 +27,32 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DependencyPinger implements Dependency, StatusUpdateProducer, Runnable {
     private static final Logger log = LoggerFactory.getLogger(DependencyPinger.class);
 
-    /// The ping period respected by this dependency. This will be equal to the particular ping period for the
+    /// The ping period respected by this dependency. This will be equal to the particular ping
+    // period for the
     ///  underlying dependency or the specified override, depending on the constructor used.
     private final long pingPeriod;
-    @SuppressWarnings ({"FieldCanBeLocal"})
+
+    @SuppressWarnings({"FieldCanBeLocal"})
     private final int consecutiveFailureThreshold = 3;
+
     private final AtomicInteger consecutiveFailures = new AtomicInteger();
     private final AtomicLong totalSuccesses = new AtomicLong();
     private final AtomicLong totalFailures = new AtomicLong();
-    private final LongRecentEventsCounter failuresOverTime = new LongRecentEventsCounter(LongRecentEventsCounter.MINUTE_TICKER, 60);
+    private final LongRecentEventsCounter failuresOverTime =
+            new LongRecentEventsCounter(LongRecentEventsCounter.MINUTE_TICKER, 60);
     private final StatusUpdateDelegate updateHandler = new StatusUpdateDelegate();
-    @Nullable
-    private volatile CheckResult lastResult = null;
+    @Nullable private volatile CheckResult lastResult = null;
     private transient Throwable lastThrown = null;
     private transient long lastDuration = 0L;
     private transient long lastExecuted = 0L;
     private transient long lastKnownGood = 0L;
 
-    @Nonnull
-    private final DependencyChecker checker;
-    @Nonnull
-    private final Dependency dependency;
+    @Nonnull private final DependencyChecker checker;
+    @Nonnull private final Dependency dependency;
 
     @VisibleForTesting
     public DependencyPinger(@Nonnull final Dependency dependency) {
-        this(ImmutableDependencyPingerParams.builder()
-                .dependency(dependency)
-                .build());
+        this(ImmutableDependencyPingerParams.builder().dependency(dependency).build());
     }
 
     public DependencyPinger(final DependencyPingerParams params) {
@@ -61,20 +60,22 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
         this.dependency = params.dependency();
         this.pingPeriod = params.pingPeriod();
 
-        VarExporter.forNamespace(DependencyPinger.class.getSimpleName() + "-" + this.dependency.getId()).includeInGlobal().export(this, "");
+        VarExporter.forNamespace(
+                        DependencyPinger.class.getSimpleName() + "-" + this.dependency.getId())
+                .includeInGlobal()
+                .export(this, "");
     }
 
     /**
-     * The method intended to be executed by a worker thread; no result is returned directly here, it is simply
-     *  cached for use by systems.
-     *
+     * The method intended to be executed by a worker thread; no result is returned directly here,
+     * it is simply cached for use by systems.
      */
     @Override
-    public void run () {
+    public void run() {
         // The result of a live execution
         CheckResult currentResult;
 
-        synchronized(this) {
+        synchronized (this) {
             try {
                 lastExecuted = checker.getWallClock().currentTimeMillis();
                 currentResult = checker.evaluate(dependency);
@@ -86,7 +87,6 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
                     // Replace the result of the evaluation depending on the number of consecutive
                     //  failures, etc.
                     currentResult = handleFailure(currentResult, null);
-
                 }
 
             } catch (final Throwable t) {
@@ -99,8 +99,8 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     }
 
     /**
-     * The method, derived from {@link Dependency} intended to be used by elements that check the status of the
-     *  background task.
+     * The method, derived from {@link Dependency} intended to be used by elements that check the
+     * status of the background task.
      */
     @Override
     @Nonnull
@@ -115,7 +115,8 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
             }
         }
 
-        // this will not be null, because lastResult goes from null -> notnull and never back to null
+        // this will not be null, because lastResult goes from null -> notnull and never back to
+        // null
         //noinspection ConstantConditions
         return lastResult;
     }
@@ -123,7 +124,8 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     private void notifyListeners(@Nonnull final CheckResult currentResult) {
         updateHandler.onChecked(this, currentResult);
 
-        // calling getStatus is safe because lastResult goes from null -> notnull and never back to null
+        // calling getStatus is safe because lastResult goes from null -> notnull and never back to
+        // null
         //noinspection ConstantConditions
         if (null == lastResult || lastResult.getStatus() != currentResult.getStatus()) {
             updateHandler.onChanged(this, lastResult, currentResult);
@@ -147,7 +149,8 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
                 .build();
     }
 
-    private CheckResult handleFailure(@Nullable final CheckResult reportedResult, @Nullable final Throwable t) {
+    private CheckResult handleFailure(
+            @Nullable final CheckResult reportedResult, @Nullable final Throwable t) {
         consecutiveFailures.incrementAndGet();
         totalFailures.incrementAndGet();
         synchronized (failuresOverTime) {
@@ -155,55 +158,72 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
         }
         lastDuration = checker.getWallClock().currentTimeMillis() - lastExecuted;
         //noinspection ThrowableResultOfMethodCallIgnored
-        lastThrown = null == reportedResult ? t  : (null == t ? reportedResult.getThrowable() : t);
+        lastThrown = null == reportedResult ? t : (null == t ? reportedResult.getThrowable() : t);
 
-        // The worst possible status this failure can generate. If the caller is using a full-fledged dependency rather than
-        // an up/down exception-thrower, then we don't want to report an OUTAGE when it's simply been a MINOR degradation
+        // The worst possible status this failure can generate. If the caller is using a
+        // full-fledged dependency rather than
+        // an up/down exception-thrower, then we don't want to report an OUTAGE when it's simply
+        // been a MINOR degradation
         // for a while.
-        final CheckStatus worstPossibleStatus = null == reportedResult ? CheckStatus.OUTAGE : reportedResult.getStatus();
+        final CheckStatus worstPossibleStatus =
+                null == reportedResult ? CheckStatus.OUTAGE : reportedResult.getStatus();
         return newFailureNotice(worstPossibleStatus, reportedResult);
     }
 
     @Nonnull
-    private CheckResult newFailureNotice(@Nonnull final CheckStatus outageStatus, @Nullable final CheckResult failedResult) {
+    private CheckResult newFailureNotice(
+            @Nonnull final CheckStatus outageStatus, @Nullable final CheckResult failedResult) {
         final CheckResult result;
 
         if (consecutiveFailures.get() < consecutiveFailureThreshold && totalSuccesses.get() > 0) {
             if (log.isDebugEnabled()) {
-                log.debug ( "Most recent call to '" + dependency.getId() + "' was a failure, but recent pings succeeded. Noting impairment." );
+                log.debug(
+                        "Most recent call to '"
+                                + dependency.getId()
+                                + "' was a failure, but recent pings succeeded. Noting impairment.");
             }
 
             // The most recent execution was a failure, but prior executions succeeded. Flag the
             //  target system as impaired on the assumption that it will respond properly on the
             //  next execution.
-            result = CheckResult.newBuilder(this, CheckStatus.MINOR, getFailureMessage(failedResult, lastThrown))
-                    .setTimestamp(lastExecuted)
-                    .setDuration(lastDuration)
-                    .setLastKnownGoodTimestamp(lastKnownGood)
-                    .setPeriod(pingPeriod)
-                    .setThrowable(lastThrown)
-                    .build();
+            result =
+                    CheckResult.newBuilder(
+                                    this,
+                                    CheckStatus.MINOR,
+                                    getFailureMessage(failedResult, lastThrown))
+                            .setTimestamp(lastExecuted)
+                            .setDuration(lastDuration)
+                            .setLastKnownGoodTimestamp(lastKnownGood)
+                            .setPeriod(pingPeriod)
+                            .setThrowable(lastThrown)
+                            .build();
 
         } else {
             if (log.isDebugEnabled()) {
-                log.debug ( "No recent pings to '" + getId() + "' have succeeded. Noting unavailability." );
+                log.debug(
+                        "No recent pings to '"
+                                + getId()
+                                + "' have succeeded. Noting unavailability.");
             }
 
             // Use whatever the reported status was.
-            result = CheckResult.newBuilder(this, outageStatus, getFailureMessage(failedResult, lastThrown))
-                    .setTimestamp(lastExecuted)
-                    .setDuration(lastDuration)
-                    .setLastKnownGoodTimestamp(lastKnownGood)
-                    .setPeriod(pingPeriod)
-                    .setThrowable(lastThrown)
-                    .build();
+            result =
+                    CheckResult.newBuilder(
+                                    this, outageStatus, getFailureMessage(failedResult, lastThrown))
+                            .setTimestamp(lastExecuted)
+                            .setDuration(lastDuration)
+                            .setLastKnownGoodTimestamp(lastKnownGood)
+                            .setPeriod(pingPeriod)
+                            .setThrowable(lastThrown)
+                            .build();
         }
 
         return result;
     }
 
     @Nonnull
-    private static String getFailureMessage(@Nullable final CheckResult result, @Nullable final Throwable thrown) {
+    private static String getFailureMessage(
+            @Nullable final CheckResult result, @Nullable final Throwable thrown) {
         if (null != thrown) {
             final String thrownMessage = thrown.getMessage();
             if (!Strings.isNullOrEmpty(thrownMessage)) {
@@ -246,55 +266,57 @@ public class DependencyPinger implements Dependency, StatusUpdateProducer, Runna
     }
 
     @Export(name = "consecutive-failures", doc = "Number of times failed consecutively")
-    public int getConsecutiveFailures() { return consecutiveFailures.get(); }
+    public int getConsecutiveFailures() {
+        return consecutiveFailures.get();
+    }
 
     @Override
-    public long getPingPeriod () {
+    public long getPingPeriod() {
         return pingPeriod;
     }
 
     @Override
-    public String getId () {
+    public String getId() {
         return dependency.getId();
     }
 
     @Override
-    public String getDescription () {
+    public String getDescription() {
         return dependency.getDescription();
     }
 
     @Override
-    public String getDocumentationUrl () {
+    public String getDocumentationUrl() {
         return dependency.getDocumentationUrl();
     }
 
     @Override
-    public long getTimeout () {
+    public long getTimeout() {
         return dependency.getTimeout();
     }
 
     @Override
-    public Urgency getUrgency () {
+    public Urgency getUrgency() {
         return dependency.getUrgency();
     }
 
     @Override
-    public DependencyType getType () {
+    public DependencyType getType() {
         return dependency.getType();
     }
 
     @Override
-    public String getServicePool () {
+    public String getServicePool() {
         return dependency.getServicePool();
     }
 
     @Override
-    public void clear () {
+    public void clear() {
         updateHandler.clear();
     }
 
     @Override
-    public void addListener (final StatusUpdateListener listener) {
+    public void addListener(final StatusUpdateListener listener) {
         updateHandler.addListener(listener);
     }
 

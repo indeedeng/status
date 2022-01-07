@@ -7,8 +7,7 @@ package com.indeed.status.core;
  */
 @SuppressWarnings({"UnusedDeclaration"}) // Public exception; used in other codebases
 public class UndesirableStateException extends RuntimeException {
-    public UndesirableStateException() {
-    }
+    public UndesirableStateException() {}
 
     public UndesirableStateException(Throwable cause) {
         super(cause);

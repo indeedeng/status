@@ -41,11 +41,12 @@ public abstract class AbstractDependencyManagerParams {
 
     @Value.Default
     public DependencyChecker checker() {
-        return new DependencyChecker(ImmutableDependencyCheckerParams.builder()
-                .executorService(threadPool())
-                .loggerName(loggerName())
-                .systemReporter(systemReporter())
-                .throttle(throttleDependencyChecks())
-                .build());
+        return new DependencyChecker(
+                ImmutableDependencyCheckerParams.builder()
+                        .executorService(threadPool())
+                        .loggerName(loggerName())
+                        .systemReporter(systemReporter())
+                        .throttle(throttleDependencyChecks())
+                        .build());
     }
 }

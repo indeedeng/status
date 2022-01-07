@@ -16,9 +16,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- *
- */
 public class StrictServlet extends AbstractDaemonCheckReportServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -28,7 +25,10 @@ public class StrictServlet extends AbstractDaemonCheckReportServlet {
     }
 
     @Override
-    protected CheckReportHandler newHandler(HttpServletRequest request, HttpServletResponse response, Function<CheckStatus, Integer> mapper) {
+    protected CheckReportHandler newHandler(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Function<CheckStatus, Integer> mapper) {
         return new PrivilegedReportHandler(mapper, response) {
             @Override
             protected boolean isDetailed() {
@@ -65,7 +65,7 @@ public class StrictServlet extends AbstractDaemonCheckReportServlet {
             }
 
             @Override
-            public long getPingPeriod () {
+            public long getPingPeriod() {
                 return 1000;
             }
 

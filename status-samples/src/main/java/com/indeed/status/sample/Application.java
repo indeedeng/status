@@ -13,12 +13,10 @@ import java.io.StringWriter;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-/**
- * @author pitz@indeed.com (Jeremy Pitzeruse)
- */
+/** @author pitz@indeed.com (Jeremy Pitzeruse) */
 public class Application {
-    private static final ObjectWriter WRITER = new ObjectMapper().writer()
-            .withDefaultPrettyPrinter();
+    private static final ObjectWriter WRITER =
+            new ObjectMapper().writer().withDefaultPrettyPrinter();
 
     private static final String DATABASE_NAME = "test";
 
@@ -34,15 +32,14 @@ public class Application {
         this.resultSet = resultSet;
     }
 
-
-
     public static void main(final String[] args) throws IOException, InterruptedException {
         final MysqlDataSource dataSource = new MysqlDataSource();
         dataSource.setDatabaseName(DATABASE_NAME);
         final JdbcTemplate testdb = new JdbcTemplate(dataSource);
         final MongoClient client = new MongoClient("localhost");
 
-        final Dependency mysqlDatabaseDependency = new MySqlDatabaseDependency(DATABASE_NAME, testdb);
+        final Dependency mysqlDatabaseDependency =
+                new MySqlDatabaseDependency(DATABASE_NAME, testdb);
         final Dependency dbDependency = new MongoDBDatabaseDependency(DATABASE_NAME, client);
         final Dependency onDiskFileDependency = new OnDiskFileDependency("file");
 
@@ -52,13 +49,17 @@ public class Application {
         dependencyManager.addDependency(onDiskFileDependency);
 
         final Application application = new Application();
-        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                application.setResultSet(dependencyManager.evaluate());
-            }
-        }, 0L, 3L, TimeUnit.SECONDS);
-
+        Executors.newScheduledThreadPool(1)
+                .scheduleAtFixedRate(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                application.setResultSet(dependencyManager.evaluate());
+                            }
+                        },
+                        0L,
+                        3L,
+                        TimeUnit.SECONDS);
 
         while (true) {
             final CheckResultSet resultSet = application.getResultSet();

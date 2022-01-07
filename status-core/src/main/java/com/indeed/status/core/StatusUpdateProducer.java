@@ -2,13 +2,9 @@ package com.indeed.status.core;
 
 import java.util.Iterator;
 
-/**
- * @author matts
- */
+/** @author matts */
 public interface StatusUpdateProducer {
-    /**
-     * Remove all listeners
-     */
+    /** Remove all listeners */
     void clear();
 
     /**
@@ -18,8 +14,6 @@ public interface StatusUpdateProducer {
      */
     void addListener(final StatusUpdateListener listener);
 
-    /**
-     * Allow iterating over all the added listeners
-     */
+    /** Allow iterating over all the added listeners */
     Iterator<StatusUpdateListener> listeners();
 }

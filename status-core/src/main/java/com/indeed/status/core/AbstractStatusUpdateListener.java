@@ -11,41 +11,46 @@ import javax.annotation.Nullable;
  *
  * @author matts
  */
-@SuppressWarnings ({"UnusedParameters"})
+@SuppressWarnings({"UnusedParameters"})
 public class AbstractStatusUpdateListener implements StatusUpdateListener {
     private static final Logger log = LoggerFactory.getLogger(AbstractStatusUpdateListener.class);
 
     /**
-     * Use provided functions if you would like to use this class. If you want to make your
-     * own onChanged method implement StatusUpdateListener instead
+     * Use provided functions if you would like to use this class. If you want to make your own
+     * onChanged method implement StatusUpdateListener instead
      *
      * @param source
      * @param original
      * @param updated
      */
     @Override
-    public final void onChanged (
+    public final void onChanged(
             @Nonnull final Dependency source,
             @Nullable final CheckResult original,
-            @Nonnull final CheckResult updated
-    ) {
+            @Nonnull final CheckResult updated) {
         final CheckStatus previous = null == original ? null : original.getStatus();
         final CheckStatus current = updated.getStatus();
 
-        if(log.isTraceEnabled()) {
-            log.trace("Notified of the change in status of " + source.getId() + " from " + previous + " to " + current);
+        if (log.isTraceEnabled()) {
+            log.trace(
+                    "Notified of the change in status of "
+                            + source.getId()
+                            + " from "
+                            + previous
+                            + " to "
+                            + current);
         }
 
         if (null == previous) {
             onStarted(source, original, updated);
 
         } else {
-            switch(previous) {
+            switch (previous) {
                 case OK:
                     onDegraded(source, original, updated);
                     break;
                 default:
-                    switch(current) {
+                    switch (current) {
                         case OK:
                             onRestored(source, original, updated);
                             break;
@@ -84,14 +89,12 @@ public class AbstractStatusUpdateListener implements StatusUpdateListener {
     protected void onDegraded(
             @Nonnull final Dependency dependency,
             @Nullable final CheckResult original,
-            @Nonnull final CheckResult updated
-    ) {
+            @Nonnull final CheckResult updated) {
         // No-op in the base class.
     }
 
     /**
-     * Triggered when the given <code>dependency</code> has improved but is still not
-     *  OK.
+     * Triggered when the given <code>dependency</code> has improved but is still not OK.
      *
      * @param dependency
      * @param original
@@ -100,8 +103,7 @@ public class AbstractStatusUpdateListener implements StatusUpdateListener {
     protected void onImproved(
             @Nonnull final Dependency dependency,
             @Nullable final CheckResult original,
-            @Nonnull final CheckResult updated
-    ) {
+            @Nonnull final CheckResult updated) {
         // No-op in the base class.
     }
 
@@ -115,8 +117,7 @@ public class AbstractStatusUpdateListener implements StatusUpdateListener {
     protected void onWorsened(
             @Nonnull final Dependency dependency,
             @Nullable final CheckResult original,
-            @Nonnull final CheckResult updated
-    ) {
+            @Nonnull final CheckResult updated) {
         // No-op in the base class.
     }
 
@@ -130,8 +131,7 @@ public class AbstractStatusUpdateListener implements StatusUpdateListener {
     protected void onRestored(
             @Nonnull final Dependency dependency,
             @Nullable final CheckResult original,
-            @Nonnull final CheckResult updated
-    ) {
+            @Nonnull final CheckResult updated) {
         // No-op in the base class.
     }
 
@@ -145,8 +145,7 @@ public class AbstractStatusUpdateListener implements StatusUpdateListener {
     protected void onDisabled(
             @Nonnull final Dependency dependency,
             @Nullable final CheckResult original,
-            @Nonnull final CheckResult updated
-    ) {
+            @Nonnull final CheckResult updated) {
         // No-op in the base class.
     }
 
@@ -160,8 +159,7 @@ public class AbstractStatusUpdateListener implements StatusUpdateListener {
     protected void onStarted(
             @Nonnull final Dependency dependency,
             @Nullable final CheckResult original,
-            @Nonnull final CheckResult updated
-    ) {
+            @Nonnull final CheckResult updated) {
         // No-op in the base class.
     }
 }

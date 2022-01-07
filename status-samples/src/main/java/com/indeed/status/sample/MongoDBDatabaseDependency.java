@@ -4,9 +4,7 @@ import com.indeed.status.core.PingableDependency;
 import com.indeed.status.core.Urgency;
 import com.mongodb.MongoClient;
 
-/**
- * @author pitz@indeed.com (Jeremy Pitzeruse)
- */
+/** @author pitz@indeed.com (Jeremy Pitzeruse) */
 public class MongoDBDatabaseDependency extends PingableDependency {
 
     private final MongoClient client;
@@ -15,10 +13,9 @@ public class MongoDBDatabaseDependency extends PingableDependency {
     public MongoDBDatabaseDependency(final String databaseName, final MongoClient client) {
 
         super(
-            "mongodb-database-" + databaseName,
-            "MongoDB Database Dependency [" + databaseName + "]",
-            Urgency.REQUIRED
-        );
+                "mongodb-database-" + databaseName,
+                "MongoDB Database Dependency [" + databaseName + "]",
+                Urgency.REQUIRED);
 
         this.databaseName = databaseName;
         this.client = client;

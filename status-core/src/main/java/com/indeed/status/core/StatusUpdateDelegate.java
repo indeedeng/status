@@ -20,23 +20,36 @@ class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateListener
 
     private final List<StatusUpdateListener> listeners;
 
-    StatusUpdateDelegate () {
+    StatusUpdateDelegate() {
         final List<StatusUpdateListener> l = Lists.newArrayListWithExpectedSize(2);
         listeners = new CopyOnWriteArrayList<StatusUpdateListener>(l);
     }
 
     @Override
-    public void onChanged (@Nonnull final Dependency source, @Nullable final CheckResult original, @Nonnull final CheckResult updated) {
+    public void onChanged(
+            @Nonnull final Dependency source,
+            @Nullable final CheckResult original,
+            @Nonnull final CheckResult updated) {
         if (log.isTraceEnabled()) {
-            log.trace("Notifying " + listeners.size() + " listeners of the change to " + source + " from " + original + " to " + updated);
+            log.trace(
+                    "Notifying "
+                            + listeners.size()
+                            + " listeners of the change to "
+                            + source
+                            + " from "
+                            + original
+                            + " to "
+                            + updated);
         }
 
-        for (final StatusUpdateListener listener: listeners) {
+        for (final StatusUpdateListener listener : listeners) {
             try {
                 listener.onChanged(source, original, updated);
 
-            } catch(RuntimeException e) {
-                log.error("Status update listeners should not throw errors. Something must be tragically wrong.", e);
+            } catch (RuntimeException e) {
+                log.error(
+                        "Status update listeners should not throw errors. Something must be tragically wrong.",
+                        e);
 
                 // Swallow runtime exceptions. Allow Errors through.
             }
@@ -44,17 +57,25 @@ class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateListener
     }
 
     @Override
-    public void onChecked (@Nonnull final Dependency source, @Nonnull final CheckResult result) {
+    public void onChecked(@Nonnull final Dependency source, @Nonnull final CheckResult result) {
         if (log.isTraceEnabled()) {
-            log.trace("Notifying " + listeners.size() + " listeners of the check of " + source + " resulting in " + result);
+            log.trace(
+                    "Notifying "
+                            + listeners.size()
+                            + " listeners of the check of "
+                            + source
+                            + " resulting in "
+                            + result);
         }
 
-        for (final StatusUpdateListener listener: listeners) {
+        for (final StatusUpdateListener listener : listeners) {
             try {
                 listener.onChecked(source, result);
 
-            } catch(final RuntimeException e) {
-                log.error("Status update listeners should not throw errors. Something must be tragically wrong.", e);
+            } catch (final RuntimeException e) {
+                log.error(
+                        "Status update listeners should not throw errors. Something must be tragically wrong.",
+                        e);
 
                 // Swallow runtime exceptions. Allow Errors through.
             }
@@ -63,12 +84,14 @@ class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateListener
 
     @Override
     public void onAdded(@Nonnull final Dependency dependency) {
-        for (final StatusUpdateListener listener: listeners) {
+        for (final StatusUpdateListener listener : listeners) {
             try {
                 listener.onAdded(dependency);
 
-            } catch(RuntimeException e) {
-                log.error("Status update listeners should not throw errors. Something must be tragically wrong.", e);
+            } catch (RuntimeException e) {
+                log.error(
+                        "Status update listeners should not throw errors. Something must be tragically wrong.",
+                        e);
 
                 // Swallow runtime exceptions. Allow Errors through.
             }
@@ -77,12 +100,14 @@ class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateListener
 
     @Override
     public void onRemoved(@Nonnull final Dependency dependency) {
-        for (final StatusUpdateListener listener: listeners) {
+        for (final StatusUpdateListener listener : listeners) {
             try {
                 listener.onRemoved(dependency);
 
-            } catch(RuntimeException e) {
-                log.error("Status update listeners should not throw errors. Something must be tragically wrong.", e);
+            } catch (RuntimeException e) {
+                log.error(
+                        "Status update listeners should not throw errors. Something must be tragically wrong.",
+                        e);
 
                 // Swallow runtime exceptions. Allow Errors through.
             }
@@ -90,7 +115,7 @@ class StatusUpdateDelegate implements StatusUpdateProducer, StatusUpdateListener
     }
 
     @Override
-    public void addListener (final StatusUpdateListener listener) {
+    public void addListener(final StatusUpdateListener listener) {
         listeners.add(listener);
     }
 

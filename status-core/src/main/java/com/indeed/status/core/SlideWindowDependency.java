@@ -9,6 +9,7 @@ import java.util.Iterator;
 
 /**
  * This dependency return the state according the average failed ratio in a given time window.
+ *
  * @author xinjianz
  */
 public abstract class SlideWindowDependency extends AbstractDependency {
@@ -24,15 +25,16 @@ public abstract class SlideWindowDependency extends AbstractDependency {
     // When failed ratio is in [maxMajor, ~), check status is OUTAGE.
     protected final double maxMajor;
 
-    protected SlideWindowDependency(final String id,
-                                    final String description,
-                                    final long timeout,
-                                    final long pingPeriod,
-                                    final Urgency urgency,
-                                    final double maxOK,
-                                    final double maxMinor,
-                                    final double maxMajor,
-                                    final long timeInterval) {
+    protected SlideWindowDependency(
+            final String id,
+            final String description,
+            final long timeout,
+            final long pingPeriod,
+            final Urgency urgency,
+            final double maxOK,
+            final double maxMinor,
+            final double maxMajor,
+            final long timeInterval) {
         super(id, description, timeout, pingPeriod, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
         this.maxOK = maxOK;
         this.maxMinor = maxMinor;
@@ -43,6 +45,7 @@ public abstract class SlideWindowDependency extends AbstractDependency {
     protected static class Event {
         private final double failedRatio;
         private final long time;
+
         public Event(final double failedRatio, final long time) {
             this.failedRatio = failedRatio;
             this.time = time;
@@ -59,6 +62,7 @@ public abstract class SlideWindowDependency extends AbstractDependency {
         final long timeInterval;
         long lastUpdate;
         double totalRatio;
+
         EventList(final long timeInterval) {
             // timeInterval need to be a positive number.
             this.timeInterval = (timeInterval >= 0) ? timeInterval : 1;
@@ -69,6 +73,7 @@ public abstract class SlideWindowDependency extends AbstractDependency {
         /**
          * The x-axis is time, the y-axis is failed ratio. Draw lines between adjacent events.
          * Average failed ratio is the area under lines divides total time.
+         *
          * @param newEvent the new ping event.
          * @return average failed ratio in the window.
          */
@@ -126,7 +131,6 @@ public abstract class SlideWindowDependency extends AbstractDependency {
             final long time = (events.getFirst().time - events.getLast().time) + 1;
             return totalRatio / time;
         }
-
     }
 
     @Override
@@ -153,8 +157,9 @@ public abstract class SlideWindowDependency extends AbstractDependency {
 
     /**
      * This function is used to test dependency.
-     * @return the failed ratio of your test. In one ping, you maybe test multiple instance, the returned value can
-     *         be the failed ratio of your test.
+     *
+     * @return the failed ratio of your test. In one ping, you maybe test multiple instance, the
+     *     returned value can be the failed ratio of your test.
      * @throws Exception
      */
     protected abstract double ping() throws Exception;
@@ -171,5 +176,4 @@ public abstract class SlideWindowDependency extends AbstractDependency {
         }
         return new Event(failedRatio, currentTime);
     }
-
 }

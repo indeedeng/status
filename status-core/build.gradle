@@ -11,6 +11,9 @@ dependencies {
     compileOnly project(':log4j1dummyshim')
     testCompileOnly project(':log4j1dummyshim')
 
+    compileOnly 'org.immutables:value:2.8.8'
+    annotationProcessor 'org.immutables:value:2.8.8'
+
     compileOnly 'javax.annotation:javax.annotation-api:1.3.2'
 
     compileOnly libs.jsr305

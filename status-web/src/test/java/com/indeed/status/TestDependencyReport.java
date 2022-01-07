@@ -1,16 +1,16 @@
 package com.indeed.status;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import com.indeed.teststatus.ServletTestSuite;
 import com.indeed.status.core.CheckResultSet;
 import com.indeed.status.core.CheckStatus;
 import com.indeed.status.core.Dependency;
 import com.indeed.status.core.PingableDependency;
 import com.indeed.status.core.Urgency.BuiltIns;
 import com.indeed.status.web.AbstractResponseWriter;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.indeed.teststatus.ServletTestSuite;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -21,9 +21,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
-/**
- *
- */
+/** */
 public class TestDependencyReport extends ServletTestSuite {
     @Test
     public void testBasicOperation() throws IOException {
@@ -46,46 +44,49 @@ public class TestDependencyReport extends ServletTestSuite {
     @Test
     public void testErrorLevel() throws Exception {
         final AtomicBoolean weakAvailable = new AtomicBoolean(true);
-        final Dependency weakDependency = new PingableDependency("weak", "", BuiltIns.WEAK) {
-            public void ping () throws Exception {
-                if (!weakAvailable.get()) {
-                    throw new Exception();
-                }
-            }
+        final Dependency weakDependency =
+                new PingableDependency("weak", "", BuiltIns.WEAK) {
+                    public void ping() throws Exception {
+                        if (!weakAvailable.get()) {
+                            throw new Exception();
+                        }
+                    }
 
-            @Override
-            public String getDocumentationUrl() {
-                return null;
-            }
-        };
+                    @Override
+                    public String getDocumentationUrl() {
+                        return null;
+                    }
+                };
 
         final AtomicBoolean strongAvailable = new AtomicBoolean(true);
-        final Dependency strongDependency = new PingableDependency("strong", "", BuiltIns.STRONG) {
-            public void ping () throws Exception {
-                if (!strongAvailable.get()) {
-                    throw new Exception();
-                }
-            }
+        final Dependency strongDependency =
+                new PingableDependency("strong", "", BuiltIns.STRONG) {
+                    public void ping() throws Exception {
+                        if (!strongAvailable.get()) {
+                            throw new Exception();
+                        }
+                    }
 
-            @Override
-            public String getDocumentationUrl() {
-                return null;
-            }
-        };
+                    @Override
+                    public String getDocumentationUrl() {
+                        return null;
+                    }
+                };
 
         final AtomicBoolean requiredAvailable = new AtomicBoolean(true);
-        final Dependency requiredDependency = new PingableDependency("required", "", BuiltIns.REQUIRED) {
-            public void ping () throws Exception {
-                if (!requiredAvailable.get()) {
-                    throw new Exception();
-                }
-            }
+        final Dependency requiredDependency =
+                new PingableDependency("required", "", BuiltIns.REQUIRED) {
+                    public void ping() throws Exception {
+                        if (!requiredAvailable.get()) {
+                            throw new Exception();
+                        }
+                    }
 
-            @Override
-            public String getDocumentationUrl() {
-                return null;
-            }
-        };
+                    @Override
+                    public String getDocumentationUrl() {
+                        return null;
+                    }
+                };
 
         final DependencyManager manager = new DependencyManager();
         manager.addDependency(weakDependency);
@@ -97,52 +98,63 @@ public class TestDependencyReport extends ServletTestSuite {
 
         weakAvailable.set(false);
         final CheckResultSet weakFailureResults = manager.evaluate();
-        Assert.assertEquals(CheckStatus.OUTAGE, manager.evaluate(weakDependency.getId()).getStatus());
+        Assert.assertEquals(
+                CheckStatus.OUTAGE, manager.evaluate(weakDependency.getId()).getStatus());
         // Should NOT be able to downgrade a system status beyond minor.
         Assert.assertEquals(CheckStatus.MINOR, weakFailureResults.getSystemStatus());
         Assert.assertEquals(
                 "Expected the default public response to a weak dependency to be 'ok'. Netscalers, leave us alone.",
                 HttpServletResponse.SC_OK,
-                (long) AbstractResponseWriter.FN_PUBLIC_RESPONSE.apply(weakFailureResults.getSystemStatus()));
+                (long)
+                        AbstractResponseWriter.FN_PUBLIC_RESPONSE.apply(
+                                weakFailureResults.getSystemStatus()));
         weakAvailable.set(true);
 
         strongAvailable.set(false);
         final CheckResultSet strongFailureResults = manager.evaluate();
-        Assert.assertEquals(CheckStatus.OUTAGE, manager.evaluate(strongDependency.getId()).getStatus());
+        Assert.assertEquals(
+                CheckStatus.OUTAGE, manager.evaluate(strongDependency.getId()).getStatus());
         // Should NOT be able to downgrade a system status beyond minor.
         Assert.assertEquals(CheckStatus.MAJOR, strongFailureResults.getSystemStatus());
         Assert.assertEquals(
                 "Expected the default public response to a strong dependency to be 'ok'. Netscalers, leave us alone.",
                 HttpServletResponse.SC_OK,
-                (long) AbstractResponseWriter.FN_PUBLIC_RESPONSE.apply(weakFailureResults.getSystemStatus()));
+                (long)
+                        AbstractResponseWriter.FN_PUBLIC_RESPONSE.apply(
+                                weakFailureResults.getSystemStatus()));
     }
 
     @Test
     public void testJsonInvariants() throws Exception {
-        final Dependency alwaysDies = new PingableDependency("alwaysDies", "", BuiltIns.REQUIRED) {
-            public void ping () throws Exception {
-                // throw a new checked exception caused by an unchecked exceptions
-                throw new IOException(new NullPointerException());
-            }
+        final Dependency alwaysDies =
+                new PingableDependency("alwaysDies", "", BuiltIns.REQUIRED) {
+                    public void ping() throws Exception {
+                        // throw a new checked exception caused by an unchecked exceptions
+                        throw new IOException(new NullPointerException());
+                    }
 
-            @Override
-            public String getDocumentationUrl() {
-                return null;
-            }
-        };
+                    @Override
+                    public String getDocumentationUrl() {
+                        return null;
+                    }
+                };
         final DependencyManager manager = new DependencyManager();
         manager.addDependency(alwaysDies);
 
         final CheckResultSet results = manager.evaluate();
         final StringWriter out = new StringWriter();
-        new JsonFactory(new ObjectMapper()).createJsonGenerator(out).setPrettyPrinter(new DefaultPrettyPrinter()).writeObject(results.summarize(true));
+        new JsonFactory(new ObjectMapper())
+                .createJsonGenerator(out)
+                .setPrettyPrinter(new DefaultPrettyPrinter())
+                .writeObject(results.summarize(true));
         final String json = out.toString();
 
-        final List<String> expectedJsonFingerprints = ImmutableList.of(
+        final List<String> expectedJsonFingerprints =
+                ImmutableList.of(
                         "\"status\" : \"OUTAGE\"",
                         "\"exception\" : \"IOException\"",
                         "\"exception\" : \"NullPointerException\"");
-        for (final String fingerprint:  expectedJsonFingerprints) {
+        for (final String fingerprint : expectedJsonFingerprints) {
             Assert.assertTrue(
                     "Expected to find fingerprint '" + fingerprint + "' in json: " + json,
                     json.contains(fingerprint));

@@ -27,7 +27,8 @@ public class SystemReporter {
         return checkResultSet.new SystemReport(wallClock);
     }
 
-    public CheckResultSystemReport collectDetailedSystemReport(final CheckResultSet checkResultSet) {
+    public CheckResultSystemReport collectDetailedSystemReport(
+            final CheckResultSet checkResultSet) {
         return checkResultSet.new DetailedSystemReport(wallClock);
     }
 }

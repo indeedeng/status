@@ -24,11 +24,9 @@ import java.util.concurrent.TimeUnit;
 import static com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter.serializeAllExcept;
 import static org.junit.Assert.assertEquals;
 
-/**
- *
- */
+/** */
 public class CheckResultSystemReportTest {
-    
+
     private static TimeZone originalTimeZone;
     private static Calendar originalCalendar;
 
@@ -58,42 +56,46 @@ public class CheckResultSystemReportTest {
         final Date sampleDate = calendar.getTime();
         wallClock.set(sampleDate.getTime());
 
-        final DependencyChecker checker = new DependencyChecker(ImmutableDependencyCheckerParams.builder()
-                .executorService(Executors.newSingleThreadExecutor())
-                .systemReporter(systemReporter)
-                .build());
+        final DependencyChecker checker =
+                new DependencyChecker(
+                        ImmutableDependencyCheckerParams.builder()
+                                .executorService(Executors.newSingleThreadExecutor())
+                                .systemReporter(systemReporter)
+                                .build());
 
-        final SimplePingableDependency dependency = SimplePingableDependency.newBuilder()
-                .setId("id")
-                .setDescription("description")
-                .setPingMethod((PingMethod) () -> {
-                    // create a duration
-                    wallClock.plus(10, TimeUnit.MILLISECONDS);
-                })
-                .setWallClock(wallClock)
-                .setDocumentationUrl("http://example.com/?id")
-                .build();
-
+        final SimplePingableDependency dependency =
+                SimplePingableDependency.newBuilder()
+                        .setId("id")
+                        .setDescription("description")
+                        .setPingMethod(
+                                (PingMethod)
+                                        () -> {
+                                            // create a duration
+                                            wallClock.plus(10, TimeUnit.MILLISECONDS);
+                                        })
+                        .setWallClock(wallClock)
+                        .setDocumentationUrl("http://example.com/?id")
+                        .build();
 
         final CheckResultSet resultSet = checker.evaluate(ImmutableList.of(dependency));
 
         final CheckResultSystemReport report = resultSet.summarizeBySystemReporter(false);
 
-        final String json = new ObjectMapper()
-                .addMixIn(Object.class, PropertyFilterMixIn.class)
-                .writer()
-                .with(new SimpleFilterProvider()
-                        .addFilter("master-filter", serializeAllExcept("hostname")))
-                .withDefaultPrettyPrinter()
-                .writeValueAsString(report);
+        final String json =
+                new ObjectMapper()
+                        .addMixIn(Object.class, PropertyFilterMixIn.class)
+                        .writer()
+                        .with(
+                                new SimpleFilterProvider()
+                                        .addFilter("master-filter", serializeAllExcept("hostname")))
+                        .withDefaultPrettyPrinter()
+                        .writeValueAsString(report);
 
-
-        final String expectedJson = Resources.toString(
-                Resources.getResource(getTestResourcePath() + "/testSimpleReport.json"),
-                Charsets.UTF_8);
-        assertEquals(
-                "Failed to generate the expected json report",
-                expectedJson, json);
+        final String expectedJson =
+                Resources.toString(
+                        Resources.getResource(getTestResourcePath() + "/testSimpleReport.json"),
+                        Charsets.UTF_8);
+        assertEquals("Failed to generate the expected json report", expectedJson, json);
     }
 
     @Test
@@ -106,49 +108,55 @@ public class CheckResultSystemReportTest {
         final Date sampleDate = calendar.getTime();
         wallClock.set(sampleDate.getTime());
 
-        final DependencyChecker checker = new DependencyChecker(ImmutableDependencyCheckerParams.builder()
-                .executorService(Executors.newSingleThreadExecutor())
-                .systemReporter(systemReporter)
-                .build());
+        final DependencyChecker checker =
+                new DependencyChecker(
+                        ImmutableDependencyCheckerParams.builder()
+                                .executorService(Executors.newSingleThreadExecutor())
+                                .systemReporter(systemReporter)
+                                .build());
 
-        final SimplePingableDependency dependency = SimplePingableDependency.newBuilder()
-                .setId("id")
-                .setDescription("description")
-                .setPingMethod((PingMethod) () -> {
-                    // create a duration
-                    wallClock.plus(10, TimeUnit.MILLISECONDS);
-                })
-                .setWallClock(wallClock)
-                .setDocumentationUrl("http://example.com/?id")
-                .build();
+        final SimplePingableDependency dependency =
+                SimplePingableDependency.newBuilder()
+                        .setId("id")
+                        .setDescription("description")
+                        .setPingMethod(
+                                (PingMethod)
+                                        () -> {
+                                            // create a duration
+                                            wallClock.plus(10, TimeUnit.MILLISECONDS);
+                                        })
+                        .setWallClock(wallClock)
+                        .setDocumentationUrl("http://example.com/?id")
+                        .build();
 
         final CheckResultSet resultSet = checker.evaluate(ImmutableList.of(dependency));
-        assertEquals(
-                sampleDate.getTime(), resultSet.getStartTimeMillis());
+        assertEquals(sampleDate.getTime(), resultSet.getStartTimeMillis());
 
         final CheckResult checkResult = resultSet.get("id");
         assert checkResult != null;
 
         assertEquals(
                 "Failed to pass date through to dependency",
-                sampleDate.getTime(), checkResult.getTimestamp());
+                sampleDate.getTime(),
+                checkResult.getTimestamp());
 
         final CheckResultSystemReport report = resultSet.summarizeBySystemReporter(true);
 
-        final String json = new ObjectMapper()
-                .addMixIn(Object.class, PropertyFilterMixIn.class)
-                .writer()
-                .with(new SimpleFilterProvider()
-                        .addFilter("master-filter", serializeAllExcept("hostname")))
-                .withDefaultPrettyPrinter()
-                .writeValueAsString(report);
+        final String json =
+                new ObjectMapper()
+                        .addMixIn(Object.class, PropertyFilterMixIn.class)
+                        .writer()
+                        .with(
+                                new SimpleFilterProvider()
+                                        .addFilter("master-filter", serializeAllExcept("hostname")))
+                        .withDefaultPrettyPrinter()
+                        .writeValueAsString(report);
 
-        final String expectedJson = Resources.toString(
-                Resources.getResource(getTestResourcePath() + "/testDetailedReport.json"),
-                Charsets.UTF_8);
-        assertEquals(
-                "Failed to generate the expected json report",
-                expectedJson, json);
+        final String expectedJson =
+                Resources.toString(
+                        Resources.getResource(getTestResourcePath() + "/testDetailedReport.json"),
+                        Charsets.UTF_8);
+        assertEquals("Failed to generate the expected json report", expectedJson, json);
     }
 
     @Test
@@ -161,22 +169,23 @@ public class CheckResultSystemReportTest {
         final Date sampleDate = calendar.getTime();
         wallClock.set(sampleDate.getTime());
 
-        final SimpleDependencyManager manager = new SimpleDependencyManager(
-                "app",
-                systemReporter);
+        final SimpleDependencyManager manager = new SimpleDependencyManager("app", systemReporter);
 
         final CountDownLatch latch = new CountDownLatch(1);
-        final SimplePingableDependency dependency = SimplePingableDependency.newBuilder()
-                .setId("id")
-                .setDescription("description")
-                .setPingMethod((PingMethod) () -> {
-                    // Simulate taking 10 ms to complete.
-                    wallClock.plus(10, TimeUnit.MILLISECONDS);
-                    latch.countDown();
-                })
-                .setWallClock(wallClock)
-                .setDocumentationUrl("http://example.com/?id")
-                .build();
+        final SimplePingableDependency dependency =
+                SimplePingableDependency.newBuilder()
+                        .setId("id")
+                        .setDescription("description")
+                        .setPingMethod(
+                                (PingMethod)
+                                        () -> {
+                                            // Simulate taking 10 ms to complete.
+                                            wallClock.plus(10, TimeUnit.MILLISECONDS);
+                                            latch.countDown();
+                                        })
+                        .setWallClock(wallClock)
+                        .setDocumentationUrl("http://example.com/?id")
+                        .build();
 
         manager.launchPinger(dependency);
         latch.await(10, TimeUnit.SECONDS);
@@ -184,36 +193,39 @@ public class CheckResultSystemReportTest {
         final CheckResultSet resultSet = manager.evaluate();
 
         assertEquals(
-                "Expected the timestamp of the result set to match the time of the wall clock at the moment the " +
-                        "result set was created, i.e. after the background ping has occurred.",
-                sampleDate.getTime() + 10, resultSet.getStartTimeMillis());
+                "Expected the timestamp of the result set to match the time of the wall clock at the moment the "
+                        + "result set was created, i.e. after the background ping has occurred.",
+                sampleDate.getTime() + 10,
+                resultSet.getStartTimeMillis());
 
         final CheckResult checkResult = resultSet.get("id");
         assert checkResult != null;
 
         assertEquals(
-                "Expected the 'last executed' timestamp of the individual dependency to record the time " +
-                        "the evaluation of dependency was initiated.",
-                sampleDate.getTime(), checkResult.getTimestamp());
+                "Expected the 'last executed' timestamp of the individual dependency to record the time "
+                        + "the evaluation of dependency was initiated.",
+                sampleDate.getTime(),
+                checkResult.getTimestamp());
 
         final CheckResultSystemReport report = resultSet.summarizeBySystemReporter(true);
 
-        final String json = new ObjectMapper()
-                .addMixIn(Object.class, PropertyFilterMixIn.class)
-                .writer()
-                .with(new SimpleFilterProvider()
-                        .addFilter("master-filter", serializeAllExcept("hostname")))
-                .withDefaultPrettyPrinter()
-                .writeValueAsString(report);
+        final String json =
+                new ObjectMapper()
+                        .addMixIn(Object.class, PropertyFilterMixIn.class)
+                        .writer()
+                        .with(
+                                new SimpleFilterProvider()
+                                        .addFilter("master-filter", serializeAllExcept("hostname")))
+                        .withDefaultPrettyPrinter()
+                        .writeValueAsString(report);
 
-        final String expectedJson = Resources.toString(
-                Resources.getResource(getTestResourcePath() + "/testDetailedReportBackground.json"),
-                Charsets.UTF_8);
-        assertEquals(
-                "Failed to generate the expected json report",
-                expectedJson, json);
+        final String expectedJson =
+                Resources.toString(
+                        Resources.getResource(
+                                getTestResourcePath() + "/testDetailedReportBackground.json"),
+                        Charsets.UTF_8);
+        assertEquals("Failed to generate the expected json report", expectedJson, json);
     }
-
 
     @Nonnull
     private String getTestResourcePath() {
@@ -225,10 +237,12 @@ public class CheckResultSystemReportTest {
 
     private static class SimpleDependencyManager extends AbstractDependencyManager {
         public SimpleDependencyManager(
-                @Nullable final String appName,
-                @Nonnull final SystemReporter systemReporter
-        ) {
-            super(ImmutableDependencyManagerParams.builder().appName(appName).systemReporter(systemReporter).build());
+                @Nullable final String appName, @Nonnull final SystemReporter systemReporter) {
+            super(
+                    ImmutableDependencyManagerParams.builder()
+                            .appName(appName)
+                            .systemReporter(systemReporter)
+                            .build());
         }
     }
 }

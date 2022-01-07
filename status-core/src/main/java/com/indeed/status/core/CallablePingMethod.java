@@ -4,9 +4,7 @@ import javax.annotation.Nonnull;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
-/**
- * @author matts
- */
+/** @author matts */
 public class CallablePingMethod implements PingMethod {
     @Nonnull private final Callable<Void> delegate;
 

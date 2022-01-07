@@ -11,9 +11,7 @@ import com.indeed.status.web.AbstractDaemonCheckReportServlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 
-/**
- *
- */
+/** */
 public class PermissiveServlet extends AbstractDaemonCheckReportServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {

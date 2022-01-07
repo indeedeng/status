@@ -13,4 +13,6 @@ dependencies {
 
     testImplementation libs.junit
     testImplementation 'org.eclipse.jetty:jetty-webapp:8.1.8.v20121106'
+
+    compileOnly project(':log4j1dummyshim')
 }

@@ -21,61 +21,49 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The {@link CheckResult} represents the outcome of a single dependency check. This
- *  object is immutable and may be persisted indefinitely to communicate the snapshot
- *  status of the dependency to interested parties.
+ * The {@link CheckResult} represents the outcome of a single dependency check. This object is
+ * immutable and may be persisted indefinitely to communicate the snapshot status of the dependency
+ * to interested parties.
  */
-@SuppressWarnings({"UnusedDeclaration"}) // Suppress unused declarations since most are there for serialization
+@SuppressWarnings({
+    "UnusedDeclaration"
+}) // Suppress unused declarations since most are there for serialization
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class CheckResult {
     /// The final status resulting from the dependency evaluation
-    @Nonnull
-    private final CheckStatus status;
+    @Nonnull private final CheckStatus status;
     /// More detailed description of the dependency, for use by operators reading the report.
-    @Nonnull
-    private final String description;
+    @Nonnull private final String description;
     /// More detailed status message describing the final result of the dependency check
-    @Nonnull
-    private final String errorMessage;
+    @Nonnull private final String errorMessage;
     /// The time this result was generated
-    @Nullable
-    private final Date timestamp;
+    @Nullable private final Date timestamp;
     /// The duration of the check
-    @Nonnegative
-    private final long duration;
+    @Nonnegative private final long duration;
     /// The last known time this result was OK'd.
-    @Nonnegative
-    private final long lastKnownGoodTimestamp;
+    @Nonnegative private final long lastKnownGoodTimestamp;
     /// The periodicity of this result
-    @Nonnegative
-    private final long period;
+    @Nonnegative private final long period;
     /// The id of the dependency that generated this result;
-    @Nonnull
-    private final String id;
+    @Nonnull private final String id;
     /// The urgency of this dependency
-    @Nonnull
-    private final Urgency urgency;
+    @Nonnull private final Urgency urgency;
     /// The documentation URL giving additional info about the result
-    @Nonnull
-    private final String documentationUrl;
+    @Nonnull private final String documentationUrl;
     /// The exception thrown during execution, if any.
-    @Nonnull
-    private final DependencyType type;
-    @Nonnull
-    private final String servicePool;
-    @JsonIgnore
-    private final Throwable throwable;
+    @Nonnull private final DependencyType type;
+    @Nonnull private final String servicePool;
+    @JsonIgnore private final Throwable throwable;
 
-    public static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
-        @Override
-        protected DateFormat initialValue() {
-            return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-        }
-    };
+    public static final ThreadLocal<DateFormat> DATE_FORMAT =
+            new ThreadLocal<DateFormat>() {
+                @Override
+                protected DateFormat initialValue() {
+                    return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+                }
+            };
 
-    /**
-     * @deprecated Use {@link CheckResult.Builder} instead
-     */
+    /** @deprecated Use {@link CheckResult.Builder} instead */
     @Deprecated
     public CheckResult(
             @Nonnull final Dependency dependency,
@@ -84,8 +72,7 @@ public class CheckResult {
             @Nonnegative final long timestamp,
             @Nonnegative final long duration,
             @Nonnegative final long period,
-            @Nullable final Throwable t
-    ) {
+            @Nullable final Throwable t) {
         this(
                 dependency,
                 status,
@@ -94,8 +81,7 @@ public class CheckResult {
                 duration,
                 0L, /* lastKnownGoodTimestamp */
                 period,
-                t
-        );
+                t);
     }
 
     private CheckResult(
@@ -106,8 +92,7 @@ public class CheckResult {
             @Nonnegative final long duration,
             @Nonnegative final long lastKnownGoodTimestamp,
             @Nonnegative final long period,
-            @Nullable final Throwable t
-    ) {
+            @Nullable final Throwable t) {
         this.id = dependency.getId();
         this.status = status;
         this.description = dependency.getDescription();
@@ -124,22 +109,22 @@ public class CheckResult {
     }
 
     @Nonnull
-    public String getId () {
+    public String getId() {
         return id;
     }
 
     @Nonnull
-    public CheckStatus getStatus () {
+    public CheckStatus getStatus() {
         return status;
     }
 
     @Nonnull
-    public String getDescription () {
+    public String getDescription() {
         return description;
     }
 
     @Nonnull
-    public String getErrorMessage () {
+    public String getErrorMessage() {
         return errorMessage;
     }
 
@@ -149,7 +134,7 @@ public class CheckResult {
     }
 
     @Nonnegative
-    public long getDuration () {
+    public long getDuration() {
         return duration;
     }
 
@@ -180,12 +165,12 @@ public class CheckResult {
     }
 
     @Nullable
-    public String getDate () {
+    public String getDate() {
         return null == timestamp ? null : DATE_FORMAT.get().format(timestamp);
     }
 
     @Nonnegative
-    public long getPeriod () {
+    public long getPeriod() {
         return period;
     }
 
@@ -200,36 +185,41 @@ public class CheckResult {
     }
 
     @Nonnull
-    public String toString () {
+    public String toString() {
         return "{'id':'" + getId() + "';'status':'" + status + "';}";
     }
 
-    @SuppressWarnings ( { "UnusedDeclaration" })
+    @SuppressWarnings({"UnusedDeclaration"})
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public static class Thrown {
         private static final int MAX_DEPTH = 20;
         private static final int MAX_TRACE = 20;
 
         public Thrown(@Nonnull final Throwable throwable) {
-            this(throwable instanceof CheckException ? throwable.getCause() : throwable, new HashSet<Throwable>(), 0);
+            this(
+                    throwable instanceof CheckException ? throwable.getCause() : throwable,
+                    new HashSet<Throwable>(),
+                    0);
         }
 
-        private Thrown(@Nonnull final Throwable throwable, final Set<Throwable> seen, final int depth) {
+        private Thrown(
+                @Nonnull final Throwable throwable, final Set<Throwable> seen, final int depth) {
             this.message = throwable.getMessage();
             this.exception = throwable.getClass().getSimpleName();
 
             final StackTraceElement[] trace = throwable.getStackTrace();
             if (null != trace) {
-                this.stack = trace.length > MAX_TRACE ?
-                        Lists.newArrayList(Arrays.asList(trace).subList(0, MAX_TRACE)) :
-                        Lists.newArrayList(trace);
+                this.stack =
+                        trace.length > MAX_TRACE
+                                ? Lists.newArrayList(Arrays.asList(trace).subList(0, MAX_TRACE))
+                                : Lists.newArrayList(trace);
             }
 
             if (depth <= MAX_DEPTH) {
                 final Throwable cause = throwable.getCause();
                 if (null != cause && !seen.contains(cause)) {
                     seen.add(cause);
-                    this.thrown = new Thrown(cause, seen, depth+1);
+                    this.thrown = new Thrown(cause, seen, depth + 1);
                 } else {
                     this.thrown = null;
                 }
@@ -238,16 +228,17 @@ public class CheckResult {
             }
         }
 
-        public String getException () {
+        public String getException() {
             return exception;
         }
 
-        public String getMessage () {
+        public String getMessage() {
             return message;
         }
 
-        public List<String> getStack () {
-            // TODO - ketan's right that collapsing the rich data on the stack trace isn't right, but
+        public List<String> getStack() {
+            // TODO - ketan's right that collapsing the rich data on the stack trace isn't right,
+            // but
             //  as long it's mostly humans reading the output, the terser format is more usable. We
             //  could bridge the gap with a nondefault pretty-printer if we wanted to, but for now
             //  let's stick with the well-recognized format.
@@ -268,13 +259,13 @@ public class CheckResult {
     public static Builder newBuilder(
             @Nonnull final Dependency dependency,
             @Nonnull final CheckStatus status,
-            @Nonnull final String errorMessage
-    ) {
+            @Nonnull final String errorMessage) {
         return new Builder(dependency, status, errorMessage);
     }
 
     @Nonnull
-    public static Builder newBuilder(@Nonnull final Dependency dependency, @Nonnull final CheckResult source) {
+    public static Builder newBuilder(
+            @Nonnull final Dependency dependency, @Nonnull final CheckResult source) {
         return newBuilder(dependency, source.getStatus(), source.getErrorMessage())
                 .setTimestamp(source.getTimestamp())
                 .setDuration(source.getDuration())
@@ -284,35 +275,27 @@ public class CheckResult {
     }
 
     public static class Builder {
-        @Nonnull
-        private Dependency dependency;
-        @Nonnull
-        private CheckStatus status;
-        @Nonnull
-        private String errorMessage;
-        @Nonnegative
-        private long timestamp = 0L;
-        @Nonnegative
-        private long duration = 0L;
-        @Nonnegative
-        private long lastKnownGoodTimestamp = 0L;
-        @Nonnegative
-        private long period = 0L;
-        @Nullable
-        private Throwable t;
+        @Nonnull private Dependency dependency;
+        @Nonnull private CheckStatus status;
+        @Nonnull private String errorMessage;
+        @Nonnegative private long timestamp = 0L;
+        @Nonnegative private long duration = 0L;
+        @Nonnegative private long lastKnownGoodTimestamp = 0L;
+        @Nonnegative private long period = 0L;
+        @Nullable private Throwable t;
 
         private Builder(
                 @Nonnull final Dependency dependency,
                 @Nonnull final CheckStatus status,
-                @Nonnull final String errorMessage
-        ) {
+                @Nonnull final String errorMessage) {
             this.dependency = dependency;
             this.status = status;
             this.errorMessage = errorMessage;
         }
 
         public Builder setDependency(@Nonnull final Dependency dependency) {
-            this.dependency = Preconditions.checkNotNull(dependency, "Missing dependency reference");
+            this.dependency =
+                    Preconditions.checkNotNull(dependency, "Missing dependency reference");
             return this;
         }
 

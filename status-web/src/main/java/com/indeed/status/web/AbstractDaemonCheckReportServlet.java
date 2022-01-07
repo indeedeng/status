@@ -15,17 +15,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/**
- * @author Matt Schemmel
- */
-abstract public class AbstractDaemonCheckReportServlet extends HttpServlet {
+/** @author Matt Schemmel */
+public abstract class AbstractDaemonCheckReportServlet extends HttpServlet {
     /// Instance logger available for use by subclasses.
     private final Logger log = LoggerFactory.getLogger(getClass());
     // Set-once, read-many
     private AbstractDependencyManager manager;
 
     @Override
-    protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response)
+            throws ServletException, IOException {
         try {
             final CheckResultSet resultSet = getManager().evaluate();
             final CheckReportHandler handler = newHandler(request, response);
@@ -35,9 +34,12 @@ abstract public class AbstractDaemonCheckReportServlet extends HttpServlet {
         } catch (final Throwable t) {
             log.error("Received an unexpected top-level throwable.", t);
 
-            // Note: the checker#evaluate method should never throw any sort of recoverable exception.
+            // Note: the checker#evaluate method should never throw any sort of recoverable
+            // exception.
             // If we get here, it is due to NPEs, OOMs, and other complete failures.
-            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Error executing dependency check.");
+            response.sendError(
+                    HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                    "Error executing dependency check.");
         }
     }
 
@@ -48,20 +50,24 @@ abstract public class AbstractDaemonCheckReportServlet extends HttpServlet {
         this.manager = newManager(config);
     }
 
-    abstract protected AbstractDependencyManager newManager(final ServletConfig config);
+    protected abstract AbstractDependencyManager newManager(final ServletConfig config);
 
     protected AbstractDependencyManager getManager() {
         return this.manager;
     }
 
-    @SuppressWarnings ( { "UnusedParameters" })
-    protected CheckReportHandler newHandler ( final HttpServletRequest request, final HttpServletResponse response ) {
+    @SuppressWarnings({"UnusedParameters"})
+    protected CheckReportHandler newHandler(
+            final HttpServletRequest request, final HttpServletResponse response) {
         final Function<CheckStatus, Integer> mapper = newStatusMapper(request);
 
         return newHandler(request, response, mapper);
     }
 
-    protected CheckReportHandler newHandler(HttpServletRequest request, HttpServletResponse response, Function<CheckStatus, Integer> mapper) {
+    protected CheckReportHandler newHandler(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Function<CheckStatus, Integer> mapper) {
         return new PrivilegedReportHandler(mapper, response);
     }
 

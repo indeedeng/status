@@ -6,24 +6,20 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-/**
- * @author jplaisance
- */
+/** @author jplaisance */
 public abstract class ComparableDependency<T extends Comparable<T>> extends AbstractDependency {
-    @SuppressWarnings ("UnusedDeclaration")
+    @SuppressWarnings("UnusedDeclaration")
     private static final Logger log = LoggerFactory.getLogger(ComparableDependency.class);
 
-    @Nonnull
-    private final T maxOK;
+    @Nonnull private final T maxOK;
 
-    @Nullable
-    private final T maxMinor;
+    @Nullable private final T maxMinor;
 
-    @Nullable
-    private final T maxMajor;
+    @Nullable private final T maxMajor;
 
     /**
-     * @deprecated Instead, use {@link #ComparableDependency(String, String, long, long, Urgency, DependencyType, String, Comparable, Comparable, Comparable)}.
+     * @deprecated Instead, use {@link #ComparableDependency(String, String, long, long, Urgency,
+     *     DependencyType, String, Comparable, Comparable, Comparable)}.
      */
     @Deprecated
     public ComparableDependency(
@@ -34,9 +30,18 @@ public abstract class ComparableDependency<T extends Comparable<T>> extends Abst
             @Nonnull final Urgency urgency,
             @Nonnull final T maxOK,
             @Nullable final T maxMinor,
-            @Nullable final T maxMajor
-    ) {
-        this(id, description, timeout, pingPeriod, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL, maxOK, maxMinor, maxMajor);
+            @Nullable final T maxMajor) {
+        this(
+                id,
+                description,
+                timeout,
+                pingPeriod,
+                urgency,
+                DEFAULT_TYPE,
+                DEFAULT_SERVICE_POOL,
+                maxOK,
+                maxMinor,
+                maxMajor);
     }
 
     public ComparableDependency(
@@ -49,8 +54,7 @@ public abstract class ComparableDependency<T extends Comparable<T>> extends Abst
             @Nonnull final String servicePool,
             @Nonnull final T maxOK,
             @Nullable final T maxMinor,
-            @Nullable final T maxMajor
-    ) {
+            @Nullable final T maxMajor) {
         super(id, description, timeout, pingPeriod, urgency, type, servicePool);
         this.maxOK = maxOK;
         this.maxMinor = maxMinor;
@@ -79,7 +83,8 @@ public abstract class ComparableDependency<T extends Comparable<T>> extends Abst
                 status = CheckStatus.OUTAGE;
             }
             final long duration = System.currentTimeMillis() - start;
-            final String errorMessage = formatErrorMessage(status, value, threshold, start, duration, null);
+            final String errorMessage =
+                    formatErrorMessage(status, value, threshold, start, duration, null);
             return CheckResult.newBuilder(this, status, errorMessage)
                     .setTimestamp(start)
                     .setDuration(duration)
@@ -87,7 +92,8 @@ public abstract class ComparableDependency<T extends Comparable<T>> extends Abst
 
         } catch (final Exception e) {
             final long duration = System.currentTimeMillis() - start;
-            final String errorMessage = formatErrorMessage(CheckStatus.OUTAGE, null, null, start, duration, e);
+            final String errorMessage =
+                    formatErrorMessage(CheckStatus.OUTAGE, null, null, start, duration, e);
             return CheckResult.newBuilder(this, CheckStatus.OUTAGE, errorMessage)
                     .setTimestamp(start)
                     .setDuration(duration)
@@ -98,5 +104,11 @@ public abstract class ComparableDependency<T extends Comparable<T>> extends Abst
 
     protected abstract T getValue() throws Exception;
 
-    protected abstract String formatErrorMessage(CheckStatus status, @Nullable T value, @Nullable T brokenThreshold, long timestamp, long duration, @Nullable Exception e);
+    protected abstract String formatErrorMessage(
+            CheckStatus status,
+            @Nullable T value,
+            @Nullable T brokenThreshold,
+            long timestamp,
+            long duration,
+            @Nullable Exception e);
 }

@@ -19,9 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-/**
- * author: cameron
- */
+/** author: cameron */
 public class DependencyPingerTest {
     private WallClock wallClock = new DefaultWallClock();
     private SystemReporter systemReporter = new SystemReporter(wallClock);
@@ -31,11 +29,13 @@ public class DependencyPingerTest {
         final StatusUpdateListener listener = EasyMock.createMock(StatusUpdateListener.class);
         final ControlledDependency dependency = ControlledDependency.build();
         dependency.setInError(true);
-        final DependencyPinger pinger = new DependencyPinger(ImmutableDependencyPingerParams.builder()
-                .executorService(MoreExecutors.newDirectExecutorService())
-                .dependency(dependency)
-                .systemReporter(systemReporter)
-                .build());
+        final DependencyPinger pinger =
+                new DependencyPinger(
+                        ImmutableDependencyPingerParams.builder()
+                                .executorService(MoreExecutors.newDirectExecutorService())
+                                .dependency(dependency)
+                                .systemReporter(systemReporter)
+                                .build());
         pinger.addListener(listener);
 
         final Capture<CheckResult> original = Capture.newInstance();
@@ -43,12 +43,15 @@ public class DependencyPingerTest {
         final Capture<CheckResult> checked = Capture.newInstance();
         EasyMock.reset(listener);
         listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
-        listener.onChanged(EasyMock.same(pinger), EasyMock.<CheckResult>isNull(), EasyMock.capture(updated));
+        listener.onChanged(
+                EasyMock.same(pinger), EasyMock.<CheckResult>isNull(), EasyMock.capture(updated));
         listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
-        listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
+        listener.onChanged(
+                EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
         listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
         listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
-        listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
+        listener.onChanged(
+                EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
         EasyMock.replay(listener);
 
         dependency.setInError(false);
@@ -86,12 +89,15 @@ public class DependencyPingerTest {
     @Test
     public void testWithUrgencyNone() throws Exception {
         final StatusUpdateListener listener = EasyMock.createMock(StatusUpdateListener.class);
-        final ControlledDependency dependency = ControlledDependency.builder().setUrgency(Urgency.NONE).build();
-        final DependencyPinger pinger = new DependencyPinger(ImmutableDependencyPingerParams.builder()
-                .executorService(MoreExecutors.newDirectExecutorService())
-                .dependency(dependency)
-                .systemReporter(systemReporter)
-                .build());
+        final ControlledDependency dependency =
+                ControlledDependency.builder().setUrgency(Urgency.NONE).build();
+        final DependencyPinger pinger =
+                new DependencyPinger(
+                        ImmutableDependencyPingerParams.builder()
+                                .executorService(MoreExecutors.newDirectExecutorService())
+                                .dependency(dependency)
+                                .systemReporter(systemReporter)
+                                .build());
         pinger.addListener(listener);
 
         final Capture<CheckResult> original = Capture.newInstance();
@@ -100,12 +106,15 @@ public class DependencyPingerTest {
         EasyMock.reset(listener);
 
         listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
-        listener.onChanged(EasyMock.same(pinger), EasyMock.<CheckResult>isNull(), EasyMock.capture(updated));
+        listener.onChanged(
+                EasyMock.same(pinger), EasyMock.<CheckResult>isNull(), EasyMock.capture(updated));
         listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
-        listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
+        listener.onChanged(
+                EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
         listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
         listener.onChecked(EasyMock.same(pinger), EasyMock.capture(checked));
-        listener.onChanged(EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
+        listener.onChanged(
+                EasyMock.same(pinger), EasyMock.capture(original), EasyMock.capture(updated));
 
         EasyMock.replay(listener);
 
@@ -142,11 +151,13 @@ public class DependencyPingerTest {
     public void testGradual() throws Exception {
         final ControlledDependency dependency = ControlledDependency.build();
         dependency.setInError(true);
-        final DependencyPinger pinger = new DependencyPinger(ImmutableDependencyPingerParams.builder()
-                .executorService(MoreExecutors.newDirectExecutorService())
-                .dependency(dependency)
-                .systemReporter(systemReporter)
-                .build());
+        final DependencyPinger pinger =
+                new DependencyPinger(
+                        ImmutableDependencyPingerParams.builder()
+                                .executorService(MoreExecutors.newDirectExecutorService())
+                                .dependency(dependency)
+                                .systemReporter(systemReporter)
+                                .build());
 
         // with no successes
         // expect that first time, call will run something
@@ -189,18 +200,24 @@ public class DependencyPingerTest {
     @Test
     public void testWithToggle() throws Exception {
         final AtomicBoolean toggle = new AtomicBoolean(true);
-        final ControlledDependency dependency = ControlledDependency.builder().setToggle(new Supplier<Boolean>() {
-            @Override
-            public Boolean get() {
-                return toggle.get();
-            }
-        }).build();
+        final ControlledDependency dependency =
+                ControlledDependency.builder()
+                        .setToggle(
+                                new Supplier<Boolean>() {
+                                    @Override
+                                    public Boolean get() {
+                                        return toggle.get();
+                                    }
+                                })
+                        .build();
         dependency.setInError(true);
-        final DependencyPinger pinger = new DependencyPinger(ImmutableDependencyPingerParams.builder()
-                .executorService(MoreExecutors.newDirectExecutorService())
-                .dependency(dependency)
-                .systemReporter(systemReporter)
-                .build());
+        final DependencyPinger pinger =
+                new DependencyPinger(
+                        ImmutableDependencyPingerParams.builder()
+                                .executorService(MoreExecutors.newDirectExecutorService())
+                                .dependency(dependency)
+                                .systemReporter(systemReporter)
+                                .build());
 
         assertEquals(CheckStatus.OUTAGE, pinger.call().getStatus());
         assertEquals(1, dependency.getTimes());
@@ -222,19 +239,25 @@ public class DependencyPingerTest {
         final StatusUpdateListener listener3 = EasyMock.createMock(StatusUpdateListener.class);
         final ControlledDependency dependency = ControlledDependency.build();
         dependency.setInError(true);
-        final DependencyPinger pinger = new DependencyPinger(ImmutableDependencyPingerParams.builder()
-                .executorService(MoreExecutors.newDirectExecutorService())
-                .dependency(dependency)
-                .systemReporter(systemReporter)
-                .build());
+        final DependencyPinger pinger =
+                new DependencyPinger(
+                        ImmutableDependencyPingerParams.builder()
+                                .executorService(MoreExecutors.newDirectExecutorService())
+                                .dependency(dependency)
+                                .systemReporter(systemReporter)
+                                .build());
         pinger.addListener(listener1);
         pinger.addListener(listener2);
         pinger.addListener(listener3);
         final Iterator<StatusUpdateListener> actual = pinger.listeners();
-        assertEquals(ImmutableList.of(listener1, listener2, listener3), Arrays.asList(Iterators.toArray(actual, StatusUpdateListener.class)));
+        assertEquals(
+                ImmutableList.of(listener1, listener2, listener3),
+                Arrays.asList(Iterators.toArray(actual, StatusUpdateListener.class)));
 
         // verify no ConcurrentModificationException
-        for (final Iterator<StatusUpdateListener> it = pinger.listeners(); it.hasNext() ; it.next()) {
+        for (final Iterator<StatusUpdateListener> it = pinger.listeners();
+                it.hasNext();
+                it.next()) {
             pinger.addListener(EasyMock.createMock(StatusUpdateListener.class));
         }
     }

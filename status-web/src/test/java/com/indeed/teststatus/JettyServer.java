@@ -9,8 +9,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import java.io.File;
 
 /**
- * The <code>JettyServer</code> class represents a singleton that may be used to
- *  spin up a singleton Jetty instance for test purposes.
+ * The <code>JettyServer</code> class represents a singleton that may be used to spin up a singleton
+ * Jetty instance for test purposes.
  */
 public class JettyServer {
 
@@ -36,7 +36,7 @@ public class JettyServer {
             final String customPortName = System.getProperty("unit.test.http.port");
             result = null == customPortName ? TEST_PORT : Integer.valueOf(customPortName);
 
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             result = TEST_PORT;
         }
 
@@ -47,14 +47,16 @@ public class JettyServer {
         return null != server && server.isStarted();
     }
 
-    public void start ( final String host, final int port, final File root ) throws Exception {
+    public void start(final String host, final int port, final File root) throws Exception {
         if (!isStarted()) {
-            final ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+            final ServletContextHandler handler =
+                    new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
             handler.setContextPath("/");
             handler.addServlet(new ServletHolder(new StrictServlet()), "/public/json");
             handler.addServlet(new ServletHolder(new PermissiveServlet()), "/private/json");
 
-            // TODO cache servers by hostspec. This will allow multiple instances to be executed e.g. in Hudson.
+            // TODO cache servers by hostspec. This will allow multiple instances to be executed
+            // e.g. in Hudson.
             server = new Server(port);
             server.setHandler(handler);
             server.start();
@@ -62,23 +64,20 @@ public class JettyServer {
     }
 
     public void stop() throws Exception {
-        if ( isStarted()  ) {
+        if (isStarted()) {
             server.stop();
         }
 
         server = null;
     }
 
-    /**
-     * Start the test server with default values to enable debugging.
-     */
+    /** Start the test server with default values to enable debugging. */
     public static void main(final String[] args) throws Exception {
         INSTANCE.start();
 
-        for(;;) {
+        for (; ; ) {
             Thread.sleep(5000);
         }
-
     }
 
     private static final String TEST_HOST = "localhost";

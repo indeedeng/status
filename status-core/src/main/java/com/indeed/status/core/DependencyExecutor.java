@@ -3,9 +3,7 @@ package com.indeed.status.core;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-/**
- * @author matts
- */
+/** @author matts */
 public interface DependencyExecutor {
     Future<CheckResult> submit(final Dependency dependency);
 

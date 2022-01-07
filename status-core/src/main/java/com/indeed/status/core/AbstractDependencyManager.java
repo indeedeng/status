@@ -31,10 +31,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * The {@link AbstractDependencyManager} is a singleton clearinghouse responsible for knowing
- * all dependencies of the system and their current availability.
+ * The {@link AbstractDependencyManager} is a singleton clearinghouse responsible for knowing all
+ * dependencies of the system and their current availability.
  */
-abstract public class AbstractDependencyManager implements StatusUpdateProducer, StatusUpdateListener/*,Terminable todo(cameron)*/ {
+public abstract class AbstractDependencyManager
+        implements StatusUpdateProducer, StatusUpdateListener /*,Terminable todo(cameron)*/ {
     private static final int DEFAULT_PING_PERIOD = 30 * 1000; // 30 seconds
     private static final AtomicInteger DEFAULT_THREAD_POOL_COUNT = new AtomicInteger(1);
     private static final AtomicInteger MANAGEMENT_THREAD_POOL_COUNT = new AtomicInteger(1);
@@ -55,182 +56,236 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     private final StatusUpdateDelegate updateHandler = new StatusUpdateDelegate();
 
     /// Collection of all dependencies governed by this manager. The keys of this map are the unique
-    ///  String identifiers of each dependency. The values are the immutable objects representing the
+    ///  String identifiers of each dependency. The values are the immutable objects representing
+    // the
     ///  canonical view of each dependency. This map does <em>not</em> indicate the current status
     ///  of dependencies, but rather the set of dependencies that are registered with the system.
     @Nonnull private final ConcurrentMap<String, Dependency> dependencies = Maps.newConcurrentMap();
 
-    /// Collection of all dependency pingers that have been created to monitor the health of a dependency.
+    /// Collection of all dependency pingers that have been created to monitor the health of a
+    // dependency.
     /// Once a dependency is removed from the manager, its associated pinger is cancelled.
-    @Nonnull private final ConcurrentMap<String, ScheduledFuture<?>> dependencyPingers = Maps.newConcurrentMap();
+    @Nonnull
+    private final ConcurrentMap<String, ScheduledFuture<?>> dependencyPingers =
+            Maps.newConcurrentMap();
 
     private long pingPeriod = DEFAULT_PING_PERIOD;
 
     public static class Qualifiers {
-        protected Qualifiers () { throw new UnsupportedOperationException("ResultType is a constants class."); }
+        protected Qualifiers() {
+            throw new UnsupportedOperationException("ResultType is a constants class.");
+        }
 
         public static final String LIVE = "live";
-        public static final String BACKGROUND = "bkgd"; // NOTE: Varying slightly from the "background" string used by client projects
-                                                        //  just so we don't trip somebody up.
+        public static final String BACKGROUND =
+                "bkgd"; // NOTE: Varying slightly from the "background" string used by client
+        // projects
+        //  just so we don't trip somebody up.
     }
 
-    /** Use {@link #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)} */
+    /**
+     * Use {@link
+     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
     @Deprecated
     public AbstractDependencyManager() {
         this(ImmutableDependencyManagerParams.builder().build());
     }
 
-    /** Use {@link #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)} */
+    /**
+     * Use {@link
+     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
     @Deprecated
     public AbstractDependencyManager(final String appName) {
-        this(ImmutableDependencyManagerParams.builder()
-                .appName(appName)
-                .build());
+        this(ImmutableDependencyManagerParams.builder().appName(appName).build());
     }
 
-    /** Use {@link #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)} */
+    /**
+     * Use {@link
+     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
     @Deprecated
-    public AbstractDependencyManager (final String appName, final org.apache.log4j.Logger logger) {
-        this(ImmutableDependencyManagerParams.builder()
-                .appName(appName)
-                .loggerName(logger == null ? null : logger.getName())
-                .build());
+    public AbstractDependencyManager(final String appName, final org.apache.log4j.Logger logger) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .build());
     }
 
-    /** Use {@link #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)} */
+    /**
+     * Use {@link
+     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
     @Deprecated
     public AbstractDependencyManager(
             final String appName,
             final org.apache.log4j.Logger logger,
-            @Nonnull final SystemReporter systemReporter
-    ) {
-        this(ImmutableDependencyManagerParams.builder()
-                .appName(appName)
-                .loggerName(logger == null ? null : logger.getName())
-                .systemReporter(systemReporter)
-                .build());
+            @Nonnull final SystemReporter systemReporter) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .systemReporter(systemReporter)
+                        .build());
     }
 
-    /** Use {@link #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)} */
+    /**
+     * Use {@link
+     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
     @Deprecated
     public AbstractDependencyManager(
             final String appName,
             final org.apache.log4j.Logger logger,
             @Nonnull final SystemReporter systemReporter,
-            final boolean throttleDependencyChecks
-    ) {
-        this(ImmutableDependencyManagerParams.builder()
-                .appName(appName)
-                .loggerName(logger == null ? null : logger.getName())
-                .systemReporter(systemReporter)
-                .throttleDependencyChecks(throttleDependencyChecks)
-                .build());
+            final boolean throttleDependencyChecks) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .systemReporter(systemReporter)
+                        .throttleDependencyChecks(throttleDependencyChecks)
+                        .build());
     }
 
-    /** Use {@link #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)} */
+    /**
+     * Use {@link
+     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
     @Deprecated
     public AbstractDependencyManager(
             @Nullable final String appName,
             @Nullable final org.apache.log4j.Logger logger,
-            @Nonnull final DependencyChecker checker
-    ) {
-        this(ImmutableDependencyManagerParams.builder()
-                .appName(appName)
-                .loggerName(logger == null ? null : logger.getName())
-                .checker(checker)
-                .build());
+            @Nonnull final DependencyChecker checker) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .checker(checker)
+                        .build());
     }
 
-    /** Use {@link #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)} */
+    /**
+     * Use {@link
+     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
     @Deprecated
     public AbstractDependencyManager(
             @Nullable final String appName,
             @Nullable final org.apache.log4j.Logger logger,
-            @Nonnull final ThreadPoolExecutor threadPool
-    ) {
-        this(ImmutableDependencyManagerParams.builder()
-                .appName(appName)
-                .loggerName(logger == null ? null : logger.getName())
-                .threadPool(threadPool)
-                .build());
+            @Nonnull final ThreadPoolExecutor threadPool) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .threadPool(threadPool)
+                        .build());
     }
 
-    /** Use {@link #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)} */
-    @Deprecated
-    public AbstractDependencyManager(
-            @Nullable final String appName,
-            @Nullable final org.apache.log4j.Logger logger,
-            @Nonnull final ThreadPoolExecutor threadPool,
-            @Nonnull final WallClock wallClock
-    ) {
-        this(ImmutableDependencyManagerParams.builder()
-                .appName(appName)
-                .loggerName(logger == null ? null : logger.getName())
-                .threadPool(threadPool)
-                .wallClock(wallClock)
-                .build());
-    }
-
-    /** Use {@link #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)} */
+    /**
+     * Use {@link
+     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
     @Deprecated
     public AbstractDependencyManager(
             @Nullable final String appName,
             @Nullable final org.apache.log4j.Logger logger,
             @Nonnull final ThreadPoolExecutor threadPool,
-            @Nonnull final SystemReporter systemReporter
-    ) {
-        this(ImmutableDependencyManagerParams.builder()
-                .appName(appName)
-                .loggerName(logger == null ? null : logger.getName())
-                .threadPool(threadPool)
-                .systemReporter(systemReporter)
-                .build());
+            @Nonnull final WallClock wallClock) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .threadPool(threadPool)
+                        .wallClock(wallClock)
+                        .build());
     }
 
-    /** Use {@link #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)} */
+    /**
+     * Use {@link
+     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
+    @Deprecated
+    public AbstractDependencyManager(
+            @Nullable final String appName,
+            @Nullable final org.apache.log4j.Logger logger,
+            @Nonnull final ThreadPoolExecutor threadPool,
+            @Nonnull final SystemReporter systemReporter) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .threadPool(threadPool)
+                        .systemReporter(systemReporter)
+                        .build());
+    }
+
+    /**
+     * Use {@link
+     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
     @Deprecated
     public AbstractDependencyManager(
             @Nullable final String appName,
             @Nullable final org.apache.log4j.Logger logger,
             @Nonnull final ThreadPoolExecutor threadPool,
             @Nonnull final SystemReporter systemReporter,
-            final boolean throttleDependencyChecks
-    ) {
-        this(ImmutableDependencyManagerParams.builder()
-                .appName(appName)
-                .loggerName(logger == null ? null : logger.getName())
-                .threadPool(threadPool)
-                .systemReporter(systemReporter)
-                .throttleDependencyChecks(throttleDependencyChecks)
-                .build());
+            final boolean throttleDependencyChecks) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .threadPool(threadPool)
+                        .systemReporter(systemReporter)
+                        .throttleDependencyChecks(throttleDependencyChecks)
+                        .build());
     }
 
-    /** Use {@link #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)} */
+    /**
+     * Use {@link
+     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
     @Deprecated
     public AbstractDependencyManager(
             @Nullable final String appName,
             @Nullable final org.apache.log4j.Logger logger,
             @Nonnull final ThreadPoolExecutor threadPool,
-            @Nonnull final DependencyChecker checker
-    ) {
-        this(ImmutableDependencyManagerParams.builder()
-                .appName(appName)
-                .loggerName(logger == null ? null : logger.getName())
-                .threadPool(threadPool)
-                .checker(checker)
-                .build());
+            @Nonnull final DependencyChecker checker) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .threadPool(threadPool)
+                        .checker(checker)
+                        .build());
     }
 
     public AbstractDependencyManager(final AbstractDependencyManagerParams params) {
         this.appName = Strings.isNullOrEmpty(params.appName()) ? null : params.appName();
-        this.log = null == params.loggerName() ? LoggerFactory.getLogger(getClass()) : LoggerFactory.getLogger(params.loggerName());
+        this.log =
+                null == params.loggerName()
+                        ? LoggerFactory.getLogger(getClass())
+                        : LoggerFactory.getLogger(params.loggerName());
 
-        this.executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder()
-                .setNameFormat("dependency-management-" + MANAGEMENT_THREAD_POOL_COUNT.getAndIncrement() + "-thread-%d")
-                .setDaemon(true)
-                .setUncaughtExceptionHandler((t, e) -> log.error("Uncaught throwable in thread " + t.getName() + "/" + t.getId(), e))
-                .build()
-        );
+        this.executor =
+                Executors.newSingleThreadScheduledExecutor(
+                        new ThreadFactoryBuilder()
+                                .setNameFormat(
+                                        "dependency-management-"
+                                                + MANAGEMENT_THREAD_POOL_COUNT.getAndIncrement()
+                                                + "-thread-%d")
+                                .setDaemon(true)
+                                .setUncaughtExceptionHandler(
+                                        (t, e) ->
+                                                log.error(
+                                                        "Uncaught throwable in thread "
+                                                                + t.getName()
+                                                                + "/"
+                                                                + t.getId(),
+                                                        e))
+                                .build());
 
         this.threadPool = params.threadPool();
 
@@ -250,36 +305,60 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     }
 
     static ThreadPoolExecutor newDefaultThreadPool() {
-        final ThreadPoolExecutor result = new ThreadPoolExecutor(
-                // Bound the pool. Most foreground dependency managers should be called only very rarely, so
-                //  keep a minimal core pool around and only grow it on demand.
-                1, 16,
-                // Threads will be kept alive in an idle state for a minute or two. After that, they may be
-                //  garbage-collected, so that we're keeping a larger thread pool only during weird periods of
-                //  congestion. (Note: the background manager will typically keep all threads pretty active, since it's
-                //  repeatedly launching new pingers. The live manager will spin them up and down based on traffic to
-                //  the rather uncommonly used /healthcheck/live uri).
-                30, TimeUnit.SECONDS,
-                // Use a blocking queue just to keep track of checks when the world is going wrong. This is mostly useful
-                //  when we're adding a bunch of checks at the same time, such as during a live healthcheck. Might as well
-                //  keep this pretty small, because any nontrivial wait to execute is going to blow up a timeout anyway.
-                new SynchronousQueue<Runnable>(),
-                // Name your threads.
-                new ThreadFactoryBuilder()
-                        .setNameFormat("dependency-default-" + DEFAULT_THREAD_POOL_COUNT.getAndIncrement() + "-checker-%d")
-                        .setDaemon(true)
-                        .setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
-                            @Override
-                            public void uncaughtException(Thread t, Throwable e) {
-                                LoggerFactory.getLogger(AbstractDependencyManager.class)
-                                        .error("Uncaught throwable in thread " + t.getName() + "/" + t.getId(), e);
-                            }
-                        })
-                        .build(),
-                // Explicitly restating the default policy here, because healthchecks should Just Not Work if there
-                //  are insufficient resources to support them. Given the smallish queue above, this means that
-                //  we're going to end up throwing exceptions if we get too blocked up somehow.
-                new AbortPolicy());
+        final ThreadPoolExecutor result =
+                new ThreadPoolExecutor(
+                        // Bound the pool. Most foreground dependency managers should be called only
+                        // very rarely, so
+                        //  keep a minimal core pool around and only grow it on demand.
+                        1,
+                        16,
+                        // Threads will be kept alive in an idle state for a minute or two. After
+                        // that, they may be
+                        //  garbage-collected, so that we're keeping a larger thread pool only
+                        // during weird periods of
+                        //  congestion. (Note: the background manager will typically keep all
+                        // threads pretty active, since it's
+                        //  repeatedly launching new pingers. The live manager will spin them up and
+                        // down based on traffic to
+                        //  the rather uncommonly used /healthcheck/live uri).
+                        30,
+                        TimeUnit.SECONDS,
+                        // Use a blocking queue just to keep track of checks when the world is going
+                        // wrong. This is mostly useful
+                        //  when we're adding a bunch of checks at the same time, such as during a
+                        // live healthcheck. Might as well
+                        //  keep this pretty small, because any nontrivial wait to execute is going
+                        // to blow up a timeout anyway.
+                        new SynchronousQueue<Runnable>(),
+                        // Name your threads.
+                        new ThreadFactoryBuilder()
+                                .setNameFormat(
+                                        "dependency-default-"
+                                                + DEFAULT_THREAD_POOL_COUNT.getAndIncrement()
+                                                + "-checker-%d")
+                                .setDaemon(true)
+                                .setUncaughtExceptionHandler(
+                                        new UncaughtExceptionHandler() {
+                                            @Override
+                                            public void uncaughtException(Thread t, Throwable e) {
+                                                LoggerFactory.getLogger(
+                                                                AbstractDependencyManager.class)
+                                                        .error(
+                                                                "Uncaught throwable in thread "
+                                                                        + t.getName()
+                                                                        + "/"
+                                                                        + t.getId(),
+                                                                e);
+                                            }
+                                        })
+                                .build(),
+                        // Explicitly restating the default policy here, because healthchecks should
+                        // Just Not Work if there
+                        //  are insufficient resources to support them. Given the smallish queue
+                        // above, this means that
+                        //  we're going to end up throwing exceptions if we get too blocked up
+                        // somehow.
+                        new AbortPolicy());
 
         result.prestartAllCoreThreads();
 
@@ -298,7 +377,8 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
 
     @Nullable
     public CheckResult evaluate(@Nonnull final String id) {
-        final Dependency dependency = checkNotNull(dependencies.get(id), "Missing dependency '%s'", id);
+        final Dependency dependency =
+                checkNotNull(dependencies.get(id), "Missing dependency '%s'", id);
         return evaluate(Collections.singleton(dependency)).get(id);
     }
 
@@ -312,8 +392,8 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     }
 
     /**
-     * Launches a background pinger over the given dependency. The periodicity of the
-     * check is controlled by the dependency manager object.
+     * Launches a background pinger over the given dependency. The periodicity of the check is
+     * controlled by the dependency manager object.
      *
      * @param dependency
      */
@@ -326,36 +406,45 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
         // unpredictably.
         pinger.addListener(updateHandler);
 
-        // Note: we can assume the id is unique and the dependency is not duplicated because of the check
+        // Note: we can assume the id is unique and the dependency is not duplicated because of the
+        // check
         // in AbstractDependencyManager#addDependency
-        dependencyPingers.computeIfAbsent(dependency.getId(), dependencyId ->
-                executor.scheduleWithFixedDelay(pinger, 0, pinger.getPingPeriod(), TimeUnit.MILLISECONDS));
+        dependencyPingers.computeIfAbsent(
+                dependency.getId(),
+                dependencyId ->
+                        executor.scheduleWithFixedDelay(
+                                pinger, 0, pinger.getPingPeriod(), TimeUnit.MILLISECONDS));
 
         addDependency(pinger);
     }
 
-    protected DependencyPinger newPingerFor (final Dependency dependency) {
+    protected DependencyPinger newPingerFor(final Dependency dependency) {
         final DependencyPinger pinger;
         final long dependencyPingPeriod = dependency.getPingPeriod();
-        if (dependencyPingPeriod <= 0 || dependencyPingPeriod == AbstractDependency.DEFAULT_PING_PERIOD) {
+        if (dependencyPingPeriod <= 0
+                || dependencyPingPeriod == AbstractDependency.DEFAULT_PING_PERIOD) {
             log.info("Creating pinger with ping period " + pingPeriod);
-            pinger = new DependencyPinger(ImmutableDependencyPingerParams.builder()
-                    .dependency(dependency)
-                    .pingPeriod(pingPeriod)
-                    .checker(checker)
-                    .build());
+            pinger =
+                    new DependencyPinger(
+                            ImmutableDependencyPingerParams.builder()
+                                    .dependency(dependency)
+                                    .pingPeriod(pingPeriod)
+                                    .checker(checker)
+                                    .build());
 
         } else {
             log.info("Creating pinger with ping period " + dependency.getPingPeriod());
-            pinger = new DependencyPinger(ImmutableDependencyPingerParams.builder()
-                    .dependency(dependency)
-                    .checker(checker)
-                    .build());
+            pinger =
+                    new DependencyPinger(
+                            ImmutableDependencyPingerParams.builder()
+                                    .dependency(dependency)
+                                    .checker(checker)
+                                    .build());
         }
         return pinger;
     }
 
-    public Dependency getDependency (final String id) {
+    public Dependency getDependency(final String id) {
         return dependencies.get(id);
     }
 
@@ -368,13 +457,16 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
             dependencyToAdd = dependency;
         }
 
-        final Dependency existing = dependencies.putIfAbsent(dependencyToAdd.getId(), dependencyToAdd);
+        final Dependency existing =
+                dependencies.putIfAbsent(dependencyToAdd.getId(), dependencyToAdd);
 
         Preconditions.checkState(
                 null == existing,
-                "Can't have two dependencies with the same ID [%s]. Check your setup.", dependencyToAdd.getId());
+                "Can't have two dependencies with the same ID [%s]. Check your setup.",
+                dependencyToAdd.getId());
 
-        // Direct this through the update-handler so that we don't inadvertently alert ourselves that we added a dependency
+        // Direct this through the update-handler so that we don't inadvertently alert ourselves
+        // that we added a dependency
         updateHandler.onAdded(dependencyToAdd);
     }
 
@@ -399,7 +491,10 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     }
 
     @Override
-    public void onChanged (@Nonnull final Dependency source, @Nullable final CheckResult original, @Nonnull final CheckResult updated) {
+    public void onChanged(
+            @Nonnull final Dependency source,
+            @Nullable final CheckResult original,
+            @Nonnull final CheckResult updated) {
         updateHandler.onChanged(source, original, updated);
     }
 
@@ -419,12 +514,12 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
     }
 
     @Override
-    public void clear () {
+    public void clear() {
         updateHandler.clear();
     }
 
     @Override
-    public void addListener (final StatusUpdateListener listener) {
+    public void addListener(final StatusUpdateListener listener) {
         updateHandler.addListener(listener);
     }
 
@@ -439,22 +534,22 @@ abstract public class AbstractDependencyManager implements StatusUpdateProducer,
 
     /*@Override todo(cameron)*/
     @PreDestroy
-    public void shutdown () {
+    public void shutdown() {
         this.checker.shutdown();
         this.executor.shutdownNow();
     }
 
-    @Export (name="active-threads")
+    @Export(name = "active-threads")
     public int getActiveDependencyThreads() {
         return threadPool.getActiveCount();
     }
 
-    @Export(name="core-pool-size")
+    @Export(name = "core-pool-size")
     public int getCorePoolSize() {
         return threadPool.getCorePoolSize();
     }
 
-    @Export(name="queue-size")
+    @Export(name = "queue-size")
     public int getQueueSize() {
         final BlockingQueue<Runnable> queue = threadPool.getQueue();
         return null == queue ? 0 : queue.size();

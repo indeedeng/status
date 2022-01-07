@@ -21,20 +21,28 @@ public abstract class DependencyPingerParams {
 
     @Value.Default
     public DependencyChecker checker() {
-        return new DependencyChecker(ImmutableDependencyCheckerParams.builder()
-                .executorService(executorService())
-                .systemReporter(systemReporter())
-                .build());
+        return new DependencyChecker(
+                ImmutableDependencyCheckerParams.builder()
+                        .executorService(executorService())
+                        .systemReporter(systemReporter())
+                        .build());
     }
 
     @Value.Default
     public ExecutorService executorService() {
-        return Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
-                .setNameFormat("dependency-pinger-%d")
-                .setDaemon(true)
-                .setUncaughtExceptionHandler((t, e) -> log.error("Uncaught throwable in thread " + t.getName() + "/" + t.getId(), e))
-                .build()
-        );
+        return Executors.newSingleThreadExecutor(
+                new ThreadFactoryBuilder()
+                        .setNameFormat("dependency-pinger-%d")
+                        .setDaemon(true)
+                        .setUncaughtExceptionHandler(
+                                (t, e) ->
+                                        log.error(
+                                                "Uncaught throwable in thread "
+                                                        + t.getName()
+                                                        + "/"
+                                                        + t.getId(),
+                                                e))
+                        .build());
     }
 
     @Value.Default

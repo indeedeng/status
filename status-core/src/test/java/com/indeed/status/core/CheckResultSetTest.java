@@ -46,9 +46,11 @@ public class CheckResultSetTest {
         assertDowngradeStatus(NONE, OUTAGE, OK);
     }
 
-    private void assertDowngradeStatus(Urgency depUrgency, CheckStatus checkStatus, CheckStatus sysStatus) {
+    private void assertDowngradeStatus(
+            Urgency depUrgency, CheckStatus checkStatus, CheckStatus sysStatus) {
         final CheckResultSet set = CheckResultSet.newInstance();
-        final ControlledDependency dep = ControlledDependency.builder().setUrgency(depUrgency).build();
+        final ControlledDependency dep =
+                ControlledDependency.builder().setUrgency(depUrgency).build();
         dep.setInError(false);
 
         set.handleInit(dep);
