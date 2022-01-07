@@ -17,7 +17,6 @@ import java.io.IOException;
 
 /** @author Matt Schemmel */
 public abstract class AbstractDaemonCheckReportServlet extends HttpServlet {
-    /// Instance logger available for use by subclasses.
     private final Logger log = LoggerFactory.getLogger(getClass());
     // Set-once, read-many
     private AbstractDependencyManager manager;

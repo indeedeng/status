@@ -26,13 +26,21 @@ import java.util.concurrent.TimeoutException;
  * @author matts
  */
 class DependencyChecker /*implements Terminable todo(cameron)*/ {
+    private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(DependencyChecker.class);
+
     @Nonnull private final DependencyExecutor dependencyExecutor;
     @Nonnull private final SystemReporter systemReporter;
     @Nonnull private final Logger log;
     private final boolean throttle;
 
     public DependencyChecker(final DependencyCheckerParams params) {
-        this.log = params.logger();
+        final String loggerName = params.loggerName();
+        if (loggerName != null) {
+            this.log = LoggerFactory.getLogger(loggerName);
+        } else {
+            this.log = DEFAULT_LOGGER;
+        }
+
         this.dependencyExecutor = params.dependencyExecutor();
         this.systemReporter = params.systemReporter();
         this.throttle = params.throttle();

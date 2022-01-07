@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.PreDestroy;
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -84,8 +83,8 @@ public abstract class AbstractDependencyManager
     }
 
     /**
-     * Use {@link
-     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
      */
     @Deprecated
     public AbstractDependencyManager() {
@@ -93,8 +92,8 @@ public abstract class AbstractDependencyManager
     }
 
     /**
-     * Use {@link
-     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
      */
     @Deprecated
     public AbstractDependencyManager(final String appName) {
@@ -102,8 +101,8 @@ public abstract class AbstractDependencyManager
     }
 
     /**
-     * Use {@link
-     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
      */
     @Deprecated
     public AbstractDependencyManager(final String appName, final org.apache.log4j.Logger logger) {
@@ -115,8 +114,8 @@ public abstract class AbstractDependencyManager
     }
 
     /**
-     * Use {@link
-     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
      */
     @Deprecated
     public AbstractDependencyManager(
@@ -132,8 +131,8 @@ public abstract class AbstractDependencyManager
     }
 
     /**
-     * Use {@link
-     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
      */
     @Deprecated
     public AbstractDependencyManager(
@@ -151,8 +150,8 @@ public abstract class AbstractDependencyManager
     }
 
     /**
-     * Use {@link
-     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
      */
     @Deprecated
     public AbstractDependencyManager(
@@ -168,8 +167,8 @@ public abstract class AbstractDependencyManager
     }
 
     /**
-     * Use {@link
-     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
      */
     @Deprecated
     public AbstractDependencyManager(
@@ -185,8 +184,8 @@ public abstract class AbstractDependencyManager
     }
 
     /**
-     * Use {@link
-     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
      */
     @Deprecated
     public AbstractDependencyManager(
@@ -204,8 +203,8 @@ public abstract class AbstractDependencyManager
     }
 
     /**
-     * Use {@link
-     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
      */
     @Deprecated
     public AbstractDependencyManager(
@@ -223,8 +222,8 @@ public abstract class AbstractDependencyManager
     }
 
     /**
-     * Use {@link
-     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
      */
     @Deprecated
     public AbstractDependencyManager(
@@ -244,8 +243,8 @@ public abstract class AbstractDependencyManager
     }
 
     /**
-     * Use {@link
-     * #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
      */
     @Deprecated
     public AbstractDependencyManager(
@@ -329,7 +328,7 @@ public abstract class AbstractDependencyManager
                         // live healthcheck. Might as well
                         //  keep this pretty small, because any nontrivial wait to execute is going
                         // to blow up a timeout anyway.
-                        new SynchronousQueue<Runnable>(),
+                        new SynchronousQueue<>(),
                         // Name your threads.
                         new ThreadFactoryBuilder()
                                 .setNameFormat(
@@ -338,9 +337,7 @@ public abstract class AbstractDependencyManager
                                                 + "-checker-%d")
                                 .setDaemon(true)
                                 .setUncaughtExceptionHandler(
-                                        new UncaughtExceptionHandler() {
-                                            @Override
-                                            public void uncaughtException(Thread t, Throwable e) {
+                                        (t, e) ->
                                                 LoggerFactory.getLogger(
                                                                 AbstractDependencyManager.class)
                                                         .error(
@@ -348,9 +345,7 @@ public abstract class AbstractDependencyManager
                                                                         + t.getName()
                                                                         + "/"
                                                                         + t.getId(),
-                                                                e);
-                                            }
-                                        })
+                                                                e))
                                 .build(),
                         // Explicitly restating the default policy here, because healthchecks should
                         // Just Not Work if there
