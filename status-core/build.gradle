@@ -1,25 +1,21 @@
-plugins {
-    id 'java'
-}
-
-ext['indeed.publish.name'] = 'status-core'
+indeedOss.activateFeature 'library'
+indeedLibrary.name = 'status-core'
 
 dependencies {
-    compile library('org.slf4j:slf4j-api')
-    compile 'com.indeed:util-core:1.0.19', {
-        exclude group: 'log4j'
-    }
-    compile 'com.indeed:util-varexport:1.0.19', {
-        exclude group: 'log4j'
-    }
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1'
-    compile library('com.google.guava:guava')
-    compileOnly 'org.immutables:value:2.8.8'
-    annotationProcessor 'org.immutables:value:2.8.8'
+    implementation libs.slf4jApi
+    implementation libs.indeedUtilCore
+    implementation libs.indeedUtilVarexport
+    implementation libs.jackson
+    implementation libs.guava
+
     compileOnly project(':log4j1dummyshim')
     testCompileOnly project(':log4j1dummyshim')
 
-    compileOnly library('com.google.code.findbugs:jsr305')
-    testCompile library('junit:junit')
-    testCompile library('org.easymock:easymock')
+    compileOnly 'javax.annotation:javax.annotation-api:1.3.2'
+
+    compileOnly libs.jsr305
+    testCompileOnly libs.jsr305
+
+    testImplementation libs.junit
+    testImplementation libs.easymock
 }
