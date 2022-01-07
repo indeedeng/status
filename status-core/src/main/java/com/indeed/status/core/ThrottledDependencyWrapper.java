@@ -2,9 +2,9 @@ package com.indeed.status.core;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** *
- * The <code>ThrottledDependencyWrapper</code> is a wrapper around another dependency, and prevents too many concurrent
- *  executions of the same healthcheck.
+/**
+ * * The <code>ThrottledDependencyWrapper</code> is a wrapper around another dependency, and
+ * prevents too many concurrent executions of the same healthcheck.
  *
  * @author dkraft
  */
@@ -22,7 +22,7 @@ public class ThrottledDependencyWrapper implements Dependency {
         try {
             before();
             return dependency.call();
-        } catch(final IllegalStateException e) {
+        } catch (final IllegalStateException e) {
             return CheckResult.newBuilder(this, CheckStatus.OUTAGE, "Exception thrown during ping")
                     .setThrowable(e)
                     .build();
@@ -36,9 +36,10 @@ public class ThrottledDependencyWrapper implements Dependency {
         // DependencyChecker can't guarantee that it can cancel a running healthcheck.
         if (numberOfRunningHealthChecks.incrementAndGet() > 2) {
             throw new IllegalStateException(
-                    String.format("Unable to ping dependency %s because there are already two previous pings that haven't " +
-                            "returned. To turn off this behavior set throttle to false.", getId())
-            );
+                    String.format(
+                            "Unable to ping dependency %s because there are already two previous pings that haven't "
+                                    + "returned. To turn off this behavior set throttle to false.",
+                            getId()));
         }
     }
 

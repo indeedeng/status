@@ -1,27 +1,36 @@
 package com.indeed.status.core;
 
 import com.google.common.util.concurrent.AtomicDouble;
-import com.indeed.status.core.CheckResult;
-import com.indeed.status.core.CheckStatus;
-import com.indeed.status.core.Urgency;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * @author xinjianz
- */
+/** @author xinjianz */
 public class SlideWindowDependencyTest {
 
     private static final class TestDependency extends SlideWindowDependency {
         private final AtomicDouble failedRatio;
         private final AtomicLong time;
-        TestDependency(final AtomicDouble failedRatio, final AtomicLong time,
-                       final double maxOK, final double maxMinor,
-                       final double maxMajor, final long timeInterval) {
-            super("testId", "testDescription", 10, 10, Urgency.REQUIRED, maxOK, maxMinor, maxMajor, timeInterval);
+
+        TestDependency(
+                final AtomicDouble failedRatio,
+                final AtomicLong time,
+                final double maxOK,
+                final double maxMinor,
+                final double maxMajor,
+                final long timeInterval) {
+            super(
+                    "testId",
+                    "testDescription",
+                    10,
+                    10,
+                    Urgency.REQUIRED,
+                    maxOK,
+                    maxMinor,
+                    maxMajor,
+                    timeInterval);
             this.failedRatio = failedRatio;
             this.time = time;
         }
@@ -56,7 +65,8 @@ public class SlideWindowDependencyTest {
         final AtomicDouble failedRatio = new AtomicDouble(0);
         final AtomicLong time = new AtomicLong(System.currentTimeMillis());
         final double errorRange = 0.0001;
-        final TestDependency testDependency = new TestDependency(failedRatio, time, 0.05, 0.1, 0.2, 600 * 1000);
+        final TestDependency testDependency =
+                new TestDependency(failedRatio, time, 0.05, 0.1, 0.2, 600 * 1000);
         // Test OK
         CheckResult checkResult = testDependency.call();
         assertEquals(CheckStatus.OK, checkResult.getStatus());

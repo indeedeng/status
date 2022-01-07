@@ -12,32 +12,33 @@ import java.util.concurrent.TimeUnit;
 public class ThreadedDependencyExecutor implements DependencyExecutor {
     private final ExecutorService executor;
 
-    public ThreadedDependencyExecutor (final ExecutorService executor) {
+    public ThreadedDependencyExecutor(final ExecutorService executor) {
         this.executor = executor;
     }
 
     @Override
-    public Future<CheckResult> submit (final Dependency dependency) {
+    public Future<CheckResult> submit(final Dependency dependency) {
         return executor.submit(dependency);
     }
 
     @Override
-    public void resolve (final Dependency dependency) {
+    public void resolve(final Dependency dependency) {
         // no-op
     }
 
     @Override
-    public boolean isShutdown () {
+    public boolean isShutdown() {
         return executor.isShutdown();
     }
 
     @Override
-    public void shutdown () {
+    public void shutdown() {
         executor.shutdown();
     }
 
     @Override
-    public void awaitTermination (final long duration, final TimeUnit unit) throws InterruptedException {
+    public void awaitTermination(final long duration, final TimeUnit unit)
+            throws InterruptedException {
         executor.awaitTermination(duration, unit);
     }
 }

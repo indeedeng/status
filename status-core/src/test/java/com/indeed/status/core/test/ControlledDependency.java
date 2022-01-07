@@ -7,24 +7,22 @@ import com.indeed.status.core.Urgency;
 
 import javax.annotation.Nonnull;
 
-/**
- * author: cameron
- */
+/** author: cameron */
 public class ControlledDependency extends PingableDependency {
     public static final RuntimeException EXCEPTION = new RuntimeException("BAD");
-    @Nonnull
-    private final Supplier<Boolean> toggle;
+    @Nonnull private final Supplier<Boolean> toggle;
     private boolean inError = true;
     private int times;
 
-    private ControlledDependency(@Nonnull final Supplier<Boolean> toggle, @Nonnull final Urgency urgency) {
+    private ControlledDependency(
+            @Nonnull final Supplier<Boolean> toggle, @Nonnull final Urgency urgency) {
         super("controlled-id", "controlled-description", urgency);
         this.toggle = toggle;
     }
 
-    public static final class TestDepControlledBuilder extends PingableDependencyBuilder<ControlledDependency, TestDepControlledBuilder> {
-        private TestDepControlledBuilder() {
-        }
+    public static final class TestDepControlledBuilder
+            extends PingableDependencyBuilder<ControlledDependency, TestDepControlledBuilder> {
+        private TestDepControlledBuilder() {}
 
         @Override
         public ControlledDependency build() {

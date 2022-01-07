@@ -6,10 +6,10 @@ public enum CheckStatus {
     MINOR,
     OK;
 
-    @SuppressWarnings ({ "UnusedDeclaration" })
-    public static CheckStatus infer ( final String string ) {
-        for ( final CheckStatus status: CheckStatus.values() ) {
-            if ( status.name().equalsIgnoreCase(string) ) {
+    @SuppressWarnings({"UnusedDeclaration"})
+    public static CheckStatus infer(final String string) {
+        for (final CheckStatus status : CheckStatus.values()) {
+            if (status.name().equalsIgnoreCase(string)) {
                 return status;
             }
         }
@@ -17,28 +17,28 @@ public enum CheckStatus {
         return null;
     }
 
-    public boolean isWorseThan (final CheckStatus other) {
+    public boolean isWorseThan(final CheckStatus other) {
         return compareTo(other) < 0;
     }
 
-    public boolean isBetterThan (final CheckStatus other) {
+    public boolean isBetterThan(final CheckStatus other) {
         return compareTo(other) > 0;
     }
 
-    public CheckStatus noBetterThan ( final CheckStatus bound ) {
+    public CheckStatus noBetterThan(final CheckStatus bound) {
         return min(this, bound);
     }
 
-    public CheckStatus noWorseThan ( final CheckStatus bound ) {
+    public CheckStatus noWorseThan(final CheckStatus bound) {
         return max(this, bound);
     }
 
-    public static CheckStatus max ( final CheckStatus lhs, final CheckStatus rhs ) {
+    public static CheckStatus max(final CheckStatus lhs, final CheckStatus rhs) {
         final CheckStatus result;
 
-        if ( lhs.equals(rhs) ) {
+        if (lhs.equals(rhs)) {
             result = lhs;
-        } else if ( lhs.compareTo(rhs) > 0 ) {
+        } else if (lhs.compareTo(rhs) > 0) {
             result = lhs;
         } else {
             result = rhs;
@@ -47,12 +47,12 @@ public enum CheckStatus {
         return result;
     }
 
-    public static CheckStatus min ( final CheckStatus lhs, final CheckStatus rhs ) {
+    public static CheckStatus min(final CheckStatus lhs, final CheckStatus rhs) {
         final CheckStatus result;
 
-        if ( lhs.equals(rhs) ) {
+        if (lhs.equals(rhs)) {
             result = lhs;
-        } else if ( lhs.compareTo(rhs) < 0 ) {
+        } else if (lhs.compareTo(rhs) < 0) {
             result = lhs;
         } else {
             result = rhs;

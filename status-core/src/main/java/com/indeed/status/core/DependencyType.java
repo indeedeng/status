@@ -3,16 +3,16 @@ package com.indeed.status.core;
 /**
  * An interface for the enum class that describes which type the {@link Dependency} is.
  *
- * This interface is mainly for further clarification of dependency. When something came up,
- * and the description of system dependency was poor, we had to dig log files and spend time
- * for investigation. {@link DependencyType} provides a standard way to describe the type of
- * the dependency.
+ * <p>This interface is mainly for further clarification of dependency. When something came up, and
+ * the description of system dependency was poor, we had to dig log files and spend time for
+ * investigation. {@link DependencyType} provides a standard way to describe the type of the
+ * dependency.
  *
- * By implementing this interface, the categorization and terminology of the dependencies is
- * intended to be shared within the system. As a result, the documentation of the dependencies
- * will exist in the health check code.
+ * <p>By implementing this interface, the categorization and terminology of the dependencies is
+ * intended to be shared within the system. As a result, the documentation of the dependencies will
+ * exist in the health check code.
  *
- * An example implementation is {@link StandardDependencyTypes}. If your project needs its own
+ * <p>An example implementation is {@link StandardDependencyTypes}. If your project needs its own
  * implementation of {@link DependencyType}, please create another.
  */
 public interface DependencyType {
@@ -21,7 +21,7 @@ public interface DependencyType {
     /**
      * An implementation of the interface {@link DependencyType} for standard systems.
      *
-     * In this class, dependency types are categorized as resource entities
+     * <p>In this class, dependency types are categorized as resource entities
      */
     enum StandardDependencyTypes implements DependencyType {
         // connection to database servers

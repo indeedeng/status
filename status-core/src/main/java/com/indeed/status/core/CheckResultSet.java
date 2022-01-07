@@ -23,39 +23,42 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * The <code>CheckResultSet</code> is a mutable aggregator collecting the results of individual dependency
- *  evaluations into a single object describing the current health of the overall system.
+ * The <code>CheckResultSet</code> is a mutable aggregator collecting the results of individual
+ * dependency evaluations into a single object describing the current health of the overall system.
  */
 public class CheckResultSet {
     private static final Logger log = Logger.getLogger(CheckResultSet.class);
     private static final DefaultWallClock DEFAULT_WALL_CLOCK = new DefaultWallClock();
-    private static final SystemReporter DEFAULT_SYSTEM_REPORTER = new SystemReporter(DEFAULT_WALL_CLOCK);
+    private static final SystemReporter DEFAULT_SYSTEM_REPORTER =
+            new SystemReporter(DEFAULT_WALL_CLOCK);
 
     /// Epoch milliseconds at which the execution captured by this result set began
     private final long startTimeMillis;
 
-    //  TODO Remove this reference; there's no need to inject the reporter into the data rather than vice versa.
-    //       It will take some unwinding to completely extract this, as this is part of the public API.
+    //  TODO Remove this reference; there's no need to inject the reporter into the data rather than
+    // vice versa.
+    //       It will take some unwinding to completely extract this, as this is part of the public
+    // API.
     /// Reporter that converts this result set into a human- or machine-readable report.
     private final SystemReporter systemReporter;
-    @Nullable
-    private String appName = null;
+    @Nullable private String appName = null;
 
     /**
-     * The overall health of the system represented by this result set.
-     * Assume that all systems start in a healthy state.
+     * The overall health of the system represented by this result set. Assume that all systems
+     * start in a healthy state.
      */
     private final AtomicReference<CheckStatus> systemStatus = new AtomicReference<>(CheckStatus.OK);
     /**
-     * Map of all currently-executing checks; provides a simple method of avoiding dependency-check-stacking.
+     * Map of all currently-executing checks; provides a simple method of avoiding
+     * dependency-check-stacking.
      */
     private final ConcurrentMap<String, Tag> executingChecks = Maps.newConcurrentMap();
+
     private final ConcurrentMap<String, CheckResult> completedChecks = Maps.newConcurrentMap();
 
     /**
      * @deprecated Use {@link com.indeed.status.core.CheckResultSet.Builder} instead
-     *
-     * TODO Remove after a reasonable grace period.
+     *     <p>TODO Remove after a reasonable grace period.
      */
     @Deprecated
     public CheckResultSet() {
@@ -68,9 +71,7 @@ public class CheckResultSet {
         this.systemReporter = systemReporter;
     }
 
-    /**
-     * Convenience factory method for default result sets. Used primarily by tests.
-     */
+    /** Convenience factory method for default result sets. Used primarily by tests. */
     public static CheckResultSet newInstance() {
         return newBuilder().build();
     }
@@ -78,9 +79,10 @@ public class CheckResultSet {
     /**
      * Set the name of the application as it should be reported downstream.
      *
-     * Implemented as a mutator to avoid having to thread the application name through the DependencyChecker.
+     * <p>Implemented as a mutator to avoid having to thread the application name through the
+     * DependencyChecker.
      *
-     * TODO Rearrange things so that we don't need this wart.
+     * <p>TODO Rearrange things so that we don't need this wart.
      */
     public void setAppName(@Nullable final String appName) {
         this.appName = appName;
@@ -91,9 +93,7 @@ public class CheckResultSet {
         return appName;
     }
 
-    /**
-     * @deprecated Use {@link #getStartTimeMillis()} instead
-     */
+    /** @deprecated Use {@link #getStartTimeMillis()} instead */
     public long getStartTime() {
         return getStartTimeMillis();
     }
@@ -103,7 +103,7 @@ public class CheckResultSet {
     }
 
     @Nullable
-    public CheckResult get(@Nonnull final String id ) {
+    public CheckResult get(@Nonnull final String id) {
         return completedChecks.get(id);
     }
 
@@ -117,12 +117,11 @@ public class CheckResultSet {
         return this.systemStatus.get();
     }
 
-
     /**
      * @deprecated This is replaced by {@link #summarizeBySystemReporter(boolean)}
-     *
-     * You could call {@link #CheckResultSet(SystemReporter)} to inject your own customized system reporter and
-     * {@link #summarizeBySystemReporter(boolean)} would return the customized reports to you.
+     *     <p>You could call {@link #CheckResultSet(SystemReporter)} to inject your own customized
+     *     system reporter and {@link #summarizeBySystemReporter(boolean)} would return the
+     *     customized reports to you.
      */
     @Nonnull
     @Deprecated
@@ -133,15 +132,22 @@ public class CheckResultSet {
 
     @Nonnull
     public CheckResultSystemReport summarizeBySystemReporter(final boolean detailed) {
-        return detailed ?
-                systemReporter.collectDetailedSystemReport(this) : systemReporter.collectSystemReport(this);
+        return detailed
+                ? systemReporter.collectDetailedSystemReport(this)
+                : systemReporter.collectSystemReport(this);
     }
 
     protected void handleInit(@Nonnull final Dependency dependency) {
         final String id = dependency.getId();
 
-        checkState(!executingChecks.containsKey(id), "Found another task executing with the same ID: '%s'.", id);
-        checkState(!completedChecks.containsKey(id), "Found another task completed with the same ID: '%s'.", id);
+        checkState(
+                !executingChecks.containsKey(id),
+                "Found another task executing with the same ID: '%s'.",
+                id);
+        checkState(
+                !completedChecks.containsKey(id),
+                "Found another task completed with the same ID: '%s'.",
+                id);
     }
 
     protected void handleExecute(@Nonnull final Dependency dependency) {
@@ -150,12 +156,13 @@ public class CheckResultSet {
         // Create a new tag with the current system time.
         final Tag tag = new Tag(id, systemReporter.getWallClock().currentTimeMillis());
 
-        @Nullable
-        final Tag oldValue = executingChecks.putIfAbsent(id, tag);
-        checkState(null == oldValue, "Found another tag executing with the same ID: '%s'.", oldValue);
+        @Nullable final Tag oldValue = executingChecks.putIfAbsent(id, tag);
+        checkState(
+                null == oldValue, "Found another tag executing with the same ID: '%s'.", oldValue);
     }
 
-    protected void handleComplete(@Nonnull final Dependency dependency, @Nonnull final CheckResult result) {
+    protected void handleComplete(
+            @Nonnull final Dependency dependency, @Nonnull final CheckResult result) {
         final String id = dependency.getId();
 
         try {
@@ -166,11 +173,10 @@ public class CheckResultSet {
 
             final Tag tag = executingChecks.get(id);
 
-            if ( null == tag ) {
+            if (null == tag) {
                 checkState(
                         result.getStatus() != CheckStatus.OK,
                         "Expected a failure of some sort from a check that isn't listed in the executing checks.");
-
             }
 
         } finally {
@@ -178,10 +184,12 @@ public class CheckResultSet {
 
             final CheckResult priorResult = completedChecks.putIfAbsent(id, result);
 
-            // After the result is added to the completed-checks, we should not allow any further exceptions to be raised,
-            //  since those exceptions should then replace the content, but won't without more code than we want to devote
+            // After the result is added to the completed-checks, we should not allow any further
+            // exceptions to be raised,
+            //  since those exceptions should then replace the content, but won't without more code
+            // than we want to devote
             //  to this. Logsig, however, is perfectly fair game.
-            if(null != priorResult) {
+            if (null != priorResult) {
                 log.error(
                         String.format("Attempted to record a second result for id '%s'.", id),
                         new UndesirableStateException());
@@ -189,37 +197,41 @@ public class CheckResultSet {
         }
     }
 
-    /**
-     * Do not throw exceptions here
-     */
-    protected void handleFinalize(@Nonnull final Dependency dependency, @Nonnull final CheckResult result ) {
-        // everything after the result is finalized depends on the completed list containing all references
+    /** Do not throw exceptions here */
+    protected void handleFinalize(
+            @Nonnull final Dependency dependency, @Nonnull final CheckResult result) {
+        // everything after the result is finalized depends on the completed list containing all
+        // references
         final CheckResult recordedResult = completedChecks.putIfAbsent(dependency.getId(), result);
         if (null == recordedResult) {
             if (result.getStatus() == CheckStatus.OK) {
-                log.error(String.format(
-                        "Found a missing completed-check result for '%s' with an OK status, which is NOT OK.",
-                        dependency), new IllegalStateException());
+                log.error(
+                        String.format(
+                                "Found a missing completed-check result for '%s' with an OK status, which is NOT OK.",
+                                dependency),
+                        new IllegalStateException());
             } else {
                 log.warn(
-                        String.format("Restored missing completed-check result for '%s'", dependency),
+                        String.format(
+                                "Restored missing completed-check result for '%s'", dependency),
                         new UndesirableStateException());
             }
         }
 
-        if ( log.isTraceEnabled() ) {
-            log.trace ( "Updating system based on dependency '" + dependency.getId() + "'." );
+        if (log.isTraceEnabled()) {
+            log.trace("Updating system based on dependency '" + dependency.getId() + "'.");
         }
 
         // Now that we have a guaranteed non-null check result, downgrade the overall
         //  system status appropriately.
-        synchronized(this) {
+        synchronized (this) {
             final CheckStatus status = systemStatus.get();
             @Nonnull
-            final CheckStatus newStatus = dependency.getUrgency().downgradeWith(status, result.getStatus());
+            final CheckStatus newStatus =
+                    dependency.getUrgency().downgradeWith(status, result.getStatus());
 
-            if ( log.isTraceEnabled() ) {
-                if ( !status.equals(newStatus) ) {
+            if (log.isTraceEnabled()) {
+                if (!status.equals(newStatus)) {
                     log.trace("... reducing system availability to '" + newStatus + "'.");
                 } else {
                     log.trace("... no impairment recorded. Remains '" + newStatus + "'.");
@@ -231,7 +243,7 @@ public class CheckResultSet {
     }
 
     private static class Tag {
-        private Tag (@Nonnull final String id, final long startTimeMillis) {
+        private Tag(@Nonnull final String id, final long startTimeMillis) {
             this.id = id;
             this.startTimeMillis = startTimeMillis;
         }
@@ -240,38 +252,35 @@ public class CheckResultSet {
         public final long startTimeMillis;
     }
 
-    private static final Comparator<CheckResult> ID_COMPARATOR = new Comparator<CheckResult>() {
-        @Override
-        public int compare(final CheckResult checkResult, final CheckResult checkResult1) {
-            return checkResult.getId().compareTo(checkResult1.getId());
-        }
-    };
+    private static final Comparator<CheckResult> ID_COMPARATOR =
+            new Comparator<CheckResult>() {
+                @Override
+                public int compare(final CheckResult checkResult, final CheckResult checkResult1) {
+                    return checkResult.getId().compareTo(checkResult1.getId());
+                }
+            };
 
-    @JsonSerialize (include = Inclusion.NON_NULL)
+    @JsonSerialize(include = Inclusion.NON_NULL)
     public class SystemReport implements CheckResultSystemReport {
-        @Nonnull
-        public final String hostname;
+        @Nonnull public final String hostname;
         public final long duration;
-        @Nonnull
-        public final CheckStatus condition;
-        @Nonnull
-        public final String dcStatus;
+        @Nonnull public final CheckStatus condition;
+        @Nonnull public final String dcStatus;
 
-        /**
-         * @deprecated Use {@link #SystemReport(WallClock)} instead
-         */
+        /** @deprecated Use {@link #SystemReport(WallClock)} instead */
         public SystemReport() {
             this(DEFAULT_WALL_CLOCK);
         }
 
         public SystemReport(@Nonnull final WallClock wallClock) {
-            // Yeah, it isn't great for elapsed time to be derived from a wall-clock rather than from
+            // Yeah, it isn't great for elapsed time to be derived from a wall-clock rather than
+            // from
             //  a nano ticker, but we need the absolute system time for other fields.
             duration = wallClock.currentTimeMillis() - startTimeMillis;
             hostname = NetUtils.determineHostName("unknown");
 
             condition = systemStatus.get();
-            switch(condition) {
+            switch (condition) {
                 case OK:
                 case MINOR:
                 case MAJOR:
@@ -286,21 +295,15 @@ public class CheckResultSet {
         }
     }
 
-    @JsonSerialize (include = Inclusion.ALWAYS)
+    @JsonSerialize(include = Inclusion.ALWAYS)
     public class DetailedSystemReport extends SystemReport {
-        @Nullable
-        public final String appname;
-        @Nullable
-        public final String catalinaBase;
-        @Nonnull
-        public final String leastRecentlyExecutedDate;
+        @Nullable public final String appname;
+        @Nullable public final String catalinaBase;
+        @Nonnull public final String leastRecentlyExecutedDate;
         public final long leastRecentlyExecutedTimestamp;
-        @Nonnull
-        public final SortedMap<CheckStatus,SortedSet<CheckResult>> results;
+        @Nonnull public final SortedMap<CheckStatus, SortedSet<CheckResult>> results;
 
-        /**
-         * @deprecated Use {@link #DetailedSystemReport(WallClock)} instead.
-         */
+        /** @deprecated Use {@link #DetailedSystemReport(WallClock)} instead. */
         public DetailedSystemReport() {
             this(DEFAULT_WALL_CLOCK);
         }
@@ -329,7 +332,8 @@ public class CheckResultSet {
             }
 
             leastRecentlyExecutedTimestamp = earliestTimestamp;
-            leastRecentlyExecutedDate = CheckResult.DATE_FORMAT.get().format(new Date(leastRecentlyExecutedTimestamp));
+            leastRecentlyExecutedDate =
+                    CheckResult.DATE_FORMAT.get().format(new Date(leastRecentlyExecutedTimestamp));
         }
     }
 

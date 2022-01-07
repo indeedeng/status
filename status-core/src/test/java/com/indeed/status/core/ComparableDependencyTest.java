@@ -8,19 +8,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * author: cameron
- */
+/** author: cameron */
 public class ComparableDependencyTest {
     private static final class CompDep extends ComparableDependency<Integer> {
 
-        @Nonnull
-        private final AtomicInteger val;
+        @Nonnull private final AtomicInteger val;
 
-        private CompDep(
-                @Nonnull final AtomicInteger val,
-                int maxOK, int maxMinor, int maxMajor
-        ) {
+        private CompDep(@Nonnull final AtomicInteger val, int maxOK, int maxMinor, int maxMajor) {
             super("id", "description", 10, 10, Urgency.REQUIRED, maxOK, maxMinor, maxMajor);
             this.val = val;
         }
@@ -31,7 +25,13 @@ public class ComparableDependencyTest {
         }
 
         @Override
-        protected String formatErrorMessage(CheckStatus status, @Nullable Integer value, @Nullable Integer brokenThreshold, long timestamp, long duration, @Nullable Exception e) {
+        protected String formatErrorMessage(
+                CheckStatus status,
+                @Nullable Integer value,
+                @Nullable Integer brokenThreshold,
+                long timestamp,
+                long duration,
+                @Nullable Exception e) {
             return status.name() + "," + value + "," + brokenThreshold + "," + e;
         }
     }
@@ -66,6 +66,8 @@ public class ComparableDependencyTest {
     @Test
     public void testException() throws Exception {
         final CompDep compDep = new CompDep(null, 5, 10, 15);
-        assertEquals("OUTAGE,null,null,java.lang.NullPointerException", compDep.call().getErrorMessage());
+        assertEquals(
+                "OUTAGE,null,null,java.lang.NullPointerException",
+                compDep.call().getErrorMessage());
     }
 }

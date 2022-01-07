@@ -6,13 +6,12 @@ import javax.annotation.Nonnull;
 /**
  * @author matts
  * @deprecated Use {@link AbstractDependency.Builder} directly
- * <p></p>
- * This class overrides all public mutators on the the parent class so that the method signatures match their
- * pre-deprecated versions.
- * <p></p>
- * TODO Remove by 2017-01-01
+ *     <p>This class overrides all public mutators on the the parent class so that the method
+ *     signatures match their pre-deprecated versions.
+ *     <p>TODO Remove by 2017-01-01
  */
-public abstract class AbstractDependencyBuilder<T extends AbstractDependency, B extends AbstractDependencyBuilder<T, B>>
+public abstract class AbstractDependencyBuilder<
+                T extends AbstractDependency, B extends AbstractDependencyBuilder<T, B>>
         extends AbstractDependency.Builder<T, B> {
     @Nonnull
     @Override

@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * The <code>SimpleDependency</code> represents the most common form of dependency with a tiered result level.
- * <br>
+ * The <code>SimpleDependency</code> represents the most common form of dependency with a tiered
+ * result level. <br>
  * See {@link SimplePingableDependency} for a version with a binary result level.
  *
  * @author matts
@@ -20,7 +20,11 @@ public class SimpleDependency extends AbstractDependency {
     // For builder use only
     private SimpleDependency(@Nonnull final Builder builder) {
         super(builder);
-        this.checkMethod = Preconditions.checkNotNull(builder.getCheckMethod(), "Cannot construct a simple dependency with a null check method");;
+        this.checkMethod =
+                Preconditions.checkNotNull(
+                        builder.getCheckMethod(),
+                        "Cannot construct a simple dependency with a null check method");
+        ;
     }
 
     @Override
@@ -36,9 +40,7 @@ public class SimpleDependency extends AbstractDependency {
     public static class Builder extends AbstractDependency.Builder<SimpleDependency, Builder> {
         @Nullable private CheckMethod checkMethod;
 
-        protected Builder() {
-
-        }
+        protected Builder() {}
 
         public Builder setCheckMethod(@Nonnull final CheckMethod checkMethod) {
             this.checkMethod = checkMethod;
@@ -52,7 +54,10 @@ public class SimpleDependency extends AbstractDependency {
 
         @Override
         public SimpleDependency build() {
-            final CheckMethod checkMethod = Preconditions.checkNotNull(this.checkMethod, "Cannot construct a simple dependency with a null check method");
+            final CheckMethod checkMethod =
+                    Preconditions.checkNotNull(
+                            this.checkMethod,
+                            "Cannot construct a simple dependency with a null check method");
             return new SimpleDependency(this);
         }
     }

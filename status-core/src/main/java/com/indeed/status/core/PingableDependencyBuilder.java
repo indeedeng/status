@@ -8,20 +8,17 @@ import javax.annotation.Nonnull;
 
 /**
  * @author matts
- *
  * @deprecated Use {@link PingableDependency.Builder} directly
- *
- * This class overrides all public mutators on the the parent class so that the method signatures match their
- *  pre-deprecated versions.
- *
- * TODO Remove by 2017-01-01
+ *     <p>This class overrides all public mutators on the the parent class so that the method
+ *     signatures match their pre-deprecated versions.
+ *     <p>TODO Remove by 2017-01-01
  */
 @Deprecated
-public abstract class PingableDependencyBuilder<T extends PingableDependency, B extends PingableDependencyBuilder<T, B>> extends PingableDependency.Builder<T, B>  {
+public abstract class PingableDependencyBuilder<
+                T extends PingableDependency, B extends PingableDependencyBuilder<T, B>>
+        extends PingableDependency.Builder<T, B> {
     @Override
-    public B setToggle(
-            @Nonnull final Supplier<Boolean> toggle
-    ) {
+    public B setToggle(@Nonnull final Supplier<Boolean> toggle) {
         return super.setToggle(toggle);
     }
 

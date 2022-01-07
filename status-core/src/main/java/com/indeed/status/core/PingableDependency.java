@@ -11,8 +11,8 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * The <code>PingableDependency</code> represents the simplest of dependencies, a dependency that executes and either
- *  completes or throws an Exception.
+ * The <code>PingableDependency</code> represents the simplest of dependencies, a dependency that
+ * executes and either completes or throws an Exception.
  *
  * @see SimpleDependency
  */
@@ -21,97 +21,85 @@ public abstract class PingableDependency extends AbstractDependency {
     @Nonnull private final WallClock wallClock;
     @Nonnull private final Supplier<Boolean> toggle;
 
-    /**
-     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
-     */
+    /** @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead. */
     @Deprecated
     public PingableDependency(
             @Nonnull final String id,
             @Nonnull final String description,
-            @Nonnull final Urgency urgency
-    ) {
+            @Nonnull final Urgency urgency) {
         //noinspection deprecation - pointless warning in a deprecated method.
         this(id, description, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
     }
 
-    /**
-     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
-     */
+    /** @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead. */
     @Deprecated
     public PingableDependency(
             @Nonnull final String id,
             @Nonnull final String description,
             @Nonnull final Urgency urgency,
             @Nonnull final DependencyType type,
-            final String servicePool
-    ) {
+            final String servicePool) {
         //noinspection deprecation - pointless warning in a deprecated method.
         this(id, description, DEFAULT_TIMEOUT, urgency, type, servicePool);
     }
 
-    /**
-     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
-     */
+    /** @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead. */
     @Deprecated
-    public PingableDependency (
+    public PingableDependency(
             @Nonnull final String id,
             @Nonnull final String description,
             final long timeout,
-            @Nonnull final Urgency urgency
-    ) {
+            @Nonnull final Urgency urgency) {
         //noinspection deprecation - pointless warning in a deprecated method.
         this(id, description, timeout, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
     }
 
-    /**
-     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
-     */
-    public PingableDependency (
+    /** @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead. */
+    public PingableDependency(
             @Nonnull final String id,
             @Nonnull final String description,
             final long timeout,
             @Nonnull final Urgency urgency,
             @Nonnull final DependencyType type,
-            final String servicePool
-    ) {
+            final String servicePool) {
         //noinspection deprecation - pointless warning in a deprecated method.
         this(id, description, timeout, DEFAULT_PING_PERIOD, urgency, type, servicePool);
     }
 
-    /**
-     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
-     */
+    /** @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead. */
     @Deprecated
-    protected PingableDependency (
+    protected PingableDependency(
             final String id,
             final String description,
             final long timeout,
             final long pingPeriod,
-            final Urgency urgency
-    ) {
+            final Urgency urgency) {
         //noinspection deprecation - pointless warning in a deprecated method.
         this(id, description, timeout, pingPeriod, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL);
     }
 
-    /**
-     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
-     */
-    protected PingableDependency (
+    /** @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead. */
+    protected PingableDependency(
             final String id,
             final String description,
             final long timeout,
             final long pingPeriod,
             final Urgency urgency,
             @Nonnull final DependencyType type,
-            final String servicePool
-    ) {
+            final String servicePool) {
         //noinspection deprecation - pointless warning in a deprecated method.
-        this(id, description, timeout, pingPeriod, urgency, type, servicePool, Suppliers.ofInstance(Boolean.TRUE));
+        this(
+                id,
+                description,
+                timeout,
+                pingPeriod,
+                urgency,
+                type,
+                servicePool,
+                Suppliers.ofInstance(Boolean.TRUE));
     }
 
-    /**
-     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
-     */
+    /** @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead. */
     @Deprecated
     protected PingableDependency(
             @Nonnull final String id,
@@ -119,15 +107,20 @@ public abstract class PingableDependency extends AbstractDependency {
             final long timeout,
             final long pingPeriod,
             @Nonnull final Urgency urgency,
-            @Nonnull final Supplier<Boolean> toggle
-    ) {
+            @Nonnull final Supplier<Boolean> toggle) {
         //noinspection deprecation - pointless warning in a deprecated method.
-        this(id, description, timeout, pingPeriod, urgency, DEFAULT_TYPE, DEFAULT_SERVICE_POOL, toggle);
+        this(
+                id,
+                description,
+                timeout,
+                pingPeriod,
+                urgency,
+                DEFAULT_TYPE,
+                DEFAULT_SERVICE_POOL,
+                toggle);
     }
 
-    /**
-     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
-     */
+    /** @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead. */
     @Deprecated
     protected PingableDependency(
             @Nonnull final String id,
@@ -137,15 +130,21 @@ public abstract class PingableDependency extends AbstractDependency {
             @Nonnull final Urgency urgency,
             @Nonnull final DependencyType type,
             final String servicePool,
-            @Nonnull final Supplier<Boolean> toggle
-    ) {
+            @Nonnull final Supplier<Boolean> toggle) {
         //noinspection deprecation - pointless warning in a deprecated method.
-        this(id, description, timeout, pingPeriod, urgency, type, servicePool, new DefaultWallClock(), toggle);
+        this(
+                id,
+                description,
+                timeout,
+                pingPeriod,
+                urgency,
+                type,
+                servicePool,
+                new DefaultWallClock(),
+                toggle);
     }
 
-    /**
-     * @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead.
-     */
+    /** @deprecated Use a {@link SimplePingableDependency.Builder} with a Callable instead. */
     @Deprecated
     protected PingableDependency(
             @Nonnull final String id,
@@ -156,8 +155,7 @@ public abstract class PingableDependency extends AbstractDependency {
             @Nonnull final DependencyType type,
             final String servicePool,
             @Nonnull final WallClock wallClock,
-            @Nonnull final Supplier<Boolean> toggle
-    ) {
+            @Nonnull final Supplier<Boolean> toggle) {
         super(id, description, timeout, pingPeriod, urgency, type, servicePool);
 
         this.wallClock = wallClock;
@@ -165,8 +163,7 @@ public abstract class PingableDependency extends AbstractDependency {
     }
 
     protected PingableDependency(
-            final PingableDependency.Builder<? extends PingableDependency, ?> builder
-    ) {
+            final PingableDependency.Builder<? extends PingableDependency, ?> builder) {
         super(builder);
 
         this.wallClock = Preconditions.checkNotNull(builder.getWallClock(), "wallclock required");
@@ -185,26 +182,29 @@ public abstract class PingableDependency extends AbstractDependency {
             }
 
             final long duration = wallClock.currentTimeMillis() - timestamp;
-            result = CheckResult.newBuilder(this, CheckStatus.OK, formatErrorMessage(null))
-                    .setTimestamp(timestamp)
-                    .setDuration(duration)
-                    .build();
+            result =
+                    CheckResult.newBuilder(this, CheckStatus.OK, formatErrorMessage(null))
+                            .setTimestamp(timestamp)
+                            .setDuration(duration)
+                            .build();
 
-        } catch(final Exception e) {
+        } catch (final Exception e) {
             final long duration = wallClock.currentTimeMillis() - timestamp;
-            result = CheckResult.newBuilder(this, CheckStatus.OUTAGE, formatErrorMessage(e))
-                    .setTimestamp(timestamp)
-                    .setDuration(duration)
-                    .setThrowable(e)
-                    .build();
+            result =
+                    CheckResult.newBuilder(this, CheckStatus.OUTAGE, formatErrorMessage(e))
+                            .setTimestamp(timestamp)
+                            .setDuration(duration)
+                            .setThrowable(e)
+                            .build();
         }
 
         return result;
     }
 
     /**
-     * Cloned from the PingableService interface, this is a convenience wrapper for the usual pattern of creating
-     * dependency checkers that return nothing and throw an exception on any error.
+     * Cloned from the PingableService interface, this is a convenience wrapper for the usual
+     * pattern of creating dependency checkers that return nothing and throw an exception on any
+     * error.
      *
      * @throws Exception If any piece of the dependency check fails.
      */
@@ -220,11 +220,12 @@ public abstract class PingableDependency extends AbstractDependency {
         return e == null ? "ok" : "Exception thrown during ping";
     }
 
-    public static abstract class Builder<T extends PingableDependency, B extends PingableDependency.Builder<T, B>> extends AbstractDependency.Builder<T, B> {
-        /**
-         * @deprecated Direct field access deprecated; use {@link #getToggle()}} instead.
-         */
+    public abstract static class Builder<
+                    T extends PingableDependency, B extends PingableDependency.Builder<T, B>>
+            extends AbstractDependency.Builder<T, B> {
+        /** @deprecated Direct field access deprecated; use {@link #getToggle()}} instead. */
         @Nonnull protected Supplier<Boolean> toggle = Suppliers.ofInstance(Boolean.TRUE);
+
         @Nonnull private WallClock wallClock = new DefaultWallClock();
 
         protected Builder() {}
@@ -256,7 +257,7 @@ public abstract class PingableDependency extends AbstractDependency {
 
         private B cast() {
             //noinspection unchecked
-            return (B)this;
+            return (B) this;
         }
     }
 }
