@@ -3,8 +3,12 @@ plugins {
 }
 
 dependencies {
-    compile project(':status-core')
-    compile 'org.mongodb:mongo-java-driver:3.0.2'
-    compile 'org.springframework:spring-jdbc:4.1.7.RELEASE'
-    compile 'mysql:mysql-connector-java:5.1.6'
+    implementation project(':status-core')
+    implementation 'org.mongodb:mongo-java-driver:3.12.10'
+    implementation 'org.springframework:spring-jdbc:5.3.14'
+    implementation 'mysql:mysql-connector-java:8.0.25'
+    implementation libs.jackson
+    implementation libs.log4j
+
+    compileOnly libs.jsr305
 }

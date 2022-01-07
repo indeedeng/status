@@ -1,19 +1,16 @@
-plugins {
-    id 'java'
-}
-
-ext['indeed.publish.name'] = 'status-web'
+indeedOss.activateFeature 'library'
+indeedLibrary.name = 'status-web'
 
 dependencies {
-    compile project(':status-core')
-    compile 'com.indeed:util-core:1.0.19'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1'
-    compile library('com.google.guava:guava')
-    compile library('log4j:log4j')
+    implementation project(':status-core')
+    implementation 'com.indeed:util-core:1.0.19'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1'
+    implementation libs.guava
+    implementation libs.log4j
 
-    compileOnly library('com.google.code.findbugs:jsr305')
-    compileOnly library('javax.servlet:javax.servlet-api')
+    compileOnly libs.jsr305
+    compileOnly libs.servletApi
 
-    testCompile library('junit:junit')
-    testCompile 'org.eclipse.jetty:jetty-webapp:8.1.8.v20121106'
+    testImplementation libs.junit
+    testImplementation 'org.eclipse.jetty:jetty-webapp:8.1.8.v20121106'
 }

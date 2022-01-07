@@ -1,3 +1,4 @@
+enableFeaturePreview 'VERSION_CATALOGS'
 include 'status-core'
 include 'status-web'
 include 'status-samples'
