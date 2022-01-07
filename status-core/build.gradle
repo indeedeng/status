@@ -8,6 +8,8 @@ dependencies {
     implementation libs.jackson
     implementation libs.guava
 
+    compileOnly 'javax.annotation:javax.annotation-api:1.3.2'
+
     compileOnly libs.jsr305
     testCompileOnly libs.jsr305
 
