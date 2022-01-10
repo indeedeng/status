@@ -8,7 +8,8 @@ import com.google.common.collect.Sets;
 import com.indeed.util.core.NetUtils;
 import com.indeed.util.core.time.DefaultWallClock;
 import com.indeed.util.core.time.WallClock;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,7 +28,7 @@ import static com.google.common.base.Preconditions.checkState;
  * dependency evaluations into a single object describing the current health of the overall system.
  */
 public class CheckResultSet {
-    private static final Logger log = Logger.getLogger(CheckResultSet.class);
+    private static final Logger log = LoggerFactory.getLogger(CheckResultSet.class);
     private static final DefaultWallClock DEFAULT_WALL_CLOCK = new DefaultWallClock();
     private static final SystemReporter DEFAULT_SYSTEM_REPORTER =
             new SystemReporter(DEFAULT_WALL_CLOCK);

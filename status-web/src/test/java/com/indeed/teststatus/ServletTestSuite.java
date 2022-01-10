@@ -3,10 +3,11 @@ package com.indeed.teststatus;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import junit.framework.TestSuite;
-import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -102,5 +103,5 @@ public abstract class ServletTestSuite extends TestSuite {
         JettyServer.INSTANCE.stop();
     }
 
-    protected final Logger log = Logger.getLogger(getClass());
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 }

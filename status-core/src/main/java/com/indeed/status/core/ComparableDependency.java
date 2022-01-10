@@ -1,6 +1,7 @@
 package com.indeed.status.core;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -8,7 +9,7 @@ import javax.annotation.Nullable;
 /** @author jplaisance */
 public abstract class ComparableDependency<T extends Comparable<T>> extends AbstractDependency {
     @SuppressWarnings("UnusedDeclaration")
-    private static final Logger log = Logger.getLogger(ComparableDependency.class);
+    private static final Logger log = LoggerFactory.getLogger(ComparableDependency.class);
 
     @Nonnull private final T maxOK;
 

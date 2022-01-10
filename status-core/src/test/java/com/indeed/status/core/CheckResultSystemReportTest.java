@@ -7,7 +7,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.indeed.util.core.time.StoppedClock;
-import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -58,23 +57,22 @@ public class CheckResultSystemReportTest {
         wallClock.set(sampleDate.getTime());
 
         final DependencyChecker checker =
-                DependencyChecker.newBuilder()
-                        .setExecutorService(Executors.newSingleThreadExecutor())
-                        .setSystemReporter(systemReporter)
-                        .build();
+                new DependencyChecker(
+                        ImmutableDependencyCheckerParams.builder()
+                                .executorService(Executors.newSingleThreadExecutor())
+                                .systemReporter(systemReporter)
+                                .build());
 
         final SimplePingableDependency dependency =
                 SimplePingableDependency.newBuilder()
                         .setId("id")
                         .setDescription("description")
                         .setPingMethod(
-                                new PingMethod() {
-                                    @Override
-                                    public void ping() throws Exception {
-                                        // create a duration
-                                        wallClock.plus(10, TimeUnit.MILLISECONDS);
-                                    }
-                                })
+                                (PingMethod)
+                                        () -> {
+                                            // create a duration
+                                            wallClock.plus(10, TimeUnit.MILLISECONDS);
+                                        })
                         .setWallClock(wallClock)
                         .setDocumentationUrl("http://example.com/?id")
                         .build();
@@ -111,23 +109,22 @@ public class CheckResultSystemReportTest {
         wallClock.set(sampleDate.getTime());
 
         final DependencyChecker checker =
-                DependencyChecker.newBuilder()
-                        .setExecutorService(Executors.newSingleThreadExecutor())
-                        .setSystemReporter(systemReporter)
-                        .build();
+                new DependencyChecker(
+                        ImmutableDependencyCheckerParams.builder()
+                                .executorService(Executors.newSingleThreadExecutor())
+                                .systemReporter(systemReporter)
+                                .build());
 
         final SimplePingableDependency dependency =
                 SimplePingableDependency.newBuilder()
                         .setId("id")
                         .setDescription("description")
                         .setPingMethod(
-                                new PingMethod() {
-                                    @Override
-                                    public void ping() throws Exception {
-                                        // create a duration
-                                        wallClock.plus(10, TimeUnit.MILLISECONDS);
-                                    }
-                                })
+                                (PingMethod)
+                                        () -> {
+                                            // create a duration
+                                            wallClock.plus(10, TimeUnit.MILLISECONDS);
+                                        })
                         .setWallClock(wallClock)
                         .setDocumentationUrl("http://example.com/?id")
                         .build();
@@ -172,8 +169,7 @@ public class CheckResultSystemReportTest {
         final Date sampleDate = calendar.getTime();
         wallClock.set(sampleDate.getTime());
 
-        final SimpleDependencyManager manager =
-                new SimpleDependencyManager("app", null, systemReporter);
+        final SimpleDependencyManager manager = new SimpleDependencyManager("app", systemReporter);
 
         final CountDownLatch latch = new CountDownLatch(1);
         final SimplePingableDependency dependency =
@@ -181,14 +177,12 @@ public class CheckResultSystemReportTest {
                         .setId("id")
                         .setDescription("description")
                         .setPingMethod(
-                                new PingMethod() {
-                                    @Override
-                                    public void ping() throws Exception {
-                                        // Simulate taking 10 ms to complete.
-                                        wallClock.plus(10, TimeUnit.MILLISECONDS);
-                                        latch.countDown();
-                                    }
-                                })
+                                (PingMethod)
+                                        () -> {
+                                            // Simulate taking 10 ms to complete.
+                                            wallClock.plus(10, TimeUnit.MILLISECONDS);
+                                            latch.countDown();
+                                        })
                         .setWallClock(wallClock)
                         .setDocumentationUrl("http://example.com/?id")
                         .build();
@@ -243,10 +237,12 @@ public class CheckResultSystemReportTest {
 
     private static class SimpleDependencyManager extends AbstractDependencyManager {
         public SimpleDependencyManager(
-                @Nullable final String appName,
-                @Nullable final Logger logger,
-                @Nonnull final SystemReporter systemReporter) {
-            super(appName, logger, systemReporter);
+                @Nullable final String appName, @Nonnull final SystemReporter systemReporter) {
+            super(
+                    ImmutableDependencyManagerParams.builder()
+                            .appName(appName)
+                            .systemReporter(systemReporter)
+                            .build());
         }
     }
 }

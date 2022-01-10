@@ -2,11 +2,20 @@ indeedOss.activateFeature 'library'
 indeedLibrary.name = 'status-core'
 
 dependencies {
-    implementation libs.log4j
+    implementation libs.slf4jApi
     implementation libs.indeedUtilCore
     implementation libs.indeedUtilVarexport
     implementation libs.jackson
     implementation libs.guava
+
+    // This is a fake copy of the log4j1 Logger, which allows us to continue
+    // accepting it in our deprecated method signatures without accidentially using
+    // any of its functionality.
+    compileOnly project(':log4j1dummyshim')
+    testCompileOnly project(':log4j1dummyshim')
+
+    compileOnly libs.immutables
+    annotationProcessor libs.immutables
 
     compileOnly 'javax.annotation:javax.annotation-api:1.3.2'
 

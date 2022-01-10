@@ -16,7 +16,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/** */
 public class StrictServlet extends AbstractDaemonCheckReportServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -30,7 +29,7 @@ public class StrictServlet extends AbstractDaemonCheckReportServlet {
             HttpServletRequest request,
             HttpServletResponse response,
             Function<CheckStatus, Integer> mapper) {
-        return new PrivilegedReportHandler(mapper, response, log) {
+        return new PrivilegedReportHandler(mapper, response) {
             @Override
             protected boolean isDetailed() {
                 return false;

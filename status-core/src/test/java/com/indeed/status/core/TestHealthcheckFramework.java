@@ -6,10 +6,10 @@ import com.google.common.collect.ImmutableList;
 import com.indeed.status.core.CheckResult.Thrown;
 import com.indeed.status.core.DependencyChecker.DependencyExecutorSet;
 import com.indeed.util.core.time.StoppedClock;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -51,7 +51,7 @@ public class TestHealthcheckFramework {
         }
     }
 
-    private static final Logger log = Logger.getLogger(TestHealthcheckFramework.class);
+    private static final Logger log = LoggerFactory.getLogger(TestHealthcheckFramework.class);
     private static final PingableDependency DEP_ALWAYS_TRUE =
             new AlwaysTrueDependencyBuilder().build();
 
@@ -73,7 +73,11 @@ public class TestHealthcheckFramework {
                 };
         final DependencyChecker cancellingChecker = new CancelingChecker(shouldCancel);
         final AbstractDependencyManager manager =
-                new AbstractDependencyManager("", log, cancellingChecker) {};
+                new AbstractDependencyManager(
+                        ImmutableDependencyManagerParams.builder()
+                                .appName("")
+                                .checker(cancellingChecker)
+                                .build()) {};
         manager.addDependency(longDependency);
 
         // Make sure the first attempt at this FAILED, since the task was cancelled.
@@ -132,15 +136,18 @@ public class TestHealthcheckFramework {
         final boolean interrupted;
         final ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
+            final DependencyChecker checker =
+                    new DependencyChecker(
+                            ImmutableDependencyCheckerParams.builder()
+                                    .dependencyExecutor(new ThreadedDependencyExecutor(executor))
+                                    .systemReporter(systemReporter)
+                                    .build());
             final AbstractDependencyManager manager =
                     new AbstractDependencyManager(
-                            "an-app",
-                            log,
-                            new DependencyChecker(
-                                    log,
-                                    new ThreadedDependencyExecutor(executor),
-                                    systemReporter,
-                                    false)) {};
+                            ImmutableDependencyManagerParams.builder()
+                                    .appName("an-app")
+                                    .checker(checker)
+                                    .build()) {};
             manager.addDependency(dependency);
 
             Thread.currentThread().interrupt();
@@ -267,7 +274,12 @@ public class TestHealthcheckFramework {
                                 })
                         .build();
 
-        final DependencyPinger pinger = new DependencyPinger(dependency, systemReporter);
+        final DependencyPinger pinger =
+                new DependencyPinger(
+                        ImmutableDependencyPingerParams.builder()
+                                .dependency(dependency)
+                                .systemReporter(systemReporter)
+                                .build());
 
         // Call the pinger to get a result BEFORE executing the pinger.
         final CheckResult checkResult = pinger.call();
@@ -326,8 +338,6 @@ public class TestHealthcheckFramework {
 
     @Test(expected = IllegalStateException.class)
     public void testDownstreamFromExecutionFailure() throws Exception {
-        Logger.getLogger(CheckResultSet.class).setLevel(Level.FATAL);
-
         final CheckResultSet resultSet = CheckResultSet.newInstance();
         final Dependency dependency = DEP_ALWAYS_TRUE;
 
@@ -348,10 +358,11 @@ public class TestHealthcheckFramework {
         this.wallClock.set(now);
 
         final DependencyChecker checkerWithStoppedClock =
-                DependencyChecker.newBuilder()
-                        .setExecutorService(Executors.newSingleThreadExecutor())
-                        .setSystemReporter(systemReporter)
-                        .build();
+                new DependencyChecker(
+                        ImmutableDependencyCheckerParams.builder()
+                                .executorService(Executors.newSingleThreadExecutor())
+                                .systemReporter(systemReporter)
+                                .build());
 
         // Allow the system clock to drift from the stopped clock, thus asserting that any epoch
         // millis values
@@ -499,7 +510,11 @@ public class TestHealthcheckFramework {
         assertEquals(CheckStatus.OK, result.getStatus());
 
         final DependencyChecker dependencyCheckerThrottled =
-                new DependencyChecker(log, dependencyExecutor, new SystemReporter(), true);
+                new DependencyChecker(
+                        ImmutableDependencyCheckerParams.builder()
+                                .dependencyExecutor(dependencyExecutor)
+                                .throttle(true)
+                                .build());
         final AbstractDependencyManager dependencyManagerThrottled =
                 new AbstractDependencyManager(
                         null,
@@ -513,7 +528,11 @@ public class TestHealthcheckFramework {
         assertEquals(CheckStatus.OK, resultSet2.getSystemStatus());
 
         final DependencyChecker dependencyCheckerNotThrottled =
-                new DependencyChecker(log, dependencyExecutor, new SystemReporter(), false);
+                new DependencyChecker(
+                        ImmutableDependencyCheckerParams.builder()
+                                .dependencyExecutor(dependencyExecutor)
+                                .throttle(false)
+                                .build());
         final AbstractDependencyManager dependencyManagerNotThrottled =
                 new AbstractDependencyManager(
                         null,
@@ -553,10 +572,12 @@ public class TestHealthcheckFramework {
     private class CancelingChecker extends DependencyChecker {
         public CancelingChecker(final SimpleSupplier<Boolean> shouldCancel) {
             super(
-                    log,
-                    new CancelingExecutor(Executors.newSingleThreadExecutor(), shouldCancel),
-                    systemReporter,
-                    false);
+                    ImmutableDependencyCheckerParams.builder()
+                            .dependencyExecutor(
+                                    new CancelingExecutor(
+                                            Executors.newSingleThreadExecutor(), shouldCancel))
+                            .systemReporter(systemReporter)
+                            .build());
         }
     }
 

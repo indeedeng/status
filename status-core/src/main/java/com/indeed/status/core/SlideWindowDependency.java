@@ -1,6 +1,7 @@
 package com.indeed.status.core;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -13,7 +14,7 @@ import java.util.Iterator;
  */
 public abstract class SlideWindowDependency extends AbstractDependency {
 
-    private static final Logger LOG = Logger.getLogger(SlideWindowDependency.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SlideWindowDependency.class);
 
     private final EventList eventList;
     // When failed ratio is below maxOK, check status is OK.

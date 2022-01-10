@@ -1,9 +1,9 @@
 package com.indeed.status.core;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.indeed.util.core.time.WallClock;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -26,33 +26,24 @@ import java.util.concurrent.TimeoutException;
  * @author matts
  */
 class DependencyChecker /*implements Terminable todo(cameron)*/ {
+    private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(DependencyChecker.class);
+
     @Nonnull private final DependencyExecutor dependencyExecutor;
     @Nonnull private final SystemReporter systemReporter;
     @Nonnull private final Logger log;
     private final boolean throttle;
 
-    // For builder and subclass use only
-    /**
-     * @deprecated Use {@link DependencyChecker#DependencyChecker(Logger, DependencyExecutor,
-     *     SystemReporter, boolean)} instead.
-     */
-    @Deprecated
-    protected DependencyChecker(
-            @Nonnull final Logger logger,
-            @Nonnull final DependencyExecutor dependencyExecutor,
-            @Nonnull final SystemReporter systemReporter) {
-        this(logger, dependencyExecutor, systemReporter, false);
-    }
+    public DependencyChecker(final DependencyCheckerParams params) {
+        final String loggerName = params.loggerName();
+        if (loggerName != null) {
+            this.log = LoggerFactory.getLogger(loggerName);
+        } else {
+            this.log = DEFAULT_LOGGER;
+        }
 
-    protected DependencyChecker(
-            @Nonnull final Logger logger,
-            @Nonnull final DependencyExecutor dependencyExecutor,
-            @Nonnull final SystemReporter systemReporter,
-            final boolean throttle) {
-        this.log = logger;
-        this.dependencyExecutor = dependencyExecutor;
-        this.systemReporter = systemReporter;
-        this.throttle = throttle;
+        this.dependencyExecutor = params.dependencyExecutor();
+        this.systemReporter = params.systemReporter();
+        this.throttle = params.throttle();
     }
 
     @Nonnull
@@ -276,7 +267,7 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
     }
 
     public static class DependencyExecutorSet implements DependencyExecutor {
-        private static final Logger log = Logger.getLogger(DependencyExecutorSet.class);
+        private static final Logger log = LoggerFactory.getLogger(DependencyExecutorSet.class);
 
         @Nonnull
         private final Map<String, Future<CheckResult>> inflightChecks =
@@ -363,53 +354,6 @@ class DependencyChecker /*implements Terminable todo(cameron)*/ {
         @SuppressWarnings({"UnusedDeclaration"})
         private CheckException(final Throwable cause) {
             super(cause);
-        }
-    }
-
-    @Nonnull
-    public static Builder newBuilder() {
-        return new Builder();
-    }
-
-    public static class Builder {
-        private static final Logger DEFAULT_LOGGER = Logger.getLogger(DependencyChecker.class);
-
-        @Nonnull private Logger _logger = DEFAULT_LOGGER;
-        @Nullable private ExecutorService executorService;
-        @Nonnull private SystemReporter systemReporter = new SystemReporter();
-        private boolean throttle = false;
-
-        private Builder() {}
-
-        public Builder setLogger(@Nullable final Logger logger) {
-            this._logger = logger != null ? logger : DEFAULT_LOGGER;
-            return this;
-        }
-
-        public Builder setExecutorService(@Nonnull final ExecutorService executorService) {
-            this.executorService = executorService;
-            return this;
-        }
-
-        public Builder setSystemReporter(@Nonnull final SystemReporter systemReporter) {
-            this.systemReporter = systemReporter;
-            return this;
-        }
-
-        public Builder setThrottle(@Nonnull final boolean throttle) {
-            this.throttle = throttle;
-            return this;
-        }
-
-        public DependencyChecker build() {
-            final ExecutorService executorService =
-                    Preconditions.checkNotNull(
-                            this.executorService,
-                            "Cannot configure a dependency checker with a null executor service.");
-            final DependencyExecutor dependencyExecutor =
-                    new DependencyExecutorSet(executorService);
-
-            return new DependencyChecker(_logger, dependencyExecutor, systemReporter, throttle);
         }
     }
 }

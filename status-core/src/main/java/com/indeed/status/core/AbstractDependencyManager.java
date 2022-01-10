@@ -7,12 +7,12 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.indeed.util.core.time.WallClock;
 import com.indeed.util.varexport.Export;
 import com.indeed.util.varexport.VarExporter;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.PreDestroy;
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -82,105 +82,191 @@ public abstract class AbstractDependencyManager
         //  just so we don't trip somebody up.
     }
 
-    // TODO Some day, all of this will be replaced with a builder.
-    //  At the time when we do that, we'll need to work with the dependency manager extensions
-    // present in the
-    //  unit tests, since those are the only reasonable extensions of the checker. They can probably
-    // be refactored
-    //  to push the custom behavior up into the test case or down into the dependency.
-
+    /**
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
+    @Deprecated
     public AbstractDependencyManager() {
-        this(null, null, newDefaultThreadPool());
-    }
-
-    public AbstractDependencyManager(final String appName) {
-        this(appName, null, newDefaultThreadPool());
-    }
-
-    public AbstractDependencyManager(final String appName, final Logger logger) {
-        this(appName, logger, newDefaultThreadPool());
-    }
-
-    public AbstractDependencyManager(
-            final String appName,
-            final Logger logger,
-            @Nonnull final SystemReporter systemReporter) {
-        this(appName, logger, newDefaultThreadPool(), systemReporter);
-    }
-
-    public AbstractDependencyManager(
-            final String appName,
-            final Logger logger,
-            @Nonnull final SystemReporter systemReporter,
-            final boolean throttleDependencyChecks) {
-        this(appName, logger, newDefaultThreadPool(), systemReporter, throttleDependencyChecks);
-    }
-
-    public AbstractDependencyManager(final Logger logger) {
-        this(null, logger, newDefaultThreadPool());
-    }
-
-    public AbstractDependencyManager(
-            @Nullable final String appName,
-            @Nullable final Logger logger,
-            @Nonnull final DependencyChecker checker) {
-        this(appName, logger, newDefaultThreadPool(), checker);
+        this(ImmutableDependencyManagerParams.builder().build());
     }
 
     /**
-     * @deprecated Use {@link #AbstractDependencyManager(String, Logger, ThreadPoolExecutor,
-     *     WallClock)} instead.
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
+    @Deprecated
+    public AbstractDependencyManager(final String appName) {
+        this(ImmutableDependencyManagerParams.builder().appName(appName).build());
+    }
+
+    /**
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
+    @Deprecated
+    public AbstractDependencyManager(final String appName, final org.apache.log4j.Logger logger) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .build());
+    }
+
+    /**
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
+    @Deprecated
+    public AbstractDependencyManager(
+            final String appName,
+            final org.apache.log4j.Logger logger,
+            @Nonnull final SystemReporter systemReporter) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .systemReporter(systemReporter)
+                        .build());
+    }
+
+    /**
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
+    @Deprecated
+    public AbstractDependencyManager(
+            final String appName,
+            final org.apache.log4j.Logger logger,
+            @Nonnull final SystemReporter systemReporter,
+            final boolean throttleDependencyChecks) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .systemReporter(systemReporter)
+                        .throttleDependencyChecks(throttleDependencyChecks)
+                        .build());
+    }
+
+    /**
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
      */
     @Deprecated
     public AbstractDependencyManager(
             @Nullable final String appName,
-            @Nullable final Logger logger,
-            @Nonnull final ThreadPoolExecutor threadPool) {
-        this(appName, logger, threadPool, new SystemReporter());
-    }
-
-    public AbstractDependencyManager(
-            @Nullable final String appName,
-            @Nullable final Logger logger,
-            @Nonnull final ThreadPoolExecutor threadPool,
-            @Nonnull final WallClock wallClock) {
-        this(appName, logger, threadPool, new SystemReporter(wallClock));
-    }
-
-    public AbstractDependencyManager(
-            @Nullable final String appName,
-            @Nullable final Logger logger,
-            @Nonnull final ThreadPoolExecutor threadPool,
-            @Nonnull final SystemReporter systemReporter) {
-        this(appName, logger, threadPool, systemReporter, false);
-    }
-
-    public AbstractDependencyManager(
-            @Nullable final String appName,
-            @Nullable final Logger logger,
-            @Nonnull final ThreadPoolExecutor threadPool,
-            @Nonnull final SystemReporter systemReporter,
-            final boolean throttleDependencyChecks) {
-
+            @Nullable final org.apache.log4j.Logger logger,
+            @Nonnull final DependencyChecker checker) {
         this(
-                appName,
-                logger,
-                threadPool,
-                DependencyChecker.newBuilder()
-                        .setExecutorService(threadPool)
-                        .setLogger(logger)
-                        .setSystemReporter(systemReporter)
-                        .setThrottle(throttleDependencyChecks)
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .checker(checker)
                         .build());
     }
 
+    /**
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
+    @Deprecated
     public AbstractDependencyManager(
             @Nullable final String appName,
-            @Nullable final Logger logger,
+            @Nullable final org.apache.log4j.Logger logger,
+            @Nonnull final ThreadPoolExecutor threadPool) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .threadPool(threadPool)
+                        .build());
+    }
+
+    /**
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
+    @Deprecated
+    public AbstractDependencyManager(
+            @Nullable final String appName,
+            @Nullable final org.apache.log4j.Logger logger,
+            @Nonnull final ThreadPoolExecutor threadPool,
+            @Nonnull final WallClock wallClock) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .threadPool(threadPool)
+                        .wallClock(wallClock)
+                        .build());
+    }
+
+    /**
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
+    @Deprecated
+    public AbstractDependencyManager(
+            @Nullable final String appName,
+            @Nullable final org.apache.log4j.Logger logger,
+            @Nonnull final ThreadPoolExecutor threadPool,
+            @Nonnull final SystemReporter systemReporter) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .threadPool(threadPool)
+                        .systemReporter(systemReporter)
+                        .build());
+    }
+
+    /**
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
+    @Deprecated
+    public AbstractDependencyManager(
+            @Nullable final String appName,
+            @Nullable final org.apache.log4j.Logger logger,
+            @Nonnull final ThreadPoolExecutor threadPool,
+            @Nonnull final SystemReporter systemReporter,
+            final boolean throttleDependencyChecks) {
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .threadPool(threadPool)
+                        .systemReporter(systemReporter)
+                        .throttleDependencyChecks(throttleDependencyChecks)
+                        .build());
+    }
+
+    /**
+     * @deprecated Use {@link
+     *     #AbstractDependencyManager(com.indeed.status.core.AbstractDependencyManagerParams)}
+     */
+    @Deprecated
+    public AbstractDependencyManager(
+            @Nullable final String appName,
+            @Nullable final org.apache.log4j.Logger logger,
             @Nonnull final ThreadPoolExecutor threadPool,
             @Nonnull final DependencyChecker checker) {
-        this.appName = Strings.isNullOrEmpty(appName) ? getAppName() : appName;
-        this.log = null == logger ? Logger.getLogger(getClass()) : logger;
+        this(
+                ImmutableDependencyManagerParams.builder()
+                        .appName(appName)
+                        .loggerName(logger == null ? null : logger.getName())
+                        .threadPool(threadPool)
+                        .checker(checker)
+                        .build());
+    }
+
+    public AbstractDependencyManager(final AbstractDependencyManagerParams params) {
+        this.appName = Strings.isNullOrEmpty(params.appName()) ? null : params.appName();
+        this.log =
+                null == params.loggerName()
+                        ? LoggerFactory.getLogger(getClass())
+                        : LoggerFactory.getLogger(params.loggerName());
 
         this.executor =
                 Executors.newSingleThreadScheduledExecutor(
@@ -191,22 +277,18 @@ public abstract class AbstractDependencyManager
                                                 + "-thread-%d")
                                 .setDaemon(true)
                                 .setUncaughtExceptionHandler(
-                                        new UncaughtExceptionHandler() {
-                                            @Override
-                                            public void uncaughtException(Thread t, Throwable e) {
+                                        (t, e) ->
                                                 log.error(
                                                         "Uncaught throwable in thread "
                                                                 + t.getName()
                                                                 + "/"
                                                                 + t.getId(),
-                                                        e);
-                                            }
-                                        })
+                                                        e))
                                 .build());
 
-        this.threadPool = threadPool;
+        this.threadPool = params.threadPool();
 
-        this.checker = checker;
+        this.checker = params.checker();
 
         VarExporter.forNamespace(getClass().getSimpleName()).includeInGlobal().export(this, "");
     }
@@ -246,7 +328,7 @@ public abstract class AbstractDependencyManager
                         // live healthcheck. Might as well
                         //  keep this pretty small, because any nontrivial wait to execute is going
                         // to blow up a timeout anyway.
-                        new SynchronousQueue<Runnable>(),
+                        new SynchronousQueue<>(),
                         // Name your threads.
                         new ThreadFactoryBuilder()
                                 .setNameFormat(
@@ -255,18 +337,15 @@ public abstract class AbstractDependencyManager
                                                 + "-checker-%d")
                                 .setDaemon(true)
                                 .setUncaughtExceptionHandler(
-                                        new UncaughtExceptionHandler() {
-                                            @Override
-                                            public void uncaughtException(Thread t, Throwable e) {
-                                                Logger.getLogger(AbstractDependencyManager.class)
+                                        (t, e) ->
+                                                LoggerFactory.getLogger(
+                                                                AbstractDependencyManager.class)
                                                         .error(
                                                                 "Uncaught throwable in thread "
                                                                         + t.getName()
                                                                         + "/"
                                                                         + t.getId(),
-                                                                e);
-                                            }
-                                        })
+                                                                e))
                                 .build(),
                         // Explicitly restating the default policy here, because healthchecks should
                         // Just Not Work if there
@@ -340,11 +419,22 @@ public abstract class AbstractDependencyManager
         if (dependencyPingPeriod <= 0
                 || dependencyPingPeriod == AbstractDependency.DEFAULT_PING_PERIOD) {
             log.info("Creating pinger with ping period " + pingPeriod);
-            pinger = new DependencyPinger(dependency, pingPeriod, checker);
+            pinger =
+                    new DependencyPinger(
+                            ImmutableDependencyPingerParams.builder()
+                                    .dependency(dependency)
+                                    .pingPeriod(pingPeriod)
+                                    .checker(checker)
+                                    .build());
 
         } else {
             log.info("Creating pinger with ping period " + dependency.getPingPeriod());
-            pinger = new DependencyPinger(dependency, checker);
+            pinger =
+                    new DependencyPinger(
+                            ImmutableDependencyPingerParams.builder()
+                                    .dependency(dependency)
+                                    .checker(checker)
+                                    .build());
         }
         return pinger;
     }

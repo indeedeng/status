@@ -31,7 +31,11 @@ public class DependencyPingerTest {
         dependency.setInError(true);
         final DependencyPinger pinger =
                 new DependencyPinger(
-                        MoreExecutors.newDirectExecutorService(), dependency, systemReporter);
+                        ImmutableDependencyPingerParams.builder()
+                                .executorService(MoreExecutors.newDirectExecutorService())
+                                .dependency(dependency)
+                                .systemReporter(systemReporter)
+                                .build());
         pinger.addListener(listener);
 
         final Capture<CheckResult> original = Capture.newInstance();
@@ -89,7 +93,11 @@ public class DependencyPingerTest {
                 ControlledDependency.builder().setUrgency(Urgency.NONE).build();
         final DependencyPinger pinger =
                 new DependencyPinger(
-                        MoreExecutors.newDirectExecutorService(), dependency, systemReporter);
+                        ImmutableDependencyPingerParams.builder()
+                                .executorService(MoreExecutors.newDirectExecutorService())
+                                .dependency(dependency)
+                                .systemReporter(systemReporter)
+                                .build());
         pinger.addListener(listener);
 
         final Capture<CheckResult> original = Capture.newInstance();
@@ -145,7 +153,11 @@ public class DependencyPingerTest {
         dependency.setInError(true);
         final DependencyPinger pinger =
                 new DependencyPinger(
-                        MoreExecutors.newDirectExecutorService(), dependency, systemReporter);
+                        ImmutableDependencyPingerParams.builder()
+                                .executorService(MoreExecutors.newDirectExecutorService())
+                                .dependency(dependency)
+                                .systemReporter(systemReporter)
+                                .build());
 
         // with no successes
         // expect that first time, call will run something
@@ -201,7 +213,11 @@ public class DependencyPingerTest {
         dependency.setInError(true);
         final DependencyPinger pinger =
                 new DependencyPinger(
-                        MoreExecutors.newDirectExecutorService(), dependency, systemReporter);
+                        ImmutableDependencyPingerParams.builder()
+                                .executorService(MoreExecutors.newDirectExecutorService())
+                                .dependency(dependency)
+                                .systemReporter(systemReporter)
+                                .build());
 
         assertEquals(CheckStatus.OUTAGE, pinger.call().getStatus());
         assertEquals(1, dependency.getTimes());
@@ -225,7 +241,11 @@ public class DependencyPingerTest {
         dependency.setInError(true);
         final DependencyPinger pinger =
                 new DependencyPinger(
-                        MoreExecutors.newDirectExecutorService(), dependency, systemReporter);
+                        ImmutableDependencyPingerParams.builder()
+                                .executorService(MoreExecutors.newDirectExecutorService())
+                                .dependency(dependency)
+                                .systemReporter(systemReporter)
+                                .build());
         pinger.addListener(listener1);
         pinger.addListener(listener2);
         pinger.addListener(listener3);
