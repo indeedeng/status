@@ -1,6 +1,7 @@
 plugins {
     id 'java'
 }
+indeedOss.activateFeature 'java'
 
 dependencies {
     implementation project(':status-core')
