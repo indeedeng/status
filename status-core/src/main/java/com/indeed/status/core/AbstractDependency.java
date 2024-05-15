@@ -25,7 +25,7 @@ public abstract class AbstractDependency implements Dependency {
     public static final long DEFAULT_PING_PERIOD = 30 * 1000; // 30 seconds
     public static final DependencyType DEFAULT_TYPE = DependencyType.StandardDependencyTypes.OTHER;
     public static final String DEFAULT_SERVICE_POOL = "not specified";
-    protected static final String DEFAULT_DOCUMENTATION_URL =
+    public static final String DEFAULT_DOCUMENTATION_URL =
             "http://www.example.com/<dependency-id>";
 
     /**
