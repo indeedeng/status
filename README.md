@@ -1,4 +1,4 @@
-# Status
+# This repository has been retired and is no longer supported
 
 ![OSS Lifecycle](https://img.shields.io/osslifecycle/indeedeng/status.svg)
 
